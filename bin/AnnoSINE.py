@@ -7,9 +7,10 @@ import argparse
 from argparse import RawTextHelpFormatter
 import matplotlib.pyplot as plt
 import operator
+import glob
 
 
-print('Example: python3 AnnoSINE.py 2 ../Input_Files/test.fasta ../Output_Files')
+print('Example: python3 AnnoSINE.py 2 ../Input_Files/test.fasta ../Output_Files', flush=True)
 parser = argparse.ArgumentParser(description="SINE Annotation Tool for Plant Genomes",
                                  formatter_class=RawTextHelpFormatter)
 
@@ -49,23 +50,30 @@ parser.add_argument("-f", "--figure", metavar='', type=str, default='y',
 parser.add_argument("-r", "--non_redundant", metavar='', type=str, default='y',
                     help="Annotate SINE in the whole genome based on the non-redundant library (y/n) (default: y)")
 parser.add_argument("-t", "--threads", metavar='', type=int, default=36,
-                    help="Threads for each tools(default: 36)")
+                    help="Threads for each tool in AnnoSINE (default: 36)")
+parser.add_argument("-irf", "--irf_path", metavar='', type=str, default='',
+                    help="Path to the irf program (default: '')")
 args = parser.parse_args()
 
+# obtain program paths
+script_dir = os.path.dirname(os.path.abspath(__file__)) #shujun
+work_dir = os.getcwd()
 
-def hmm_predict(genome_assembly_path,cpus):
-    dir_hmm = os.listdir('../Family_Seq/')
+def hmm_predict(genome_assembly_path, cpus, script_dir, work_dir): #shujun
+    dir_hmm = os.listdir(script_dir + '/../Family_Seq/') #shujun
+    os.system('mkdir ' + work_dir + '/HMM_out > /dev/null 2>&1') #shujun
     for num_dir_hmm in range(len(dir_hmm)):
         if dir_hmm[num_dir_hmm] != '.DS_Store':
             # Clear the content of exist output
-            if os.path.exists('../Family_Seq/' + dir_hmm[num_dir_hmm] + '/' + dir_hmm[num_dir_hmm] + '.out'):
-                clear_filename = '../Family_Seq/' + dir_hmm[num_dir_hmm] + '/' + dir_hmm[num_dir_hmm] + '.out'
+            if os.path.exists(work_dir + '/HMM_out/' + dir_hmm[num_dir_hmm] + '.out'): #shujun
+                clear_filename = work_dir + '/HMM_out/' + dir_hmm[num_dir_hmm] + '.out' #shujun
                 with open(clear_filename, "r+") as clear_f:
                     clear_f.seek(0)
                     clear_f.truncate()
             os.system(
-                'nhmmer --cpu ' + str(cpus) + ' -o ../Family_Seq/' + dir_hmm[num_dir_hmm] + '/' + dir_hmm[num_dir_hmm] + '.out '
-                + '../Family_Seq/' + dir_hmm[num_dir_hmm] + '/' + dir_hmm[num_dir_hmm] + '.hmm '
+                # output to work directory instead of program directory, shujun
+                'nhmmer --cpu ' + str(cpus) + ' -o ' + work_dir + '/HMM_out/' + dir_hmm[num_dir_hmm] + '.out ' 
+                + script_dir + '/../Family_Seq/' + dir_hmm[num_dir_hmm] + '/' + dir_hmm[num_dir_hmm] + '.hmm '
                 + genome_assembly_path)
 
 
@@ -97,12 +105,12 @@ def read_genome_assembly(genome_assembly_path):
     return genome_sequences
 
 
-def process_hmm_output_1(out_file, threshold_hmm_e_value):
+def process_hmm_output_1(out_file, threshold_hmm_e_value, script_dir):
     # ============================ HMM prediction start and end annotation =======================
     hmm_predict_record_unsort = []
     hmm_predict_record_sort = []
     hmm_predict_family_number = 0
-    with open('../Family_Seq/' + out_file) as predict_f:
+    with open(out_file) as predict_f: #shujun
         lines = predict_f.readlines()
         for line in lines[15:]:
             if 'inclusion threshold' in line or 'No hits detected' in line or line == '\n':
@@ -136,7 +144,7 @@ def process_hmm_output_1(out_file, threshold_hmm_e_value):
 
 
 def merge_same_hmm_output(hmm_output_record):
-    print('Merging the same hmm prediction ...')
+    print('Merging the same hmm prediction ...', flush=True)
     update_positions = []
     for num_record in hmm_output_record:
         add_pos = True
@@ -166,22 +174,23 @@ def merge_same_hmm_output(hmm_output_record):
     return update_positions
 
 
-def process_hmm_output_2(threshold_hmm_e_value):
-    print('Processing the hmm prediction ...')
+def process_hmm_output_2(threshold_hmm_e_value, script_dir):
+    print('Processing the hmm prediction ...', flush=True)
     family_count = {}
     family_name = []
     update_hmm_record = []
-    dir_file = os.listdir('../Family_Seq/')
-    for a in range(len(dir_file)):
-        if dir_file[a] != '.DS_Store':
-            list_pre = process_hmm_output_1(dir_file[a] + '/' + dir_file[a] + '.out', threshold_hmm_e_value)[0]
+#    dir_file = os.listdir(work_dir + '/HMM_out/') #shujun
+    out_file = glob.glob(work_dir + '/HMM_out/' + '*.out') #shujun
+    for a in range(len(out_file)):
+        if out_file[a] != '.DS_Store':
+            list_pre = process_hmm_output_1(out_file[a], threshold_hmm_e_value, script_dir)[0] #shujun
             for num_pre in range(len(list_pre)):
                 if list_pre[num_pre]['e_value'] <= threshold_hmm_e_value:
-                    family_name.append(dir_file[a])
-                    if dir_file[a] not in family_count:
-                        family_count[dir_file[a]] = 1
+                    family_name.append(os.path.splitext(out_file[a])[0]) #shujun
+                    if os.path.splitext(out_file[a])[0] not in family_count:
+                        family_count[os.path.splitext(out_file[a])[0]] = 1 #shujun
                     else:
-                        family_count[dir_file[a]] += 1
+                        family_count[os.path.splitext(out_file[a])[0]] += 1 #shujun
             for num_return_broken in range(len(list_pre)):
                 update_hmm_record.append(list_pre[num_return_broken])
     return update_hmm_record, family_name, family_count
@@ -196,9 +205,9 @@ def process_hmm_output_3(threshold_hmm_e_value, in_genome_assembly_path, pattern
     pre_strand = {}
     input_tsd_sequences = {}
     output_genome_sequence = read_genome_assembly(in_genome_assembly_path)
-    update_hmm_record = process_hmm_output_2(threshold_hmm_e_value)[0]
-    family_name = process_hmm_output_2(threshold_hmm_e_value)[1]
-    family_count = process_hmm_output_2(threshold_hmm_e_value)[2]
+    update_hmm_record = process_hmm_output_2(threshold_hmm_e_value, script_dir)[0]
+    family_name = process_hmm_output_2(threshold_hmm_e_value, script_dir)[1]
+    family_count = process_hmm_output_2(threshold_hmm_e_value, script_dir)[2]
     update_hmm_output = merge_same_hmm_output(update_hmm_record)
 
     for num_return_pos in range(len(update_hmm_output)):
@@ -254,8 +263,8 @@ def merge_tsd_input(pattern, out_genome_assembly_path):
                 f3. write(line)
 
 
-def search_tsd(out_genome_assembly_path):
-    os.system('node ./TSD_Searcher.js ' + out_genome_assembly_path)
+def search_tsd(out_genome_assembly_path, script_dir):
+    os.system('node ' + script_dir + '/TSD_Searcher.js ' + out_genome_assembly_path) #shujun
 
 
 def is_at_seq(seq, tolerance):
@@ -391,9 +400,11 @@ def save_to_fna_2(filename, sequences, input_title, input_tsd, input_start, inpu
 
 
 def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_assembly_path,cpus):
-    print('BLAST againist the genome assembly ...')
+    print('BLAST againist the genome assembly ...', flush=True)
+    # make blastdb to allow blastn multithreading, shujun
+    os.system('makeblastdb -input_type fasta -dbtype nucl -in ' + in_genome_assembly_path + ' > /dev/null 2>&1')
     os.system('blastn -query '+out_genome_assembly_path+'/Step2_extend_blast_input.fa '
-              '-subject ' + in_genome_assembly_path + ' '
+              '-db ' + in_genome_assembly_path + ' '
               '-out '+out_genome_assembly_path+'/Step3_blast_output.out '
               '-evalue ' + str(e_value) + ' '
               '-num_alignments 50000 '
@@ -407,7 +418,7 @@ def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_ass
 
 def process_blast_output_1(in_genome_assembly_path, factor_length, factor_copy, max_shift, max_gap, min_copy_number,
                            pos, out_genome_assembly_path, bound, figure):
-    print('Processing the BLAST output ...')
+    print('Processing the BLAST output ...', flush=True)
     blast_out_filename = out_genome_assembly_path+'/Step2_extend_blast_input.fa'
     with open(blast_out_filename) as blast_input_file:
         lines = blast_input_file.readlines()
@@ -708,9 +719,9 @@ def process_blast_output_2(out_genome_assembly_path):
                     f2.write(line)
 
 
-def blast_rna(out_genome_assembly_path,cpus):
+def blast_rna(out_genome_assembly_path, cpus, script_dir):
     os.system('blastn -query '+out_genome_assembly_path+'/Step4_rna_input.fasta '
-              '-subject ../Input_Files/rna_database.fa '
+              '-subject ' + script_dir + '/../Input_Files/rna_database.fa ' #shujun
               '-out '+out_genome_assembly_path+'/Step4_rna_output.out '
               '-evalue 1 '
               '-num_alignments 50000 '
@@ -724,7 +735,7 @@ def blast_rna(out_genome_assembly_path,cpus):
 
 def process_rna(out_genome_assembly_path):
     rna_database = []
-    with open('../Input_Files/rna_database.fa') as f:
+    with open(script_dir + '/../Input_Files/rna_database.fa') as f: #shujun
         num = 0
         lines = f.readlines()
         for line in lines:
@@ -815,8 +826,8 @@ def tandem_repeat_finder(out_genome_assembly_path):
               '2 5 7 80 10 10 2000 -d -h -l 6')
 
 
-def process_trf(input_trf_prob, out_genome_assembly_path):
-    trf_file = '../bin/Step4_rna_output.fasta.2.5.7.80.10.10.2000.dat'
+def process_trf(input_trf_prob, out_genome_assembly_path, work_dir):
+    trf_file = work_dir + '/Step4_rna_output.fasta.2.5.7.80.10.10.2000.dat'
     with open(trf_file, 'r')as trf_f:
         trf_list = []
         num = -1
@@ -902,9 +913,9 @@ def extend_seq(in_genome_assembly_path, out_genome_assembly_path):
     save_to_fna(filename_2, seq, title)
 
 
-def inverted_repeat_finder(out_genome_assembly_path):
+def inverted_repeat_finder(out_genome_assembly_path, irf_path):
     path = os.path.abspath(os.path.dirname(os.getcwd()))
-    os.system('irf ' + out_genome_assembly_path +'/Step6_irf_input.fasta '
+    os.system(irf_path + '/irf ' + out_genome_assembly_path +'/Step6_irf_input.fasta ' #shujun
               '2 3 5 80 10 20 500000 10000 -d -h -t4 74 -t5 493 -t7 10000')
 
 
@@ -971,8 +982,8 @@ def cluster_sequences(out_genome_assembly_path,cpus):
     os.system('cd-hit-est '
               '-i ' + out_genome_assembly_path + '/Step6_irf_output.fasta '
               '-o ' + out_genome_assembly_path + '/Step7_cluster_output.fasta '
-              '-c 0.8 '
-              '-T ' + str(cpus))
+              '-c 0.8 -M 0 ' #set unlimited memory, shujun
+              '-T ' + str(cpus) + ' > /dev/null 2>&1')
     with open(out_genome_assembly_path+'/Step7_cluster_output.fasta', 'r')as f_1:
         with open(out_genome_assembly_path+'/Seed_SINE.fa', 'w')as f_2:
             num = 0
@@ -1003,25 +1014,25 @@ def re_process_figure(out_genome_assembly_path):
             os.remove(out_genome_assembly_path + '/Figures/' + f'profile_{num}.png')
 
 
-def genome_annotate(in_genome_assembly_path, out_genome_assembly_path, in_nonredundant,cpus):
+def genome_annotate(in_genome_assembly_path, out_genome_assembly_path, in_nonredundant, rm_cpus): #reduce cpu number for RepeatMasker to avoid overutilization
     #path = os.path.abspath(os.path.dirname(os.getcwd()))
-    print(in_genome_assembly_path)
-    print(out_genome_assembly_path)
+    print('Genome file: ' + in_genome_assembly_path, flush=True)
+    print('Annotation results: ' + out_genome_assembly_path + '/RepeatMasker/', flush=True)
     if in_nonredundant == 'y':
-        os.system('RepeatMasker -e ncbi -pa ' + str(cpus) + ' -q -no_is -norna -nolow -div 40 '
+        os.system('RepeatMasker -e ncbi -pa ' + str(rm_cpus) + ' -q -no_is -norna -nolow -div 40 '
                   '-lib  ' + out_genome_assembly_path + '/Seed_SINE.fa '
                   '-cutoff 225 ' + in_genome_assembly_path + ' '
-                  '-dir ' + out_genome_assembly_path + '/RepeatMasker/')
+                  '-dir ' + out_genome_assembly_path + '/RepeatMasker/ > /dev/null 2>&1')
     elif in_nonredundant == 'n':
-        os.system('RepeatMasker -e ncbi -pa ' + str(cpus) + ' -q -no_is -norna -nolow -div 40 '
+        os.system('RepeatMasker -e ncbi -pa ' + str(rm_cpus) + ' -q -no_is -norna -nolow -div 40 '
                   '-lib  ' + out_genome_assembly_path + '/Step7_cluster_output.fasta '
                   '-cutoff 225 ' + in_genome_assembly_path + ' '
-                  '-dir ' + out_genome_assembly_path + '/RepeatMasker/')
+                  '-dir ' + out_genome_assembly_path + '/RepeatMasker/ > /dev/null 2>&1')
 
 
-def sine_finder(genome_assembly_path):
+def sine_finder(genome_assembly_path, script_dir):
     #main_func()
-    os.system('python3 ./SINEFinder.py ' + genome_assembly_path)
+    os.system('python3 ' + script_dir + '/SINEFinder.py ' + genome_assembly_path) #shujun
 
 
 def save_to_fna_4(filename, input_sequences, input_id, input_direct, input_start, input_end):
@@ -1084,7 +1095,7 @@ def ensure_path(path):
 
 
 def main_function():
-    print('Please input the path of genomic sequence')
+    print('Please input the path of genomic sequence', flush=True) # print out message immediately
     input_pattern = args.mode
     input_genome_assembly_path = args.input_filename
     output_genome_assembly_path = args.output_filename
@@ -1105,76 +1116,80 @@ def main_function():
     input_non_redundant = args.non_redundant
     
     cpus = args.threads
+    rm_cpus = int(cpus/4) #cpu number for RepeatMasker since each -pa value will invoke 4x rmblast processes
+
+    # obtain program paths
+    irf_path = os.path.dirname(args.irf_path) #shujun
 
     start_time = time.time()
-    print('************************************************************************')
-    print('*************************** AnnoSINE START! ****************************')
-    print('************************************************************************')
+    print('************************************************************************', flush=True)
+    print('*************************** AnnoSINE START! ****************************', flush=True)
+    print('************************************************************************', flush=True)
     if input_pattern == 1:
-        print('================ Step 1: HMMER prediction has begun ==================')
-        hmm_predict(input_genome_assembly_path,cpus)
+        print('================ Step 1: HMMER prediction has begun ==================', flush=True)
+        hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir)
         process_hmm_output_3(1e-10, input_genome_assembly_path, input_pattern, output_genome_assembly_path)
     elif input_pattern == 2:
-        print('================ Step 1: Structure search has begun ==================')
-        sine_finder(input_genome_assembly_path)
+        print('================ Step 1: Structure search has begun ==================', flush=True)
+        sine_finder(input_genome_assembly_path, script_dir)
         process_sine_finder(input_genome_assembly_path, input_sine_finder, output_genome_assembly_path, input_pattern)
     elif input_pattern == 3:
-        print('====== Step 1: HMMER prediction and structure search has begun =======')
-        hmm_predict(input_genome_assembly_path,cpus)
+        print('====== Step 1: HMMER prediction and structure search has begun =======', flush=True)
+        hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir)
         process_hmm_output_3(1e-10, input_genome_assembly_path, input_pattern, output_genome_assembly_path)
-        sine_finder(input_genome_assembly_path)
+        sine_finder(input_genome_assembly_path, script_dir)
         process_sine_finder(input_genome_assembly_path, input_sine_finder, output_genome_assembly_path, input_pattern)
     merge_tsd_input(input_pattern, output_genome_assembly_path)
-    print('\n======================== Step 1 has been done ========================\n\n')
+    print('\n======================== Step 1 has been done ========================\n\n', flush=True)
 
-    print('================ Step 2: TSD identification has begun ================')
-    search_tsd(output_genome_assembly_path)
+    print('================ Step 2: TSD identification has begun ================', flush=True)
+    search_tsd(output_genome_assembly_path, script_dir)
     process_tsd_output(input_genome_assembly_path, output_genome_assembly_path)
-    print('\n======================== Step 2 has been done ========================\n\n')
+    print('\n======================== Step 2 has been done ========================\n\n', flush=True)
 
-    print('================ Step 3: MSA implementation has begun ================')
+    print('================ Step 3: MSA implementation has begun ================', flush=True)
     multiple_sequence_alignment(1e-10, input_genome_assembly_path, output_genome_assembly_path,cpus)
     process_blast_output_1(input_genome_assembly_path, input_factor_length, input_factor_copy_number,
                            input_max_shift, input_max_gap, input_min_copy_number,
                            1, output_genome_assembly_path, input_bound, input_figure)
     process_blast_output_2(output_genome_assembly_path)
 
-    print('\n======================== Step 3 has been done ========================\n\n')
+    print('\n======================== Step 3 has been done ========================\n\n', flush=True)
 
-    print('========= Step 4: RNA derived head identification has begun ==========')
-    blast_rna(output_genome_assembly_path,cpus)
+    print('========= Step 4: RNA derived head identification has begun ==========', flush=True)
+    blast_rna(output_genome_assembly_path, cpus, script_dir)
     process_rna(output_genome_assembly_path)
-    print('\n========================= Step 4 has been done =======================\n\n')
+    print('\n========================= Step 4 has been done =======================\n\n', flush=True)
 
-    print('=============== Step 5: Tandem repeat finder has begun ===============')
+    print('=============== Step 5: Tandem repeat finder has begun ===============', flush=True)
     tandem_repeat_finder(output_genome_assembly_path)
-    process_trf(0.5, output_genome_assembly_path)
-    print('\n======================== Step 5 has been done ========================\n\n')
+    process_trf(0.5, output_genome_assembly_path, work_dir)
+    print('\n======================== Step 5 has been done ========================\n\n', flush=True)
 
-    print('=============== Step 6: Inverted repeat finder has begun =============')
+    print('=============== Step 6: Inverted repeat finder has begun =============', flush=True)
     extend_seq(input_genome_assembly_path, output_genome_assembly_path)
-    inverted_repeat_finder(output_genome_assembly_path)
+    inverted_repeat_finder(output_genome_assembly_path, irf_path)
     process_irf(output_genome_assembly_path)
-    print('\n========================= Step 6 has been done =======================\n\n')
+    print('\n========================= Step 6 has been done =======================\n\n', flush=True)
 
-    print('=============== Step 7: Sequences clustering has begun ===============')
+    print('=============== Step 7: Sequences clustering has begun ===============', flush=True)
     cluster_sequences(output_genome_assembly_path,cpus)
-    print('\n======================== Step 7 has been done ========================\n\n')
+    print('\n======================== Step 7 has been done ========================\n\n', flush=True)
 
-    print('================= Step 8: Genome annotation has begun ================')
+    print('================= Step 8: Genome annotation has begun ================', flush=True)
     if input_figure == 'y':
         dirs = output_genome_assembly_path+'/Figures/'
         if not os.path.exists(dirs):
             os.makedirs(dirs)
         re_process_figure(output_genome_assembly_path)
-    genome_annotate(input_genome_assembly_path, output_genome_assembly_path, input_non_redundant,cpus)
-    print('\n========================= Step 8 has been done =======================\n\n')
+    genome_annotate(input_genome_assembly_path, output_genome_assembly_path, input_non_redundant, rm_cpus) #shujun
+    print('\n========================= Step 8 has been done =======================\n\n', flush=True)
 
     end_time = time.time()
-    print('Total running time: ', end_time - start_time, 's')
-    print('************************************************************************')
-    print('************************** AnnoSINE COMPLETE! **************************')
-    print('************************************************************************')
+    print('Total running time: ', end_time - start_time, 's', flush=True)
+    print('************************************************************************', flush=True)
+    print('************************** AnnoSINE COMPLETE! **************************', flush=True)
+    print('************************************************************************', flush=True)
 
 
 if __name__ == '__main__':
