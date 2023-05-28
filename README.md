@@ -46,8 +46,8 @@ conda env create -f AnnoSINE.conda.yaml
 
 ## download IRF
 mv irf305.linux.exe irf
-## set PATH for IRF
-export PATH=$IRF_PATH:$PATH
+## obtain IRF path and give to AnnoSINE
+pwd
 ```
 
 # Usage
@@ -78,6 +78,8 @@ optional arguments:
   -b, --boundary             Output SINE seed boundaries based on TSD or MSA (default: msa)
   -f, --figure          Output the SINE seed MSA figures and copy number profiles (y/n) (default: n)
   -r, --non_redundant    Annotate SINE in the whole genome based on the non—redundant library (y/n) (default: y)
+  -t, --threads		 Threads for each tool in AnnoSINE (default: 36)
+  -irf, --irf_path	 Path to the irf program (default: '')
 ```
 
 ## Inputs
@@ -109,8 +111,8 @@ Genome sequence(fasta format).
 # Testing 
 You can test the AnnoSINE with one chromosome in *Arabisopsis thaliana* (it takes about 6 mins).
 ```
-cd ./AnnoSINE/bin
-python3 AnnoSINE.py 3 ../Testing/A.thaliana_Chr4.fasta ../Output_Files
+cd ./AnnoSINE/Testing
+python3 ../bin/AnnoSINE.py -t 20 3 A.thaliana_Chr4.fasta ./Output_Files
 ```
 Results of AnnoSINE tests on testing data are saved in Output_Files.
 
