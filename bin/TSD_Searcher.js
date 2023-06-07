@@ -29,6 +29,9 @@ function TSDsearch(faSeq) {
     i = 0,
     TSD = [];
   var SeqMatch = faSeq.match(/^>(\S+).*[\n\f\r]+([\w ~\-\t\n\f\r]+)/i);
+  if ( !SeqMatch ) {
+	  return false;
+  }
   var sn = SeqMatch[1];
   var sq = SeqMatch[2].replace(/[ ~\-\t\n\f\r]/g, "");
   var Seq =
@@ -129,7 +132,7 @@ function TSDsearch(faSeq) {
 
 const file = readFileSync(fna_filename, "utf-8");
 const FNA_HEAD_PATTERN = "(?<head>>[^\n]*\n)";
-const FNA_SEQUENCE_PATTERN = "(?<sequence>[atcgATCG\n]+)";
+const FNA_SEQUENCE_PATTERN = "(?<sequence>[atcgATCGNnXx\n]+)";
 const FNA_PATTERN = new RegExp(FNA_HEAD_PATTERN + FNA_SEQUENCE_PATTERN, "g");
 
 
