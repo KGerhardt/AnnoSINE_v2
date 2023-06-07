@@ -260,7 +260,10 @@ def merge_tsd_input(pattern, out_genome_assembly_path):
             if line[0] == '>':
                 f3.write(line)
             else:
-                f3. write(line)
+                # replace non-ACGT characters to Ns, shujun
+                line = line.rstrip('\n')  # Remove newline character
+                cleaned_line = ''.join(['N' if c not in 'ACGTacgt' else c for c in line])
+                f3.write(cleaned_line + '\n') # Add newline character back
 
 
 def search_tsd(out_genome_assembly_path, script_dir):
@@ -467,7 +470,8 @@ def process_blast_output_1(in_genome_assembly_path, factor_length, factor_copy, 
                                                'id': seq_id})
                 start = None
                 end = None
-                seq_id = line.split()[1]
+                #seq_id = line.split()[1]
+                seq_id = line.split()[0] #shujun
             if 'Query= ' in line:
                 if start is not None and end is not None and seq_id is not None:
                     blast_inter[count].append({'start': start - 1,
