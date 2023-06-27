@@ -2,7 +2,7 @@ import sys
 import argparse
 from argparse import RawTextHelpFormatter
 
-sys.setrecursionlimit(30000)  # Set the recursion limit to 30000, shujun
+sys.setrecursionlimit(100000)  # Set the recursion limit to 30000, shujun
 parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
 parser.add_argument("input_filename", type=str)
 args = parser.parse_args()
