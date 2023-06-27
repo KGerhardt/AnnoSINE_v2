@@ -41,7 +41,7 @@ parser.add_argument("-minc", "--copy_number", metavar='', type=int, default=20,
                     help="Minimum threshold of the copy number for each element (default: 20)")
 #parser.add_argument("-maxb", "--base_copy_number", type=int, default=1,
                     #help="Maximum threshold of copy number for the first and last base (default: 1)")
-parser.add_argument("-a", "--animal", type=int, default=0,
+parser.add_argument("-a", "--animal",metavar='', type=int, default=0,
                     help='If set to 1, then Hmmer will search SINE using the animal hmm files from Dfam. (default: 0)')
 parser.add_argument("-b", "--boundary", metavar='', type=str, default='msa',
                     help="Output SINE seed boundaries based on TSD or MSA (default: msa)")
