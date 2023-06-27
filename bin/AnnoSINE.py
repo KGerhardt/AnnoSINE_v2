@@ -41,8 +41,8 @@ parser.add_argument("-minc", "--copy_number", metavar='', type=int, default=20,
                     help="Minimum threshold of the copy number for each element (default: 20)")
 #parser.add_argument("-maxb", "--base_copy_number", type=int, default=1,
                     #help="Maximum threshold of copy number for the first and last base (default: 1)")
-#parser.add_argument("-p", "--probability", type=float, default=0.5,
-                    #help='Minimum of the length proportion of tandem repeat to element (default: 0.5)')
+parser.add_argument("-a", "--animal", type=int, default=0,
+                    help='If set to 1, then Hmmer will search SINE using the animal hmm files from Dfam. (default: 0)')
 parser.add_argument("-b", "--boundary", metavar='', type=str, default='msa',
                     help="Output SINE seed boundaries based on TSD or MSA (default: msa)")
 parser.add_argument("-f", "--figure", metavar='', type=str, default='n',
@@ -59,9 +59,11 @@ args = parser.parse_args()
 script_dir = os.path.dirname(os.path.abspath(__file__)) #shujun
 work_dir = os.getcwd()
 
-def hmm_predict(genome_assembly_path, cpus, script_dir, work_dir): #shujun
-    #db='Family_Seq'
-    db='Dfam_hmm'
+def hmm_predict(genome_assembly_path, cpus, script_dir, work_dir,input_ani): #shujun
+    if input_ani==0:
+        db='Family_Seq'
+    else:
+        db='Dfam_hmm'
     dir_hmm = os.listdir(script_dir + '/../'+db+'/') #shujun
     os.system('mkdir ' + work_dir + '/HMM_out > /dev/null 2>&1') #shujun
     for num_dir_hmm in range(len(dir_hmm)):
@@ -1164,6 +1166,7 @@ def main_function():
     input_min_copy_number = args.copy_number
     #input_pos = args.base_copy_number
     #trf_prob = args.probability
+    input_ani=args.animal
     input_bound = args.boundary
     input_figure = args.figure
     input_non_redundant = args.non_redundant
@@ -1182,7 +1185,7 @@ def main_function():
     if input_pattern == 1:
         print('================ Step 1: HMMER prediction has begun ==================', flush=True)
         t1=time.time()
-        hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir)
+        hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir,input_ani)
         t2=time.time()
         print('Step 1 mode-1::hmm_predict uses ',t2-t1,' s',flush=True)
         t1=time.time()
@@ -1204,7 +1207,7 @@ def main_function():
         print('====== Step 1: HMMER prediction and structure search has begun =======', flush=True)
          
         t1=time.time()
-        hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir)
+        hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir,input_ani)
         t2=time.time()
         print('Step 1 mode-3::hmm_predict uses ',t2-t1,' s',flush=True)
         t1=time.time()
