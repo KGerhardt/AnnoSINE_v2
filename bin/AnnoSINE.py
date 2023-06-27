@@ -45,8 +45,8 @@ parser.add_argument("-minc", "--copy_number", metavar='', type=int, default=20,
                     #help='Minimum of the length proportion of tandem repeat to element (default: 0.5)')
 parser.add_argument("-b", "--boundary", metavar='', type=str, default='msa',
                     help="Output SINE seed boundaries based on TSD or MSA (default: msa)")
-parser.add_argument("-f", "--figure", metavar='', type=str, default='y',
-                    help="Output the SINE seed MSA figures and copy number profiles (y/n) (default: y)")
+parser.add_argument("-f", "--figure", metavar='', type=str, default='n',
+                    help="Output the SINE seed MSA figures and copy number profiles (y/n). Please note that this step may take a long time to process. (default: n)")
 parser.add_argument("-r", "--non_redundant", metavar='', type=str, default='y',
                     help="Annotate SINE in the whole genome based on the non-redundant library (y/n) (default: y)")
 parser.add_argument("-t", "--threads", metavar='', type=int, default=36,
@@ -60,7 +60,9 @@ script_dir = os.path.dirname(os.path.abspath(__file__)) #shujun
 work_dir = os.getcwd()
 
 def hmm_predict(genome_assembly_path, cpus, script_dir, work_dir): #shujun
-    dir_hmm = os.listdir(script_dir + '/../Family_Seq/') #shujun
+    #db='Family_Seq'
+    db='Dfam_hmm'
+    dir_hmm = os.listdir(script_dir + '/../'+db+'/') #shujun
     os.system('mkdir ' + work_dir + '/HMM_out > /dev/null 2>&1') #shujun
     for num_dir_hmm in range(len(dir_hmm)):
         if dir_hmm[num_dir_hmm] != '.DS_Store':
@@ -73,7 +75,7 @@ def hmm_predict(genome_assembly_path, cpus, script_dir, work_dir): #shujun
             os.system(
                 # output to work directory instead of program directory, shujun
                 'nhmmer --cpu ' + str(cpus) + ' -o ' + work_dir + '/HMM_out/' + dir_hmm[num_dir_hmm] + '.out ' 
-                + script_dir + '/../Family_Seq/' + dir_hmm[num_dir_hmm] + '/' + dir_hmm[num_dir_hmm] + '.hmm '
+                + script_dir + '/../'+db+'/' + dir_hmm[num_dir_hmm] + '/' + dir_hmm[num_dir_hmm] + '.hmm '
                 + genome_assembly_path)
 
 
@@ -110,13 +112,30 @@ def process_hmm_output_1(out_file, threshold_hmm_e_value, script_dir):
     hmm_predict_record_unsort = []
     hmm_predict_record_sort = []
     hmm_predict_family_number = 0
+    ani=0
     with open(out_file) as predict_f: #shujun
         lines = predict_f.readlines()
         for line in lines[15:]:
+            #print(line)
+            if 'E-value' in line:ani=1
             if 'inclusion threshold' in line or 'No hits detected' in line or line == '\n':
                 break
             else:
                 hmm_predict_record_unsort.append(line.split())
+    #print(ani)
+    if ani==1:
+         hmm_predict_record_unsort = []
+         with open(out_file) as predict_f:
+            lines = predict_f.readlines()
+            for line in lines[17:]:
+                #print(line)
+                if 'inclusion threshold' in line or 'No hits detected' in line or line == '\n':
+                    break
+                if not line:break
+                else:
+                    hmm_predict_record_unsort.append(line.split())
+    #print(hmm_predict_record_unsort)
+    #exit()
     if [] not in hmm_predict_record_unsort:
         out_data = sorted(hmm_predict_record_unsort, key=lambda x: int(x[4]))
         for i in range(len(out_data)):
@@ -258,12 +277,15 @@ def merge_tsd_input(pattern, out_genome_assembly_path):
     with open(out_genome_assembly_path+'/Step1_extend_tsd_input.fa', 'w') as f3:
         for line in lines:
             if line[0] == '>':
-                f3.write(line)
+                head=line
+                #f3.write(line)
             else:
                 # replace non-ACGT characters to Ns, shujun
                 line = line.rstrip('\n')  # Remove newline character
                 cleaned_line = ''.join(['N' if c not in 'ACGTacgt' else c for c in line])
-                f3.write(cleaned_line + '\n') # Add newline character back
+                cleaned_line=cleaned_line.strip()
+                if not cleaned_line=='':
+                    f3.write(head+cleaned_line + '\n') # Add newline character back
 
 
 def search_tsd(out_genome_assembly_path, script_dir):
@@ -359,19 +381,30 @@ def process_tsd_output(in_genome_assembly_path, out_genome_assembly_path):
 
     if os.path.exists(out_genome_assembly_path+'/Step2_extend_blast_input.fa'):
         modify_text(out_genome_assembly_path+'/Step2_extend_blast_input.fa')
-
+    count=0
+    
     with open(out_genome_assembly_path+'/Step2_tsd_output.fa', 'r')as tsd_output_file:
         with open(out_genome_assembly_path+'/Step2_extend_blast_input.fa', 'w') as blast_input_file:
             flag = False
             for line in tsd_output_file:
+                #print(line)
                 if line[0] == '>':
+                    tem=''
                     if 'tsd not exist' not in line.split('|')[1]:
                         flag = True
+                        tem=line
                     else:
                         flag = False
-                if flag:
-                    blast_input_file.write(line)
-
+                if flag and not line[0]=='>':
+                    line=line.strip()
+                    if line:
+                        blast_input_file.write(tem)
+                        blast_input_file.write(line+'\n')
+                        count+=1
+                    #blast_input_file.write(line)
+    if count==0:
+        print('No sequences in Step2_extend_blast_input.fa! Please check! Exit.')
+        exit()
 
 def modify_text(modify_name):
     with open(modify_name, "r+") as f:
@@ -389,6 +422,9 @@ def save_to_fna_1(filename, sequences, strands, ids, left_offset, right_offset, 
         index += 1
     with open(filename, 'a') as file:
         file.writelines(payload)
+    if len(payload)==0:
+        print('No SINE can be detected!')
+        exit()
 
 
 def save_to_fna_2(filename, sequences, input_title, input_tsd, input_start, input_end):
@@ -551,6 +587,7 @@ def process_blast_output_1(in_genome_assembly_path, factor_length, factor_copy, 
         hit_list.append({})
         for j in range(len(blast_res[i])):
             for pos in range(blast_res[i][j]['start'], blast_res[i][j]['end']):
+                #print('Check_pos: ',pos)
                 if pos in hit_list[i]:
                     hit_list[i][pos] += 1
                 else:
@@ -617,6 +654,8 @@ def process_blast_output_1(in_genome_assembly_path, factor_length, factor_copy, 
                 res = get_keys(hit_list[m], repeat_number)
                 blast_pre = split_by_continuity(res)
                 # first and last base copy number
+                tid=length[m] - 1
+                if tid not in hit_list[m] or 0 not in hit_list[m]:continue
                 if hit_list[m][0] <= pos and hit_list[m][length[m] - 1] <= pos:
                     if len(blast_pre) == 1:
                         # shift
@@ -918,9 +957,16 @@ def extend_seq(in_genome_assembly_path, out_genome_assembly_path):
 
 
 def inverted_repeat_finder(out_genome_assembly_path, irf_path):
-    path = os.path.abspath(os.path.dirname(os.getcwd()))
-    os.system(irf_path + '/irf ' + out_genome_assembly_path +'/Step6_irf_input.fasta ' #shujun
-              '2 3 5 80 10 20 500000 10000 -d -h -t4 74 -t5 493 -t7 10000')
+    path = os.path.split(os.path.abspath(__file__))[0]
+    if irf_path=='': 
+        irf_path=path+'/irf308.linux.exe'
+
+    os.system(irf_path +' '+ out_genome_assembly_path +'/Step6_irf_input.fasta ' #shujun
+        '2 3 5 80 10 20 500000 10000 -d -h -t4 74 -t5 493 -t7 10000')
+
+    if os.path.exists('Step6_irf_input.fasta.2.3.5.80.10.20.500000.10000.dat'):
+        os.system('mv Step6_irf_input.fasta.2.3.5.80.10.20.500000.10000.dat '+out_genome_assembly_path)
+    
 
 
 def process_irf(out_genome_assembly_path):
@@ -1104,7 +1150,10 @@ def main_function():
     input_genome_assembly_path = args.input_filename
     output_genome_assembly_path = args.output_filename
     ensure_path(output_genome_assembly_path)
-    input_sine_finder = input_genome_assembly_path.replace('.fasta', '')+'-matches.fasta'
+    bfix=os.path.splitext(input_genome_assembly_path)[-1]
+    input_sine_finder = input_genome_assembly_path.replace(bfix, '')+'-matches.fasta'
+    #print(input_sine_finder)
+    #exit()
 
     #input_hmm_e_value = args.hmmer_evalue
     #input_blast_e_value = args.blast_evalue
@@ -1123,7 +1172,8 @@ def main_function():
     rm_cpus = int(cpus/4) #cpu number for RepeatMasker since each -pa value will invoke 4x rmblast processes
 
     # obtain program paths
-    irf_path = os.path.dirname(args.irf_path) #shujun
+    #irf_path = os.path.dirname(args.irf_path) #shujun
+    irf_path = args.irf_path
 
     start_time = time.time()
     print('************************************************************************', flush=True)
@@ -1131,62 +1181,120 @@ def main_function():
     print('************************************************************************', flush=True)
     if input_pattern == 1:
         print('================ Step 1: HMMER prediction has begun ==================', flush=True)
+        t1=time.time()
         hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir)
+        t2=time.time()
+        print('Step 1 mode-1::hmm_predict uses ',t2-t1,' s',flush=True)
+        t1=time.time()
         process_hmm_output_3(1e-10, input_genome_assembly_path, input_pattern, output_genome_assembly_path)
+        t2=time.time()
+        print('Step 1 mode-1::process_hmm_output_3 uses ',t2-t1,' s',flush=True)
     elif input_pattern == 2:
         print('================ Step 1: Structure search has begun ==================', flush=True)
+        t1=time.time()
         sine_finder(input_genome_assembly_path, script_dir)
+        t2=time.time()
+        print('Step 1 mode-2::sine_finder uses ',t2-t1,' s',flush=True)
+        t1=time.time()
         process_sine_finder(input_genome_assembly_path, input_sine_finder, output_genome_assembly_path, input_pattern)
+        t2=time.time()
+        print('Step 1 mode-2::process_sine_finder uses ',t2-t1,' s',flush=True)
     elif input_pattern == 3:
+        
         print('====== Step 1: HMMER prediction and structure search has begun =======', flush=True)
+         
+        t1=time.time()
         hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir)
+        t2=time.time()
+        print('Step 1 mode-3::hmm_predict uses ',t2-t1,' s',flush=True)
+        t1=time.time()
         process_hmm_output_3(1e-10, input_genome_assembly_path, input_pattern, output_genome_assembly_path)
+        t2=time.time()
+        print('Step 1 mode-3::process_hmm_output_3 uses ',t2-t1,' s',flush=True)
+        t1=time.time()
         sine_finder(input_genome_assembly_path, script_dir)
+        t2=time.time()
+        print('Step 1 mode-3::sine_finder uses ',t2-t1,' s',flush=True)
+        
+        t1=time.time()
         process_sine_finder(input_genome_assembly_path, input_sine_finder, output_genome_assembly_path, input_pattern)
+        t2=time.time()
+        print('Step 1 mode-3::process_sine_finder uses ',t2-t1,' s',flush=True)
+        
+        
+    
+    t1=time.time()
     merge_tsd_input(input_pattern, output_genome_assembly_path)
+    t2=time.time()
+    print('Step 1::merge_tsd_input uses ',t2-t1,' s',flush=True)
     print('\n======================== Step 1 has been done ========================\n\n', flush=True)
 
     print('================ Step 2: TSD identification has begun ================', flush=True)
+    t1=time.time()
     search_tsd(output_genome_assembly_path, script_dir)
     process_tsd_output(input_genome_assembly_path, output_genome_assembly_path)
+    t2=time.time()
+    print('Step 2 uses ',t2-t1,' s',flush=True)
     print('\n======================== Step 2 has been done ========================\n\n', flush=True)
 
     print('================ Step 3: MSA implementation has begun ================', flush=True)
+    t1=time.time()
+    
     multiple_sequence_alignment(1e-10, input_genome_assembly_path, output_genome_assembly_path,cpus)
+    
     process_blast_output_1(input_genome_assembly_path, input_factor_length, input_factor_copy_number,
                            input_max_shift, input_max_gap, input_min_copy_number,
                            1, output_genome_assembly_path, input_bound, input_figure)
+    
     process_blast_output_2(output_genome_assembly_path)
+    
+    t2=time.time()
+    print('Step 3 uses ',t2-t1,' s',flush=True)
 
     print('\n======================== Step 3 has been done ========================\n\n', flush=True)
 
     print('========= Step 4: RNA derived head identification has begun ==========', flush=True)
+    t1=time.time()
     blast_rna(output_genome_assembly_path, cpus, script_dir)
     process_rna(output_genome_assembly_path)
+    t2=time.time()
+    print('Step 4 uses ',t2-t1,' s',flush=True)
     print('\n========================= Step 4 has been done =======================\n\n', flush=True)
 
     print('=============== Step 5: Tandem repeat finder has begun ===============', flush=True)
+    t1=time.time()
     tandem_repeat_finder(output_genome_assembly_path)
     process_trf(0.5, output_genome_assembly_path, work_dir)
+    t2=time.time()
+    print('Step 5 uses ',t2-t1,' s',flush=True)
     print('\n======================== Step 5 has been done ========================\n\n', flush=True)
 
     print('=============== Step 6: Inverted repeat finder has begun =============', flush=True)
+    t1=time.time()
     extend_seq(input_genome_assembly_path, output_genome_assembly_path)
     inverted_repeat_finder(output_genome_assembly_path, irf_path)
     process_irf(output_genome_assembly_path)
+    t2=time.time()
+    print('Step 6 uses ',t2-t1,' s',flush=True)
     print('\n========================= Step 6 has been done =======================\n\n', flush=True)
 
     print('=============== Step 7: Sequences clustering has begun ===============', flush=True)
+    t1=time.time()
     cluster_sequences(output_genome_assembly_path,cpus)
+    t2=time.time()
+    print('Step 7 uses ',t2-t1,' s',flush=True)
     print('\n======================== Step 7 has been done ========================\n\n', flush=True)
 
     print('================= Step 8: Genome annotation has begun ================', flush=True)
+    t1=time.time()
     if input_figure == 'y':
         dirs = output_genome_assembly_path+'/Figures/'
         if not os.path.exists(dirs):
             os.makedirs(dirs)
         re_process_figure(output_genome_assembly_path)
     genome_annotate(input_genome_assembly_path, output_genome_assembly_path, input_non_redundant, rm_cpus) #shujun
+    t2=time.time()
+    print('Step 8 uses ',t2-t1,' s',flush=True)
     print('\n========================= Step 8 has been done =======================\n\n', flush=True)
 
     end_time = time.time()
