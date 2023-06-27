@@ -44,10 +44,8 @@ pip3 install -r requirements.txt
 # conda
 conda env create -f AnnoSINE.conda.yaml
 
-## download IRF
-mv irf305.linux.exe irf
-## obtain IRF path and give to AnnoSINE
-pwd
+## change the permission of IRF
+chmod 755 irf308.linux.exe
 ```
 
 # Usage
