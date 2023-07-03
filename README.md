@@ -72,6 +72,8 @@ positional arguments:
 
 optional arguments:
   -h, --help                   show this help message and exit
+  -e, --hmmer_evalue           Expectation value threshold for saving hits of homology search (default: 1e-10)
+  -v, --blast_evalue           Expectation value threshold for sequences alignment search (default: 1e-10)
   -l, --length_factor          Threshold of the local alignment length relative to the the BLAST query length (default: 0.3)
   -c, --copy_number_factor     Threshold of the copy number that determines the SINE boundary (default: 0.15)
   -s, --shift                  Maximum threshold of the boundary shift (default: 80)
