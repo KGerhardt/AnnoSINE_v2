@@ -54,6 +54,10 @@ chmod 755 irf308.linux.exe
 conda activate AnnoSINE
 python3 AnnoSINE.py [options] <mode> <input_filename> <output_filename>
 ```
+If the program stops in a certain step or has no output, this may result from the strict filtering cutoff. You can try the command below:
+```
+python3 AnnoSINE.py [options] <mode> -e 0.01 -minc 1 -s 150 <input_filename> <output_filename>
+```
 
 ## Argument
 ```
@@ -67,18 +71,19 @@ positional arguments:
   output_filename       output files path
 
 optional arguments:
-  -h, --help                 show this help message and exit
-  -l, --length_factor        Threshold of the local alignment length relative to the the BLAST query length (default: 0.3)
-  -c, --copy_number_factor   Threshold of the copy number that determines the SINE boundary (default: 0.15)
-  -s, --shift                Maximum threshold of the boundary shift (default: 80)
-  -g, --gap                  Maximum threshold of the trancated gap (default: 10)
-  -minc, --copy_number       Minimum threshold of the copy number for each element (default: 20)
-  -a, --animal               If set to 1, then Hmmer will search SINE using the animal hmm files from Dfam. (default: 0)
-  -b, --boundary             Output SINE seed boundaries based on TSD or MSA (default: msa)
-  -f, --figure           Output the SINE seed MSA figures and copy number profiles (y/n). Please note that this step may take a long time to process. (default: n)
-  -r, --non_redundant    Annotate SINE in the whole genome based on the non—redundant library (y/n) (default: y)
-  -t, --threads		 Threads for each tool in AnnoSINE (default: 36)
-  -irf, --irf_path	 Path to the irf program (default: '')
+  -h, --help                   show this help message and exit
+  -l, --length_factor          Threshold of the local alignment length relative to the the BLAST query length (default: 0.3)
+  -c, --copy_number_factor     Threshold of the copy number that determines the SINE boundary (default: 0.15)
+  -s, --shift                  Maximum threshold of the boundary shift (default: 80)
+  -g, --gap                    Maximum threshold of the trancated gap (default: 10)
+  -minc, --copy_number         Minimum threshold of the copy number for each element (default: 20)
+  -a, --animal                 If set to 1, then Hmmer will search SINE using the animal hmm files from Dfam. (default: 0)
+  -b, --boundary               Output SINE seed boundaries based on TSD or MSA (default: msa)
+  -f, --figure                 Output the SINE seed MSA figures and copy number profiles (y/n). Please note that this step may take a long time to process. (default: n)
+  -r, --non_redundant          Annotate SINE in the whole genome based on the non—redundant library (y/n) (default: y)
+  -t, --threads		              Threads for each tool in AnnoSINE (default: 36)
+  -irf, --irf_path	            Path to the irf program (default: '')
+  -rpm, --RepeatMasker_enable  If set to 0, then will not run RepearMasker (Step 8 for the code). (default: 1)
 ```
 
 ## Inputs
