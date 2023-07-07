@@ -433,8 +433,8 @@ def save_to_fna_1(filename, sequences, strands, ids, left_offset, right_offset, 
     with open(filename, 'a') as file:
         file.writelines(payload)
     if len(payload)==0:
-        print('No SINE can be detected! by HMM! Program exit.')
-        exit()
+        print('Warning! No SINE can be detected by HMM!')
+        #exit()
 
 
 def save_to_fna_2(filename, sequences, input_title, input_tsd, input_start, input_end):
