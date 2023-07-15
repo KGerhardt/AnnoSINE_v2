@@ -8,6 +8,7 @@ from argparse import RawTextHelpFormatter
 import matplotlib.pyplot as plt
 import operator
 import glob
+import uuid
 
 
 print('Example: python3 AnnoSINE.py 2 ../Input_Files/test.fasta ../Output_Files', flush=True)
@@ -897,13 +898,16 @@ def process_rna(out_genome_assembly_path):
                         rna_output_file.write(line.strip() + '\n')
 
 
-def tandem_repeat_finder(out_genome_assembly_path):
+def tandem_repeat_finder(uid,out_genome_assembly_path):
     #path = os.path.abspath(os.path.dirname(os.getcwd()))
-    path = os.path.split(os.path.abspath(__file__))[0]
+    #path = os.path.split(os.path.abspath(__file__))[0]
+    path=os.getcwd()
     os.system('trf '
-              + out_genome_assembly_path + '/Step4_rna_output.fasta '
+              + uid + '/Step4_rna_output.fasta '
               '2 5 7 80 10 10 2000 -d -h -l 6')
-    os.system('mv '+path+'/Step4_rna_output.fasta.2.5.7.80.10.10.2000.dat '+out_genome_assembly_path)
+    if os.path.exists(path+'/Step4_rna_output.fasta.2.5.7.80.10.10.2000.dat'):
+        os.system('mv '+path+'/Step4_rna_output.fasta.2.5.7.80.10.10.2000.dat '+out_genome_assembly_path)
+
 
 
 def process_trf(input_trf_prob, out_genome_assembly_path, work_dir):
@@ -1349,15 +1353,20 @@ def main_function():
     t2=time.time()
     print('Step 4 uses ',t2-t1,' s',flush=True)
     print('\n========================= Step 4 has been done =======================\n\n', flush=True)
-
+    uid=uuid.uuid1().hex 
+    if not os.path.exists(uid):
+        os.makedirs(uid)
+    os.system('cp '+output_genome_assembly_path+'/Step4_rna_output.fasta '+uid)
     print('=============== Step 5: Tandem repeat finder has begun ===============', flush=True)
     t1=time.time()
     if check_finished('Step5_trf',[work_dir+'/Step4_rna_output.fasta.2.5.7.80.10.10.2000.dat']) or at:
-        tandem_repeat_finder(output_genome_assembly_path)
+        #tandem_repeat_finder(output_genome_assembly_path)
+        tandem_repeat_finder(uid,output_genome_assembly_path)
     if check_finished('Step5_process_trf',[output_genome_assembly_path+'/Step5_trf_output.fasta']) or at:
         process_trf(0.5, output_genome_assembly_path, work_dir)
     t2=time.time()
     print('Step 5 uses ',t2-t1,' s',flush=True)
+    os.system('rm -rf '+uid)
     print('\n======================== Step 5 has been done ========================\n\n', flush=True)
 
     print('=============== Step 6: Inverted repeat finder has begun =============', flush=True)
