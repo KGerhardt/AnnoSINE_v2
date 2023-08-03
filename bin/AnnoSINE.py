@@ -40,6 +40,8 @@ parser.add_argument("-g", "--gap",  metavar='', type=int, default=10,
                     help="Maximum threshold of the truncated gap (default: 10)")
 parser.add_argument("-minc", "--copy_number", metavar='', type=int, default=20,
                     help="Minimum threshold of the copy number for each element (default: 20)")
+parser.add_argument("-numa", "--num_alignments", metavar='', type=int, default=5000,
+                    help="--num_alignments value for blast alignments (default: 5000)")
 
 #parser.add_argument("-maxb", "--base_copy_number", type=int, default=1,
                     #help="Maximum threshold of copy number for the first and last base (default: 1)")
@@ -449,7 +451,7 @@ def save_to_fna_2(filename, sequences, input_title, input_tsd, input_start, inpu
         file.writelines(payload)
 
 
-def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_assembly_path,cpus):
+def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_assembly_path,cpus,input_num_alignments):
     print('BLAST againist the genome assembly ...', flush=True)
     # make blastdb to allow blastn multithreading, shujun
     os.system('makeblastdb -input_type fasta -dbtype nucl -in ' + in_genome_assembly_path + ' > /dev/null 2>&1')
@@ -457,7 +459,7 @@ def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_ass
               '-db ' + in_genome_assembly_path + ' '
               '-out '+out_genome_assembly_path+'/Step3_blast_output.out '
               '-evalue ' + str(e_value) + ' '
-              '-num_alignments 50000 '
+              '-num_alignments '+str(input_num_alignments)+' '
               '-word_size 7 '
               '-gapopen 5 '
               '-gapextend 2 '
@@ -1225,6 +1227,7 @@ def main_function():
     input_max_shift = args.shift
     input_max_gap = args.gap
     input_min_copy_number = args.copy_number
+    input_num_alignments=args.num_alignments
     #input_pos = args.base_copy_number
     #trf_prob = args.probability
     input_ani=args.animal
@@ -1331,7 +1334,7 @@ def main_function():
     print('================ Step 3: MSA implementation has begun ================', flush=True)
     t1=time.time()
     if check_finished('Step3_MSA',[output_genome_assembly_path+'/Step3_blast_output.out']) or at:
-        multiple_sequence_alignment(input_blast_e_value, input_genome_assembly_path, output_genome_assembly_path,cpus)
+        multiple_sequence_alignment(input_blast_e_value, input_genome_assembly_path, output_genome_assembly_path,cpus,input_num_alignments)
     if check_finished('Step3_process_MSA',[output_genome_assembly_path+'/Step3_blast_process_output.fa']) or at:
         process_blast_output_1(input_genome_assembly_path, input_factor_length, input_factor_copy_number,
                            input_max_shift, input_max_gap, input_min_copy_number,
