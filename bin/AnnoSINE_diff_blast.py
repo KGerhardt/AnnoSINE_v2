@@ -415,6 +415,22 @@ def process_tsd_output(in_genome_assembly_path, out_genome_assembly_path):
                         blast_input_file.write(line+'\n')
                         count+=1
                     #blast_input_file.write(line)
+    blast_input_file.close()
+    f=open(out_genome_assembly_path+'/Step2_extend_blast_input.fa','r')
+    o=open(out_genome_assembly_path+'/Step2_extend_blast_input_rename.fa','w+')
+    c=1
+    while True:
+        line=f.readline().strip()
+        if not line:break
+        if re.search('>',line):
+            ele=line.split()
+            name=ele[0]+'_'+str(c)+' '+' '.join(ele[1:])
+            o.write(name+'\n')
+            c+=1
+        else:
+            o.write(line+'\n')
+    o.close()
+        
     if count==0:
         print('No sequences in Step2_extend_blast_input.fa! Please check! Exit.')
         exit()
@@ -455,7 +471,7 @@ def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_ass
     print('BLAST againist the genome assembly ...', flush=True)
     # make blastdb to allow blastn multithreading, shujun
     os.system('makeblastdb -input_type fasta -dbtype nucl -in ' + in_genome_assembly_path + ' > /dev/null 2>&1')
-    os.system('blastn -query '+out_genome_assembly_path+'/Step2_extend_blast_input.fa '
+    os.system('blastn -query '+out_genome_assembly_path+'/Step2_extend_blast_input_rename.fa '
               '-db ' + in_genome_assembly_path + ' '
               '-out '+out_genome_assembly_path+'/Step3_blast_output.out '
               '-evalue ' + str(e_value) + ' '
@@ -495,16 +511,20 @@ def process_blast_output_1(in_genome_assembly_path, factor_length, factor_copy, 
                 sine_info.append(line)
     output_genome_sequence = read_genome_assembly(in_genome_assembly_path)
     # ================================ Read BLAST Output ==========================
+    #exit()
     blast_inter = []
     length = []
     filename_1 = out_genome_assembly_path+'/Step3_blast_output.out'
     tem=[]
+    dused={}
     with open(filename_1) as blast_output_file_1:
         lines = blast_output_file_1.readlines()
         for line in lines:
             ele=line.split()
             #print(ele)
-            if float(ele[2])==100 and int(ele[6])==1:
+            #if float(ele[2])==100 and int(ele[6])==1:
+            if ele[0] not in dused:
+                dused[ele[0]]=''
                 if len(tem)==0:
                     tem.append({'start':int(ele[6])-1,'end':int(ele[7]),'id':ele[1]})
                     length.append(int(ele[3]))
@@ -517,6 +537,7 @@ def process_blast_output_1(in_genome_assembly_path, factor_length, factor_copy, 
                 tem.append({'start':int(ele[6])-1,'end':int(ele[7]),'id':ele[1]})
 
     blast_inter.append(tem)
+    #print(blast_inter)
     #print(len(blast_inter))
     #print(len(length))
     #exit()
@@ -1179,15 +1200,30 @@ def check_finished(pre,arr):
     if a==False:
         print(pre+' already finished! Will skip to the next step!')
     return a
+
+def convert_ingenome(ingenome):
+    #uid=uuid.uuid1().hex
+    ig=os.path.basename(ingenome)
+    name, ext = os.path.splitext(ig)
+    nf=name+'_sl'+ext
+    nd=re.sub(ig,nf,ingenome)
+    #print('seqtk seq '+ingenome+' > '+nd)
+    os.system('seqtk seq '+ingenome+' > '+nd)
+    res=nd
+    return res
             
 
 def main_function():
     print('Please input the path of genomic sequence', flush=True) # print out message immediately
     input_pattern = args.mode
     input_genome_assembly_path = args.input_filename
+    input_genome_assembly_path= convert_ingenome(input_genome_assembly_path)
+    #exit()
+
     output_genome_assembly_path = args.output_filename
     ensure_path(output_genome_assembly_path)
     bfix=os.path.splitext(input_genome_assembly_path)[-1]
+    
     input_sine_finder = input_genome_assembly_path.replace(bfix, '')+'-matches.fasta'
     #print(input_sine_finder)
     #exit()
@@ -1220,7 +1256,9 @@ def main_function():
     #irf_path = os.path.dirname(args.irf_path) #shujun
     irf_path = args.irf_path
     rpm=args.RepeatMasker_enable
-
+    #input_genome_assembly_path,input_genome_assembly_path_dir= convert_ingenome(input_genome_assembly_path)
+    #print(input_genome_assembly_path)
+    #exit()
     start_time = time.time()
     print('************************************************************************', flush=True)
     print('*************************** AnnoSINE START! ****************************', flush=True)
@@ -1386,6 +1424,7 @@ def main_function():
     print('************************************************************************', flush=True)
     print('************************** AnnoSINE COMPLETE! **************************', flush=True)
     print('************************************************************************', flush=True)
+    #os.system('rm -rf '+input_genome_assembly_path_dir)
 
 
 if __name__ == '__main__':
