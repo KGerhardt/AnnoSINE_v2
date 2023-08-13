@@ -1187,25 +1187,29 @@ def ensure_path(path):
         os.mkdir(path)
 
 
-def check_hmm_finished(pre,idir):
+def check_hmm_finished(pre,idir,at):
     a=True
     if os.path.exists(idir):
         for filename in os.listdir(idir):
             if not os.path.getsize(idir+'/'+a) == 0:
                 a=False
                 break
-    if a==False:
+    if a==False and at==False:
         print(pre+' already finished! Will skip to the next step!')
+    if a==False and at==True:
+        print(pre+' already finished! Will regenerate the result cause -auto is not set.')
     return a
 
-def check_finished(pre,arr):
+def check_finished(pre,arr,at):
     a=True
     for a in arr:
         if os.path.exists(a):
             if not os.path.getsize(a) == 0:
                 a=False
-    if a==False:
+    if a==False and at==False:
         print(pre+' already finished! Will skip to the next step!')
+    if a==False and at==True:
+        print(pre+' already finished! Will regenerate the result cause -auto is not set.')
     return a
             
 
@@ -1256,7 +1260,7 @@ def main_function():
     if input_pattern == 1:
         print('================ Step 1: HMMER prediction has begun ==================', flush=True)
         #if check_hmm_finished('S1_hmm_predict',work_dir+'/HMM_out'):
-        if check_finished('Step1_process_hmm',[output_genome_assembly_path+'/Step1_extend_tsd_input_1.fa']) or at:
+        if check_finished('Step1_process_hmm',[output_genome_assembly_path+'/Step1_extend_tsd_input_1.fa'],at) or at:
             t1=time.time()
             hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir,input_ani)
             t2=time.time()
@@ -1271,7 +1275,7 @@ def main_function():
                     exit()
     elif input_pattern == 2:
         print('================ Step 1: Structure search has begun ==================', flush=True)
-        if check_finished('Step1_sine_part',[output_genome_assembly_path+'/Step1_extend_tsd_input_2.fa']) or at:
+        if check_finished('Step1_sine_part',[output_genome_assembly_path+'/Step1_extend_tsd_input_2.fa'],at) or at:
             t1=time.time()
             sine_finder(input_genome_assembly_path, script_dir)
             t2=time.time()
@@ -1287,7 +1291,7 @@ def main_function():
     elif input_pattern == 3:
         
         print('====== Step 1: HMMER prediction and structure search has begun =======', flush=True)
-        if check_finished('Step1_process_hmm',[output_genome_assembly_path+'/Step1_extend_tsd_input_1.fa']) or at:
+        if check_finished('Step1_process_hmm',[output_genome_assembly_path+'/Step1_extend_tsd_input_1.fa'],at) or at:
             t1=time.time()
             hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir,input_ani)
             t2=time.time()
@@ -1299,7 +1303,7 @@ def main_function():
             if os.path.exists(output_genome_assembly_path+'/Step1_extend_tsd_input_1.fa'):
                 if os.path.getsize(output_genome_assembly_path+'/Step1_extend_tsd_input_1.fa') == 0:
                     print('Note! HMM can not find any matched SINE!')
-        if check_finished('Step1_sine_part',[output_genome_assembly_path+'/Step1_extend_tsd_input_2.fa']) or at:
+        if check_finished('Step1_sine_part',[output_genome_assembly_path+'/Step1_extend_tsd_input_2.fa'],at) or at:
             t1=time.time()
             sine_finder(input_genome_assembly_path, script_dir)
             t2=time.time()
@@ -1314,7 +1318,7 @@ def main_function():
                     print('Note! SINEfinder can not find any SINE!')
         
         
-    if check_finished('Step1_merge_part',[output_genome_assembly_path+'/Step1_extend_tsd_input.fa']) or at:
+    if check_finished('Step1_merge_part',[output_genome_assembly_path+'/Step1_extend_tsd_input.fa'],at) or at:
         t1=time.time()
         merge_tsd_input(input_pattern, output_genome_assembly_path)
         t2=time.time()
@@ -1323,9 +1327,9 @@ def main_function():
 
     print('================ Step 2: TSD identification has begun ================', flush=True)
     t1=time.time()
-    if check_finished('Step2_search_tsd',[output_genome_assembly_path+'/Step2_tsd.txt']) or at:
+    if check_finished('Step2_search_tsd',[output_genome_assembly_path+'/Step2_tsd.txt'],at) or at:
         search_tsd(output_genome_assembly_path, script_dir)
-    if check_finished('Step2_process_tsd',[output_genome_assembly_path+'/Step2_tsd_output.fa']) or at:
+    if check_finished('Step2_process_tsd',[output_genome_assembly_path+'/Step2_tsd_output.fa'],at) or at:
         process_tsd_output(input_genome_assembly_path, output_genome_assembly_path)
     t2=time.time()
     print('Step 2 uses ',t2-t1,' s',flush=True)
@@ -1333,13 +1337,13 @@ def main_function():
 
     print('================ Step 3: MSA implementation has begun ================', flush=True)
     t1=time.time()
-    if check_finished('Step3_MSA',[output_genome_assembly_path+'/Step3_blast_output.out']) or at:
+    if check_finished('Step3_MSA',[output_genome_assembly_path+'/Step3_blast_output.out'],at) or at:
         multiple_sequence_alignment(input_blast_e_value, input_genome_assembly_path, output_genome_assembly_path,cpus,input_num_alignments)
-    if check_finished('Step3_process_MSA',[output_genome_assembly_path+'/Step3_blast_process_output.fa']) or at:
+    if check_finished('Step3_process_MSA',[output_genome_assembly_path+'/Step3_blast_process_output.fa'],at) or at:
         process_blast_output_1(input_genome_assembly_path, input_factor_length, input_factor_copy_number,
                            input_max_shift, input_max_gap, input_min_copy_number,
                            1, output_genome_assembly_path, input_bound, input_figure)
-    if check_finished('Step3_process_MSA_p2',[output_genome_assembly_path+'/Step4_rna_input.fasta']) or at:
+    if check_finished('Step3_process_MSA_p2',[output_genome_assembly_path+'/Step4_rna_input.fasta'],at) or at:
         process_blast_output_2(output_genome_assembly_path)
     
     t2=time.time()
@@ -1349,9 +1353,9 @@ def main_function():
 
     print('========= Step 4: RNA derived head identification has begun ==========', flush=True)
     t1=time.time()
-    if check_finished('Step4_blast_rna',[output_genome_assembly_path+'/Step4_rna_output.out']) or at:
+    if check_finished('Step4_blast_rna',[output_genome_assembly_path+'/Step4_rna_output.out'],at) or at:
         blast_rna(output_genome_assembly_path, cpus, script_dir)
-    if check_finished('Step4_process_blast_rna',[output_genome_assembly_path+'/Step4_rna_output.fasta']) or at:
+    if check_finished('Step4_process_blast_rna',[output_genome_assembly_path+'/Step4_rna_output.fasta'],at) or at:
         process_rna(output_genome_assembly_path)
     t2=time.time()
     print('Step 4 uses ',t2-t1,' s',flush=True)
@@ -1362,10 +1366,10 @@ def main_function():
     os.system('cp '+output_genome_assembly_path+'/Step4_rna_output.fasta '+uid)
     print('=============== Step 5: Tandem repeat finder has begun ===============', flush=True)
     t1=time.time()
-    if check_finished('Step5_trf',[work_dir+'/Step4_rna_output.fasta.2.5.7.80.10.10.2000.dat']) or at:
+    if check_finished('Step5_trf',[work_dir+'/Step4_rna_output.fasta.2.5.7.80.10.10.2000.dat'],at) or at:
         #tandem_repeat_finder(output_genome_assembly_path)
         tandem_repeat_finder(uid,output_genome_assembly_path)
-    if check_finished('Step5_process_trf',[output_genome_assembly_path+'/Step5_trf_output.fasta']) or at:
+    if check_finished('Step5_process_trf',[output_genome_assembly_path+'/Step5_trf_output.fasta'],at) or at:
         process_trf(0.5, output_genome_assembly_path, work_dir)
     t2=time.time()
     print('Step 5 uses ',t2-t1,' s',flush=True)
@@ -1374,11 +1378,11 @@ def main_function():
 
     print('=============== Step 6: Inverted repeat finder has begun =============', flush=True)
     t1=time.time()
-    if check_finished('Step6_extend_seq',[output_genome_assembly_path+'/Step6_irf_input.fasta']) or at:
+    if check_finished('Step6_extend_seq',[output_genome_assembly_path+'/Step6_irf_input.fasta'],at) or at:
         extend_seq(input_genome_assembly_path, output_genome_assembly_path)
-    if check_finished('Step6_irf',[output_genome_assembly_path+'/Step6_irf_input.fasta.2.3.5.80.10.20.500000.10000.dat']) or at:
+    if check_finished('Step6_irf',[output_genome_assembly_path+'/Step6_irf_input.fasta.2.3.5.80.10.20.500000.10000.dat'],at) or at:
         inverted_repeat_finder(output_genome_assembly_path, irf_path)
-    if check_finished('Step6_process_irf',[output_genome_assembly_path+'/Step6_irf_output.fasta']) or at:
+    if check_finished('Step6_process_irf',[output_genome_assembly_path+'/Step6_irf_output.fasta'],at) or at:
         process_irf(output_genome_assembly_path)
     t2=time.time()
     print('Step 6 uses ',t2-t1,' s',flush=True)
@@ -1386,7 +1390,7 @@ def main_function():
 
     print('=============== Step 7: Sequences clustering has begun ===============', flush=True)
     t1=time.time()
-    if check_finished('Step7_cluster_seq',[output_genome_assembly_path+'/Step7_cluster_output.fasta']) or at:
+    if check_finished('Step7_cluster_seq',[output_genome_assembly_path+'/Step7_cluster_output.fasta'],at) or at:
         cluster_sequences(output_genome_assembly_path,cpus)
     t2=time.time()
     print('Step 7 uses ',t2-t1,' s',flush=True)
