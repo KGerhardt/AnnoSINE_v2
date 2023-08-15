@@ -177,9 +177,71 @@ def process_hmm_output_1(out_file, threshold_hmm_e_value, script_dir):
 
 def merge_same_hmm_output(hmm_output_record):
     print('Merging the same hmm prediction ...', flush=True)
+    update_positions = {}
+    # check=0
+    # check2=0
+    # check3=0
+    for num_record in hmm_output_record:
+        record_id = num_record['id']
+        # if record_id=='chr16':
+        #     check+=1
+
+        if record_id in update_positions:
+            add_pos = True
+            for index in range(len(update_positions[record_id])):
+                update_pos = update_positions[record_id][index]
+                if (num_record['start'] >= update_pos['start'] and num_record['end'] <= update_pos['end']) or \
+                        (num_record['start'] <= update_pos['start'] and num_record['end'] > update_pos['end']) or \
+                        (num_record['start'] < update_pos['start'] and num_record['end'] == update_pos['end']) or \
+                        (((update_pos['start'] < num_record['start'] < update_pos['end'] < num_record['end'] and
+                           abs(num_record['start'] - update_pos['end']) >= 0.5 * abs(
+                                    num_record['start'] - num_record['end'])) or
+                          (num_record['start'] < update_pos['start'] < num_record['end'] < update_pos['end']) and
+                          abs(update_pos['start'] - num_record['end']) >= 0.5 * abs(
+                                    num_record['start'] - num_record['end']))):
+                    if num_record['strand'] == update_pos['strand']:
+                        update_positions[record_id][index] = {'start': min(num_record['start'], update_pos['start']),
+                                                       'end': max(num_record['end'], update_pos['end']),
+                                                       'id': num_record['id'],
+                                                       'strand': num_record['strand'],
+                                                       'family': num_record['family'] + '/' + update_pos['family'],
+                                                       'e_value': num_record['e_value']}
+                        add_pos = False
+                        # if record_id == 'chr16':
+                        #     print('check2-numrecord-', check2, ':', num_record)
+                        #     print('check2-posrecord-', check2, ':', update_pos)
+                        #     check2+=1
+                        break
+            if add_pos:
+                update_positions[record_id].append(num_record)
+                # if record_id == 'chr16':
+                #     check3+=1
+
+        else:
+            update_positions[record_id] = [num_record]
+    # print('Check:',check,check2,check3)
+    # exit()
+    # print('Output merged array...')
+    # t1=time.time()
+    res = [e for r in update_positions for e in update_positions[r]]
+    t2=time.time()
+    # print('Output uses ',t2-t1)
+    return res
+
+
+
+
+
+def merge_same_hmm_output_old(hmm_output_record):
+    print('Merging the same hmm prediction ...', flush=True)
     update_positions = []
+    check = 0
+    check2 = 0
+    check3=0
     for num_record in hmm_output_record:
         add_pos = True
+        if num_record['id']=='chr16':
+            check+=1
         for index in range(len(update_positions)):
             update_pos = update_positions[index]
             if num_record['id'] == update_pos['id'] and \
@@ -200,9 +262,17 @@ def merge_same_hmm_output(hmm_output_record):
                                                'strand': num_record['strand'],
                                                'family': num_record['family'] + '/' + update_pos['family'],
                                                'e_value': num_record['e_value']}
+                    if num_record['id'] == 'chr16':
+                        print('check2-numrecord-',check2,':',num_record)
+                        print('check2-posrecord-', check2, ':', update_pos)
+                        check2+=1
                     break
         if add_pos:
             update_positions.append(num_record)
+            if num_record['id'] == 'chr16':
+                check3+=1
+    print('Check:', check, check2,check3)
+    exit()
     return update_positions
 
 
@@ -236,12 +306,30 @@ def process_hmm_output_3(threshold_hmm_e_value, in_genome_assembly_path, pattern
     e_value = {}
     pre_strand = {}
     input_tsd_sequences = {}
+    t1=time.time()
     output_genome_sequence = read_genome_assembly(in_genome_assembly_path)
+    t2=time.time()
+    print('process_hmm_output_3:read_genome_assembly uses',t2-t1,flush=True)
+    t1=time.time()
     update_hmm_record = process_hmm_output_2(threshold_hmm_e_value, script_dir)[0]
+    t2=time.time()
+    print('process_hmm_output_3:process_hmm_output_2_r1 uses',t2-t1,flush=True)
+    t1=time.time()
     family_name = process_hmm_output_2(threshold_hmm_e_value, script_dir)[1]
+    t2=time.time()
+    print('process_hmm_output_3:process_hmm_output_2_r2 uses',t2-t1,flush=True)
+    t1=time.time()
     family_count = process_hmm_output_2(threshold_hmm_e_value, script_dir)[2]
+    t2=time.time()
+    print('process_hmm_output_3:process_hmm_output_2_r3 uses',t2-t1,flush=True)
+    t1=time.time()
+    #print(update_hmm_record)
+    #exit()
     update_hmm_output = merge_same_hmm_output(update_hmm_record)
-
+    t2=time.time()
+    print('process_hmm_output_3:merge_same_hmm_output uses',t2-t1,flush=True)
+    
+    t1=time.time()
     for num_return_pos in range(len(update_hmm_output)):
         pre_num = count
         start[pre_num] = update_hmm_output[num_return_pos]['start']
@@ -253,6 +341,8 @@ def process_hmm_output_3(threshold_hmm_e_value, in_genome_assembly_path, pattern
                                                                       update_hmm_output[num_return_pos]['end']+50]
         pre_strand[pre_num] = update_hmm_output[num_return_pos]['strand']
         count += 1
+    t2=time.time()
+    print('process_hmm_output_3:for_loop uses',t2-t1,flush=True)
 
     new_start = list(start.values())
     new_end = list(end.values())
@@ -1308,6 +1398,7 @@ def main_function():
             process_hmm_output_3(input_hmm_e_value, input_genome_assembly_path, input_pattern, output_genome_assembly_path)
             t2=time.time()
             print('Step 1 mode-3::process_hmm_output_3 uses ',t2-t1,' s',flush=True)
+            #exit()
             if os.path.exists(output_genome_assembly_path+'/Step1_extend_tsd_input_1.fa'):
                 if os.path.getsize(output_genome_assembly_path+'/Step1_extend_tsd_input_1.fa') == 0:
                     print('Note! HMM can not find any matched SINE!')
@@ -1332,6 +1423,7 @@ def main_function():
         t2=time.time()
         print('Step 1::merge_tsd_input uses ',t2-t1,' s',flush=True)
     print('\n======================== Step 1 has been done ========================\n\n', flush=True)
+    #exit()
 
     print('================ Step 2: TSD identification has begun ================', flush=True)
     t1=time.time()
