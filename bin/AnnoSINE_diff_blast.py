@@ -1484,7 +1484,7 @@ def main_function():
     t1=time.time()
     if check_finished('Step6_extend_seq',[output_genome_assembly_path+'/Step6_irf_input.fasta'],at) or at:
         extend_seq(input_genome_assembly_path, output_genome_assembly_path)
-    if check_finished('Step6_irf',[output_genome_assembly_path+'/Step6_irf_input.fasta.2.3.5.80.10.20.500000.10000.dat']) or at:
+    if check_finished('Step6_irf',[output_genome_assembly_path+'/Step6_irf_input.fasta.2.3.5.80.10.20.500000.10000.dat'],at) or at:
         inverted_repeat_finder(output_genome_assembly_path, irf_path)
     if check_finished('Step6_process_irf',[output_genome_assembly_path+'/Step6_irf_output.fasta'],at) or at:
         process_irf(output_genome_assembly_path)
