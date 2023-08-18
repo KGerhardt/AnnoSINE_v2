@@ -1294,10 +1294,10 @@ def check_finished(pre,arr,at):
     return a
 
 def convert_ingenome(ingenome):
-    #uid=uuid.uuid1().hex
+    uid=uuid.uuid1().hex
     ig=os.path.basename(ingenome)
     name, ext = os.path.splitext(ig)
-    nf=name+'_sl'+ext
+    nf=name+'_'+uid+ext
     nd=re.sub(ig,nf,ingenome)
     #print('seqtk seq '+ingenome+' > '+nd)
     os.system('seqtk seq '+ingenome+' > '+nd)
