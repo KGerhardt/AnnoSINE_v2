@@ -1295,10 +1295,11 @@ def check_finished(pre,arr,at):
 
 def convert_ingenome(ingenome):
     uid=uuid.uuid1().hex
+    fdir=os.path.dirname(ingnome)
     ig=os.path.basename(ingenome)
     name, ext = os.path.splitext(ig)
     nf=name+'_'+uid+ext
-    nd=re.sub(ig,nf,ingenome)
+    nd=fdir+'/'+nf
     #print('seqtk seq '+ingenome+' > '+nd)
     os.system('seqtk seq '+ingenome+' > '+nd)
     res=nd
