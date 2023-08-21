@@ -1295,7 +1295,7 @@ def check_finished(pre,arr,at):
 
 def convert_ingenome(ingenome):
     uid=uuid.uuid1().hex
-    fdir=os.path.dirname(ingnome)
+    fdir=os.path.dirname(ingenome)
     ig=os.path.basename(ingenome)
     name, ext = os.path.splitext(ig)
     nf=name+'_'+uid+ext
