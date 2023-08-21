@@ -46,7 +46,7 @@ parser.add_argument("-numa", "--num_alignments", metavar='', type=int, default=5
 #parser.add_argument("-maxb", "--base_copy_number", type=int, default=1,
                     #help="Maximum threshold of copy number for the first and last base (default: 1)")
 parser.add_argument("-a", "--animal",metavar='', type=int, default=0,
-                    help='If set to 1, then Hmmer will search SINE using the animal hmm files from Dfam. (default: 0)')
+                    help='If set to 1, then Hmmer will search SINE using the animal hmm files from Dfam. If set to 2, then Hmmer will search SINE using both the plant and animal hmm files. (default: 0)')
 parser.add_argument("-b", "--boundary", metavar='', type=str, default='msa',
                     help="Output SINE seed boundaries based on TSD or MSA (default: msa)")
 parser.add_argument("-f", "--figure", metavar='', type=str, default='n',
@@ -71,9 +71,20 @@ work_dir=args.output_filename
 def hmm_predict(genome_assembly_path, cpus, script_dir, work_dir,input_ani): #shujun
     if input_ani==0:
         db='Family_Seq'
-    else:
+    elif input_ani==1:
         db='Dfam_hmm'
-    dir_hmm = os.listdir(script_dir + '/../'+db+'/') #shujun
+    elif input_ani==2:
+        db1='Family_Seq'
+        db2='Dfam_hmm'
+    if not input_ani==2:
+        dir_hmm = os.listdir(script_dir + '/../'+db+'/') #shujun
+    else:
+        d1=os.listdir(script_dir + '/../'+db1+'/')
+        d2=os.listdir(script_dir + '/../'+db2+'/')
+        dir_hmm=d1+d2
+    #print(genome_assembly_path)
+    #exit()
+
     os.system('mkdir ' + work_dir + '/HMM_out > /dev/null 2>&1') #shujun
     for num_dir_hmm in range(len(dir_hmm)):
         if dir_hmm[num_dir_hmm] != '.DS_Store':
@@ -1299,8 +1310,12 @@ def convert_ingenome(ingenome):
     ig=os.path.basename(ingenome)
     name, ext = os.path.splitext(ig)
     nf=name+'_'+uid+ext
-    nd=fdir+'/'+nf
+    if fdir=='':
+        nd=nf
+    else:
+        nd=fdir+'/'+nf
     #print('seqtk seq '+ingenome+' > '+nd)
+    #exit()
     os.system('seqtk seq '+ingenome+' > '+nd)
     res=nd
     return res
