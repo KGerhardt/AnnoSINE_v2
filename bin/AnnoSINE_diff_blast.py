@@ -94,11 +94,21 @@ def hmm_predict(genome_assembly_path, cpus, script_dir, work_dir,input_ani): #sh
                 with open(clear_filename, "r+") as clear_f:
                     clear_f.seek(0)
                     clear_f.truncate()
-            os.system(
-                # output to work directory instead of program directory, shujun
-                'nhmmer --cpu ' + str(cpus) + ' -o ' + work_dir + '/HMM_out/' + dir_hmm[num_dir_hmm] + '.out ' 
-                + script_dir + '/../'+db+'/' + dir_hmm[num_dir_hmm] + '/' + dir_hmm[num_dir_hmm] + '.hmm '
-                + genome_assembly_path)
+            if not input_ani==2:
+                os.system(
+                    # output to work directory instead of program directory, shujun
+                    'nhmmer --cpu ' + str(cpus) + ' -o ' + work_dir + '/HMM_out/' + dir_hmm[num_dir_hmm] + '.out ' 
+                    + script_dir + '/../'+db+'/' + dir_hmm[num_dir_hmm] + '/' + dir_hmm[num_dir_hmm] + '.hmm '
+                    + genome_assembly_path)
+            else:
+                if os.path.exists(script_dir +'/../'+db1+'/' + dir_hmm[num_dir_hmm]):
+                    db=db1
+                if os.path.exists(script_dir +'/../'+db2+'/' + dir_hmm[num_dir_hmm]):
+                    db=db2
+                os.system(
+                    'nhmmer --cpu ' + str(cpus) + ' -o ' + work_dir + '/HMM_out/' + dir_hmm[num_dir_hmm] + '.out '
+                    + script_dir + '/../'+db+'/' + dir_hmm[num_dir_hmm] + '/' + dir_hmm[num_dir_hmm] + '.hmm '
+                    + genome_assembly_path)
 
 
 def read_genome_assembly(genome_assembly_path):
@@ -958,9 +968,9 @@ def process_rna(out_genome_assembly_path):
             if rna_id[num][0] in rna_database[0]:
                 hit_record.append('tRNA')
             elif rna_id[num][0] in rna_database[1]:
-                hit_record.append('5S rRNA')
+                hit_record.append('5S_rRNA')
             elif rna_id[num][0] in rna_database[2]:
-                hit_record.append('7SL RNA')
+                hit_record.append('7SL_RNA')
             else:
                 hit_record.append('Unknown')
         else:
@@ -988,10 +998,23 @@ def process_rna(out_genome_assembly_path):
                 if flag:
                     if '>' in line:
                         num += 1
-                        new_line = line.strip() + '|' + hit_record[num].strip().replace('RNA', '') + '\n'
+                        #new_line = line.strip() + '|' + hit_record[num].strip().replace('RNA', '') + '\n'
+                        #print(line.strip())
+                        '''
+                        ele=line.strip().split()
+                        #print(ele)
+                        ne=ele[0].split()
+                        ne[0]=ne[0]+'#SINE/'+hit_record[num].strip()
+                        ele[0]=' '.join(ne)
+                        
+                        line=' '.join(ele)
+                        #print(line)
+                        '''
+                        new_line = line.strip() + '|' + hit_record[num].strip() + '\n'
                         rna_output_file.write(new_line)
                     else:
                         rna_output_file.write(line.strip() + '\n')
+            #exit()
 
 
 def tandem_repeat_finder(uid,out_genome_assembly_path):
@@ -1076,6 +1099,8 @@ def extend_seq(in_genome_assembly_path, out_genome_assembly_path):
             if line[0] == '>':
                 title.append(line.strip())
                 seq_id = line.split()[0].replace('>', '')
+                #print(seq_id)
+                #seq_id= re.sub('#.*','',seq_id) # Herui New add for header
                 sine_start = int(line.split('|')[2].split(':')[1])
                 sine_end = int(line.split('|')[3].split(':')[1])
                 if abs(sine_end-sine_start) >= 200:
@@ -1176,7 +1201,8 @@ def cluster_sequences(out_genome_assembly_path,cpus):
             num = 0
             for line in f_1:
                 if line[0] == '>':
-                    new_line = f'>SINE_{num} ' + line.replace('>', '')
+                    sa=re.split('\|',line.strip())
+                    new_line = f'>SINE_{num}#SINE/'+sa[-1]+' ' + line.replace('>', '')
                     f_2.write(new_line)
                     num += 1
                 else:
