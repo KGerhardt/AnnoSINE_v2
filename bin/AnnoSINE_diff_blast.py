@@ -1340,9 +1340,9 @@ def convert_ingenome(ingenome):
         nd=nf
     else:
         nd=fdir+'/'+nf
-    print('seqtk seq '+ingenome+' > '+nd)
+    #print('seqtk seq '+ingenome+' > '+nd)
     #exit()
-    #os.system('seqtk seq '+ingenome+' > '+nd)
+    os.system('seqtk seq '+ingenome+' > '+nd)
     res=nd
     return res
             
