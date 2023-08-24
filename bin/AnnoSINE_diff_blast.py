@@ -1340,9 +1340,9 @@ def convert_ingenome(ingenome):
         nd=nf
     else:
         nd=fdir+'/'+nf
-    #print('seqtk seq '+ingenome+' > '+nd)
+    print('seqtk seq '+ingenome+' > '+nd)
     #exit()
-    os.system('seqtk seq '+ingenome+' > '+nd)
+    #os.system('seqtk seq '+ingenome+' > '+nd)
     res=nd
     return res
             
@@ -1352,13 +1352,18 @@ def main_function():
     input_pattern = args.mode
     input_genome_assembly_path = args.input_filename
     input_genome_assembly_path= convert_ingenome(input_genome_assembly_path)
+    #print(input_genome_assembly_path)
     #exit()
 
     output_genome_assembly_path = args.output_filename
     ensure_path(output_genome_assembly_path)
-    bfix=os.path.splitext(input_genome_assembly_path)[-1]
+    #bfix=os.path.splitext(input_genome_assembly_path)[-1]
+    pre=os.path.splitext(input_genome_assembly_path)[0]
+    #print(pre)
+    #print(bfix)
     
-    input_sine_finder = input_genome_assembly_path.replace(bfix, '')+'-matches.fasta'
+    #input_sine_finder = input_genome_assembly_path.replace(bfix, '')+'-matches.fasta'
+    input_sine_finder = pre+'-matches.fasta'
     #print(input_sine_finder)
     #exit()
 
