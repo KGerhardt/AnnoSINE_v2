@@ -153,7 +153,10 @@ def process_hmm_output_1(out_file, threshold_hmm_e_value, script_dir):
             if 'inclusion threshold' in line or 'No hits detected' in line or line == '\n':
                 break
             else:
-                hmm_predict_record_unsort.append(line.split())
+                check=re.sub('-','',line)
+                check=check.strip()
+                if not check=='':
+                    hmm_predict_record_unsort.append(line.split())
     #print(ani)
     if ani==1:
          hmm_predict_record_unsort = []
@@ -165,10 +168,21 @@ def process_hmm_output_1(out_file, threshold_hmm_e_value, script_dir):
                     break
                 if not line:break
                 else:
-                    hmm_predict_record_unsort.append(line.split())
+                    check=re.sub('-','',line) 
+                    check=check.strip()
+                    '''
+                    check=0
+                    for e in line.split():
+                        if not re.search('-',e):
+                            check=1
+                    '''
+                        
+                    if not check=='':
+                        hmm_predict_record_unsort.append(line.split())
     #print(hmm_predict_record_unsort)
     #exit()
     if [] not in hmm_predict_record_unsort:
+        #print(hmm_predict_record_unsort)
         out_data = sorted(hmm_predict_record_unsort, key=lambda x: int(x[4]))
         #print(out_data)
         for i in range(len(out_data)):
@@ -193,6 +207,7 @@ def process_hmm_output_1(out_file, threshold_hmm_e_value, script_dir):
                     if float(out_data[i][0]) <= 1:
                         hmm_predict_family_number += 1
     #print(hmm_predict_record_sort)
+    #exit()
     return hmm_predict_record_sort, hmm_predict_family_number
 
 
