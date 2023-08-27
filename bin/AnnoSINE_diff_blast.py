@@ -97,7 +97,7 @@ def hmm_predict(genome_assembly_path, cpus, script_dir, work_dir,input_ani,input
             if not input_ani==2:
                 os.system(
                     # output to work directory instead of program directory, shujun
-                    'nhmmer --cpu ' + str(cpus) +' -E '+input_hmm_e_value+ ' -o ' + work_dir + '/HMM_out/' + dir_hmm[num_dir_hmm] + '.out ' 
+                    'nhmmer --cpu ' + str(cpus) +' -E '+str(input_hmm_e_value)+ ' -o ' + work_dir + '/HMM_out/' + dir_hmm[num_dir_hmm] + '.out ' 
                     + script_dir + '/../'+db+'/' + dir_hmm[num_dir_hmm] + '/' + dir_hmm[num_dir_hmm] + '.hmm '
                     + genome_assembly_path)
             else:
@@ -106,7 +106,7 @@ def hmm_predict(genome_assembly_path, cpus, script_dir, work_dir,input_ani,input
                 if os.path.exists(script_dir +'/../'+db2+'/' + dir_hmm[num_dir_hmm]):
                     db=db2
                 os.system(
-                    'nhmmer --cpu ' + str(cpus) + ' -E '+input_hmm_e_value+' -o ' + work_dir + '/HMM_out/' + dir_hmm[num_dir_hmm] + '.out '
+                    'nhmmer --cpu ' + str(cpus) + ' -E '+str(input_hmm_e_value)+' -o ' + work_dir + '/HMM_out/' + dir_hmm[num_dir_hmm] + '.out '
                     + script_dir + '/../'+db+'/' + dir_hmm[num_dir_hmm] + '/' + dir_hmm[num_dir_hmm] + '.hmm '
                     + genome_assembly_path)
 
