@@ -68,7 +68,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__)) #shujun
 #work_dir = os.getcwd()
 work_dir=args.output_filename
 
-def hmm_predict(genome_assembly_path, cpus, script_dir, work_dir,input_ani): #shujun
+def hmm_predict(genome_assembly_path, cpus, script_dir, work_dir,input_ani,input_hmm_e_value): #shujun
     if input_ani==0:
         db='Family_Seq'
     elif input_ani==1:
@@ -97,7 +97,7 @@ def hmm_predict(genome_assembly_path, cpus, script_dir, work_dir,input_ani): #sh
             if not input_ani==2:
                 os.system(
                     # output to work directory instead of program directory, shujun
-                    'nhmmer --cpu ' + str(cpus) + ' -o ' + work_dir + '/HMM_out/' + dir_hmm[num_dir_hmm] + '.out ' 
+                    'nhmmer --cpu ' + str(cpus) +' -E '+input_hmm_e_value+ ' -o ' + work_dir + '/HMM_out/' + dir_hmm[num_dir_hmm] + '.out ' 
                     + script_dir + '/../'+db+'/' + dir_hmm[num_dir_hmm] + '/' + dir_hmm[num_dir_hmm] + '.hmm '
                     + genome_assembly_path)
             else:
@@ -106,7 +106,7 @@ def hmm_predict(genome_assembly_path, cpus, script_dir, work_dir,input_ani): #sh
                 if os.path.exists(script_dir +'/../'+db2+'/' + dir_hmm[num_dir_hmm]):
                     db=db2
                 os.system(
-                    'nhmmer --cpu ' + str(cpus) + ' -o ' + work_dir + '/HMM_out/' + dir_hmm[num_dir_hmm] + '.out '
+                    'nhmmer --cpu ' + str(cpus) + ' -E '+input_hmm_e_value+' -o ' + work_dir + '/HMM_out/' + dir_hmm[num_dir_hmm] + '.out '
                     + script_dir + '/../'+db+'/' + dir_hmm[num_dir_hmm] + '/' + dir_hmm[num_dir_hmm] + '.hmm '
                     + genome_assembly_path)
 
@@ -1407,7 +1407,7 @@ def main_function():
         #if check_hmm_finished('S1_hmm_predict',work_dir+'/HMM_out'):
         if check_finished('Step1_process_hmm',[output_genome_assembly_path+'/Step1_extend_tsd_input_1.fa'],at) or at:
             t1=time.time()
-            hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir,input_ani)
+            hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir,input_ani,input_hmm_e_value)
             t2=time.time()
             print('Step 1 mode-1::hmm_predict uses ',t2-t1,' s',flush=True)
             t1=time.time()
