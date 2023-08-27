@@ -1438,7 +1438,7 @@ def main_function():
         print('====== Step 1: HMMER prediction and structure search has begun =======', flush=True)
         if check_finished('Step1_process_hmm',[output_genome_assembly_path+'/Step1_extend_tsd_input_1.fa'],at) or at:
             t1=time.time()
-            hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir,input_ani)
+            hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir,input_ani,input_hmm_e_value)
             t2=time.time()
             print('Step 1 mode-3::hmm_predict uses ',t2-t1,' s',flush=True)
             t1=time.time()
