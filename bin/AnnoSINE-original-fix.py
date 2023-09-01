@@ -1109,8 +1109,9 @@ def main_function():
     input_genome_assembly_path = args.input_filename
     output_genome_assembly_path = args.output_filename
     ensure_path(output_genome_assembly_path)
-    le=re.split('\.',input_genome_assembly_path)[-1]
-    input_sine_finder = input_genome_assembly_path.replace('.'+le, '')+'-matches.fasta'
+    (path,filename)=os.path.split(input_genome_assembly_path)
+    le=re.split('\.',filename)[-1]
+    input_sine_finder = path+'/'+filename.replace('.'+le, '')+'-matches.fasta'
 
     #print(input_sine_finder)
     #exit()
