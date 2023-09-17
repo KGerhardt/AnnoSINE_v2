@@ -1339,10 +1339,18 @@ def check_finished(pre,arr,at):
         if os.path.exists(a):
             if not os.path.getsize(a) == 0:
                 a=False
+            else:
+                a=True
+                break
+        else:
+            a=True
+            break
     if a==False and at==False:
         print(pre+' already finished! Will skip to the next step!')
     if a==False and at==True:
         print(pre+' already finished! Will regenerate the result cause -auto is not set.')
+    if a==True and a==False:
+        print(pre+' not finished! Will regenerate the result!')
     return a
 
 def convert_ingenome(ingenome):
@@ -1492,7 +1500,7 @@ def main_function():
     if check_finished('Step2_search_tsd',[output_genome_assembly_path+'/Step2_tsd.txt'],at) or at:
         search_tsd(output_genome_assembly_path, script_dir)
         #print('')
-    if check_finished('Step2_process_tsd',[output_genome_assembly_path+'/Step2_tsd_output.fa'],at) or at:
+    if check_finished('Step2_process_tsd',[output_genome_assembly_path+'/Step2_tsd_output.fa','Step2_extend_blast_input.fa'],at) or at:
         process_tsd_output(input_genome_assembly_path, output_genome_assembly_path)
         #print('')
     t2=time.time()
