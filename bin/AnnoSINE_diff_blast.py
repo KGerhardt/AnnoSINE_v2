@@ -1500,7 +1500,7 @@ def main_function():
     if check_finished('Step2_search_tsd',[output_genome_assembly_path+'/Step2_tsd.txt'],at) or at:
         search_tsd(output_genome_assembly_path, script_dir)
         #print('')
-    if check_finished('Step2_process_tsd',[output_genome_assembly_path+'/Step2_tsd_output.fa','Step2_extend_blast_input.fa'],at) or at:
+    if check_finished('Step2_process_tsd',[output_genome_assembly_path+'/Step2_tsd_output.fa',output_genome_assembly_path+'/Step2_extend_blast_input.fa'],at) or at:
         process_tsd_output(input_genome_assembly_path, output_genome_assembly_path)
         #print('')
     t2=time.time()
