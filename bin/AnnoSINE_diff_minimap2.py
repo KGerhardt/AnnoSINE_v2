@@ -597,7 +597,8 @@ def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_ass
     print('Minimap2 againist the genome assembly ...', flush=True)
     # make blastdb to allow blastn multithreading, shujun
     os.system('minimap2 -c -t '+str(cpus)+' -p 0.3 -N '+str(input_num_alignments)+' '+ in_genome_assembly_path+' '+out_genome_assembly_path+'/Step2_extend_blast_input_rename.fa  > '+out_genome_assembly_path+'/Step3_blast_output.paf ')
-    os.system('python paf2blast6.py '+out_genome_assembly_path+'/Step3_blast_output.paf '+out_genome_assembly_path)
+    #os.system('python paf2blast6.py '+out_genome_assembly_path+'/Step3_blast_output.paf '+out_genome_assembly_path)
+    os.system('python ' + script_dir + '/paf2blast6.py ' + out_genome_assembly_path + '/Step3_blast_output.paf ' + out_genome_assembly_path)
     '''
     os.system('makeblastdb -input_type fasta -dbtype nucl -in ' + in_genome_assembly_path + ' > /dev/null 2>&1')
     os.system('blastn -query '+out_genome_assembly_path+'/Step2_extend_blast_input_rename.fa '
