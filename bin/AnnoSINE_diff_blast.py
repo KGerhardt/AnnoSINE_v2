@@ -1217,7 +1217,7 @@ def cluster_sequences(out_genome_assembly_path,cpus):
             for line in f_1:
                 if line[0] == '>':
                     sa=re.split('\|',line.strip())
-                    new_line = f'>SINE_{num}#SINE/'+sa[-1]+' ' + line.replace('>', '')
+                    new_line = f'>SINE_{num}#SINE/Unknown ' + line.replace('>', '')
                     f_2.write(new_line)
                     num += 1
                 else:
