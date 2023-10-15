@@ -28,16 +28,16 @@ __version_date__ = "2010-09-28"
 
 options = {
     'verbose': 0,
-    'RUNTYPE': 'seqwise',  # possible: 'chunkwise'
+    'RUNTYPE': 'chunkwise',  # possible: 'chunkwise' 'seqwise'
     'TSD_MISMATCH_TOLERANCE': 2,
     'TSD_MIN_WORDSIZE': 5,
     'TSD_MISMATCH_PENALTY': 1,
     'TSD_SCORE_CUTOFF': 10,
-    'TSD_ORIENTATION': 'F',  # possible: 'FR':
+    'TSD_ORIENTATION': 'FR',  # possible: 'F' 'R' 'FR':
     # 'R' equal to 'F' but as
     # a result of reverse search
-    'CHUNKSIZE': 100000,
-    'OVERLAP': 8000,
+    'CHUNKSIZE': 10000, # was 100k
+    'OVERLAP': 1000, # was 8k
     'OUTTYPE': 'fasta',
 }
 EXITCHAR = "qQ"
@@ -320,9 +320,9 @@ seems_to_be_fasta = lambda f: open(f).read(10).strip().startswith('>')
 
 class FastaIterator:
     config = {
-        'RUNTYPE': 'seqwise',
-        'CHUNKSIZE': 100000,
-        'OVERLAP': 8000,
+        'RUNTYPE': 'chunkwise', # was seqwise
+        'CHUNKSIZE': 10000, # was 100k
+        'OVERLAP': 1000, # was 8k
     }
 
     def __init__(self, filename, **kwargs):
@@ -1161,8 +1161,8 @@ def main_func():
                 # For chunkwise processing of files prompting for some parameters.
 
                 if options['RUNTYPE'] == 'chunkwise':
-                    options['CHUNKSIZE'] = 100000
-                    options['OVERLAP'] = 2000
+                    options['CHUNKSIZE'] = 10000 # was 100k
+                    options['OVERLAP'] = 1000 # was 2k
 
                 # Parameters related to pattern search
 
