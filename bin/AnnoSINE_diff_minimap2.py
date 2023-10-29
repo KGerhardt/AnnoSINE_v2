@@ -34,14 +34,14 @@ parser.add_argument("-l", "--length_factor", metavar='', type=float, default=0.3
                     help="Threshold of the local alignment length relative to the the BLAST query length (default: 0.3)")
 parser.add_argument("-c", "--copy_number_factor", metavar='', type=float, default=0.15,
                     help="Threshold of the copy number that determines the SINE boundary (default: 0.15)")
-parser.add_argument("-s", "--shift",  metavar='', type=int, default=5000,
+parser.add_argument("-s", "--shift",  metavar='', type=int, default=50,
                     help="Maximum threshold of the boundary shift (default: 50)")
 parser.add_argument("-g", "--gap",  metavar='', type=int, default=10,
                     help="Maximum threshold of the truncated gap (default: 10)")
-parser.add_argument("-minc", "--copy_number", metavar='', type=int, default=1,
+parser.add_argument("-minc", "--copy_number", metavar='', type=int, default=20,
                     help="Minimum threshold of the copy number for each element (default: 20)")
-parser.add_argument("-numa", "--num_alignments", metavar='', type=int, default=5000,
-                    help="--num_alignments value for blast alignments (default: 5000)")
+parser.add_argument("-numa", "--num_alignments", metavar='', type=int, default=50000,
+                    help="--num_alignments value for blast alignments (default: 50000)")
 
 #parser.add_argument("-maxb", "--base_copy_number", type=int, default=1,
                     #help="Maximum threshold of copy number for the first and last base (default: 1)")
