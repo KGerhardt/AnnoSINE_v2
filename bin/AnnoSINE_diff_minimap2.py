@@ -38,8 +38,8 @@ parser.add_argument("-s", "--shift",  metavar='', type=int, default=50,
                     help="Maximum threshold of the boundary shift (default: 50)")
 parser.add_argument("-g", "--gap",  metavar='', type=int, default=10,
                     help="Maximum threshold of the truncated gap (default: 10)")
-parser.add_argument("-minc", "--copy_number", metavar='', type=int, default=20,
-                    help="Minimum threshold of the copy number for each element (default: 20)")
+parser.add_argument("-minc", "--copy_number", metavar='', type=int, default=1,
+                    help="Minimum threshold of the copy number for each element (default: 1)")
 parser.add_argument("-numa", "--num_alignments", metavar='', type=int, default=50000,
                     help="--num_alignments value for blast alignments (default: 50000)")
 
