@@ -1673,7 +1673,7 @@ def main_function():
     print('================ Step 2: TSD identification has begun ================', flush=True)
     t1=time.time()
     if check_finished('Step2_search_tsd',[output_genome_assembly_path+'/Step2_tsd.txt'],at) or at:
-        search_tsd(output_genome_assembly_path, script_dir,cpus=8)
+        search_tsd(output_genome_assembly_path, script_dir,cpus)
         #print('')
     if check_finished('Step2_process_tsd',[output_genome_assembly_path+'/Step2_tsd_output.fa','Step2_extend_blast_input.fa'],at) or at:
         process_tsd_output(input_genome_assembly_path, output_genome_assembly_path)
