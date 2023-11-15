@@ -1668,7 +1668,7 @@ def main_function():
         t2=time.time()
         print('Step 1::merge_tsd_input uses ',t2-t1,' s',flush=True)
     t2=time.time()
-    print('Step 1 totally uses ',t2-start_time, ' s',flash=True)
+    print('Step 1 totally uses ',t2-start_time, ' s',flush=True)
     print('\n======================== Step 1 has been done ========================\n\n', flush=True)
     #exit()
 
