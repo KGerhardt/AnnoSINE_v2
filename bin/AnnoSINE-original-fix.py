@@ -308,7 +308,10 @@ def process_tsd_output(in_genome_assembly_path, out_genome_assembly_path):
                 hmm_id.append(line.split()[0].replace('>', ''))
             else:
                 sequences.append(line)
-                hmm_tsd.append(len(line.split()[0]))
+                if not line[0]=='':
+                  hmm_tsd.append(len(line.split()[0]))
+                else:
+                  hmm_tsd.append[0]
 
     hmm_pos = []
     record_tsd = []
