@@ -259,19 +259,17 @@ def merge_tsd_input(pattern, out_genome_assembly_path):
                 elif pattern == 3:
                     lines = lines1+lines2
     with open(out_genome_assembly_path+'/Step1_extend_tsd_input.fa', 'w') as f3:
-        d={}
-        pattern = re.compile(r'[ATGC]')
         for line in lines:
             if line[0] == '>':
-                d[line]=''
-                tem=line
+                head=line
                 #f3.write(line)
             else:
-                d[tem]=line
-                #f3. write(line)
-        for s in d:
-            if re.search(pattern,d[s]):
-              f3.write(s+'\n'+d[s]+'\n')
+                # replace non-ACGT characters to Ns, shujun
+                line = line.rstrip('\n')  # Remove newline character
+                cleaned_line = ''.join(['N' if c not in 'ACGTacgt' else c for c in line])
+                cleaned_line=cleaned_line.strip()
+                if not cleaned_line=='':
+                    f3.write(head+cleaned_line + '\n') # Add newline character back
 
 
 def search_tsd(out_genome_assembly_path):
