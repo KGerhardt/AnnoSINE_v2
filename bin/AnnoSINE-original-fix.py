@@ -259,11 +259,19 @@ def merge_tsd_input(pattern, out_genome_assembly_path):
                 elif pattern == 3:
                     lines = lines1+lines2
     with open(out_genome_assembly_path+'/Step1_extend_tsd_input.fa', 'w') as f3:
+        d={}
+        pattern = re.compile(r'[ATGC]')
         for line in lines:
             if line[0] == '>':
-                f3.write(line)
+                d[line]=''
+                tem=line
+                #f3.write(line)
             else:
-                f3. write(line)
+                d[tem]=line
+                #f3. write(line)
+        for s in d:
+            if re.search(pattern,d[s]):
+              f3.write(s+'\n'+d[s]+'\n')
 
 
 def search_tsd(out_genome_assembly_path):
