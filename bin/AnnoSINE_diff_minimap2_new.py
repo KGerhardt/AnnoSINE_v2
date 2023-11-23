@@ -718,15 +718,29 @@ def save_to_fna_2(filename, sequences, input_title, input_tsd, input_start, inpu
         file.writelines(payload)
 
 
+def is_file_size_exceeded(file_path, max_size):
+    file_size = os.path.getsize(file_path)
+    file_size_mb = file_size / (1024 * 1024)
+    if file_size_mb > max_size:
+        return True
+    else:
+        return False
 
 def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_assembly_path,cpus,input_num_alignments):
     print('Minimap2 againist the genome assembly ...', flush=True)
+    result = is_file_size_exceeded(out_genome_assembly_path+'/Step2_extend_blast_input_rename.fa',30)
     # make blastdb to allow blastn multithreading, shujun
     if not os.path.exists(out_genome_assembly_path+'/Step3_blast_output.paf'):
-        os.system('minimap2 -c -t '+str(cpus)+' -p 0.01 -k 8 -N '+str(input_num_alignments)+' '+ in_genome_assembly_path+' '+out_genome_assembly_path+'/Step2_extend_blast_input_rename.fa  > '+out_genome_assembly_path+'/Step3_blast_output.paf ')
+        if result:
+            os.system('minimap2 -c -t '+str(cpus)+' -p 0.01 -k 10 -K 1M -N '+str(input_num_alignments)+' '+ in_genome_assembly_path+' '+out_genome_assembly_path+'/Step2_extend_blast_input_rename.fa  > '+out_genome_assembly_path+'/Step3_blast_output.paf ')
+        else:
+            os.system('minimap2 -c -t '+str(cpus)+' -p 0.01 -k 8 -N '+str(input_num_alignments)+' '+ in_genome_assembly_path+' '+out_genome_assembly_path+'/Step2_extend_blast_input_rename.fa  > '+out_genome_assembly_path+'/Step3_blast_output.paf ')
     else:
         if not check_file_has_rows(out_genome_assembly_path+'/Step3_blast_output.paf'):
-            os.system('minimap2 -c -t ' + str(cpus) + ' -p 0.01 -k 8 -N ' + str(input_num_alignments) + ' ' + in_genome_assembly_path + ' ' + out_genome_assembly_path + '/Step2_extend_blast_input_rename.fa  > ' + out_genome_assembly_path + '/Step3_blast_output.paf ')
+            if result:
+                os.system('minimap2 -c -t '+str(cpus)+' -p 0.01 -k 10 -K 1M -N '+str(input_num_alignments)+' '+ in_genome_assembly_path+' '+out_genome_assembly_path+'/Step2_extend_blast_input_rename.fa  > '+out_genome_assembly_path+'/Step3_blast_output.paf ')
+            else:
+                os.system('minimap2 -c -t ' + str(cpus) + ' -p 0.01 -k 8 -N ' + str(input_num_alignments) + ' ' + in_genome_assembly_path + ' ' + out_genome_assembly_path + '/Step2_extend_blast_input_rename.fa  > ' + out_genome_assembly_path + '/Step3_blast_output.paf ')
     #os.system('python paf2blast6.py '+out_genome_assembly_path+'/Step3_blast_output.paf '+out_genome_assembly_path)
     os.system('python ' + script_dir + '/paf2blast6_chunking2_parallel3_ordered_parts.py ' + out_genome_assembly_path + '/Step3_blast_output.paf ' + out_genome_assembly_path+' -t '+str(cpus))
     '''
