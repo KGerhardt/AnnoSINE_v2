@@ -1503,6 +1503,7 @@ def process_sine_finder(genome_assembly_path, sine_finder_out, out_genome_assemb
                 end_position.append(end-50)
                 seq = output_genome_sequence[seq_id][start:end]
                 finder_seq.append(seq)
+    os.system('mv '+sine_finder_out+' '+out_genome_assembly_path)
     if pattern == 2 or pattern == 3:
         if os.path.exists(out_genome_assembly_path+'/Step1_extend_tsd_input_2.fa'):
             modify_text(out_genome_assembly_path+'/Step1_extend_tsd_input_2.fa')
