@@ -1547,16 +1547,19 @@ def check_finished(pre,arr,at):
         print(pre+' not finished! Will regenerate the result!')
     return a
 
-def convert_ingenome(ingenome):
+def convert_ingenome(ingenome,odir):
     uid=uuid.uuid1().hex
     fdir=os.path.dirname(ingenome)
     ig=os.path.basename(ingenome)
     name, ext = os.path.splitext(ig)
     nf=name+'_'+uid+ext
+    nd=odir+'/'+nf
+    '''
     if fdir=='':
         nd=nf
     else:
         nd=fdir+'/'+nf
+    '''
     #print('seqtk seq '+ingenome+' > '+nd)
     #exit()
     os.system('seqtk seq '+ingenome+' > '+nd)
@@ -1568,11 +1571,12 @@ def main_function():
     print('Please input the path of genomic sequence', flush=True) # print out message immediately
     input_pattern = args.mode
     input_genome_assembly_path = args.input_filename
-    input_genome_assembly_path= convert_ingenome(input_genome_assembly_path)
+    output_genome_assembly_path = args.output_filename
+    input_genome_assembly_path= convert_ingenome(input_genome_assembly_path,output_genome_assembly_path)
     #print(input_genome_assembly_path)
     #exit()
 
-    output_genome_assembly_path = args.output_filename
+    
     ensure_path(output_genome_assembly_path)
     #bfix=os.path.splitext(input_genome_assembly_path)[-1]
     pre=os.path.splitext(input_genome_assembly_path)[0]
