@@ -1572,6 +1572,9 @@ def main_function():
     input_pattern = args.mode
     input_genome_assembly_path = args.input_filename
     output_genome_assembly_path = args.output_filename
+    if not os.path.exists(output_genome_assembly_path):
+      os.makedirs(output_genome_assembly_path)
+    
     input_genome_assembly_path= convert_ingenome(input_genome_assembly_path,output_genome_assembly_path)
     #print(input_genome_assembly_path)
     #exit()
