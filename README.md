@@ -1,3 +1,4 @@
+[![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/annosine2/README.html)
 # AnnoSINE2
 
 SINE Annotation Tool for Plant/Animal Genomes
