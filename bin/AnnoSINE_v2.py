@@ -1791,7 +1791,7 @@ def main_function():
     print('************************************************************************', flush=True)
     print('************************** AnnoSINE COMPLETE! **************************', flush=True)
     print('************************************************************************', flush=True)
-    #os.system('rm -rf '+input_genome_assembly_path_dir)
+    os.system('rm '+input_genome_assembly_path)
 
 
 if __name__ == '__main__':
