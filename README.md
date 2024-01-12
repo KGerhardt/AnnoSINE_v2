@@ -1,5 +1,5 @@
 [![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/annosine2/README.html)
-# AnnoSINE2
+# AnnoSINE_v2
 
 SINE Annotation Tool for Plant/Animal Genomes
 
@@ -15,7 +15,7 @@ SINE Annotation Tool for Plant/Animal Genomes
 - [Citations](#Citations)
 
 # Introduction
-AnnoSINE2 is a SINE annotation tool for plant/animal genomes. The program is designed to generate high-quality non-redundant SINE libraries for genome annotation. It uses the manually curated SINE library in the *Oryza sativa* genome to benchmark the annotation performance.
+AnnoSINE_v2 is a SINE annotation tool for plant/animal genomes. The program is designed to generate high-quality non-redundant SINE libraries for genome annotation. It uses the manually curated SINE library in the *Oryza sativa* genome to benchmark the annotation performance.
 
 <div  align="center">   
 <img src="https://github.com/yangli557/AnnoSINE/blob/main/pipeline.png" width = "700" height = "900" />
@@ -24,7 +24,7 @@ AnnoSINE2 is a SINE annotation tool for plant/animal genomes. The program is des
 <!AnnoSINE has eight major modules. The first one is to identify putative SINE candidates by applying hidden Markov model (HMM)-based homology search, structure-based *de novo* search or combinition of homology-structure-based search. This step is usually sensitive but can output many false SINE candidates. In the 2nd step, it searches for target site duplication (TSD) in the flanking region to further verify each SINE candidate. As TSD is a significant feature of SINEs, this step is highly effective in removing non-SINEs. Although searching for TSD can be conducted in the later stage of the pipeline, removing false positives earlier can save the computational time of the downstream analysis. In the 3rd step, it examines the copy number and the alignment of SINE copies to remove the sequences with few copy numbers or shifted/fragmented/extended alignments. In addition, it can identify some lineage-specific differences, such as the length of the 3' end using the alignment profile. In the 4th step, it decides the superfamily of each candidate SINE sequence and remove highly similar candidates from known non-coding RNAs. Meanwhile, the highly identical sequences assembling to RNA are false positives. In the 5th step, it removes candidates with a large proportion of tandem repeats. In the 6th step, it removes other TEs by detecting inverted repeats adjacent to TSDs. These steps focused on identifying complete SINEs (i.e., *seed sequences*) in the query genome. Redundant seeds are filtered to generate the SINE library. After we obtain the non-redundant seed sequences, it will apply RepeatMasker to identify other SINEs to complete the whole genome SINE annotation in the last step.-->
 
 # Prerequisites
-To use AnnoSINE2, you need to install the tools listed below.
+To use AnnoSINE_v2, you need to install the tools listed below.
 
  - [Python 3.7.4](https://www.python.org/)
  - [HMMER 3.3.1](http://hmmer.org/download.html)
@@ -53,7 +53,7 @@ chmod 755 irf308.linux.exe
 
 ```
 conda activate AnnoSINE
-python3 AnnoSINE.py [options] <mode> <input_filename> <output_filename>
+python3 AnnoSINE_v2.py [options] <mode> <input_filename> <output_filename>
 ```
 If the program stops in a certain step or has no output, this may result from the strict filtering cutoff. You can try the command below:
 ```
