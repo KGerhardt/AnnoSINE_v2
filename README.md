@@ -57,7 +57,7 @@ python AnnoSINE_v2 [options] <mode> <input_filename> <output_filename>
 ```
 If the program stops in a certain step or has no output, this may result from the strict filtering cutoff. You can try the command below:
 ```
-python3 AnnoSINE.py [options] <mode> -e 0.01 -minc 1 -s 150 <input_filename> <output_filename>
+python3 AnnoSINE_v2 [options] <mode> -e 0.01 -minc 1 -s 150 <input_filename> <output_filename>
 ```
 
 ## Argument
