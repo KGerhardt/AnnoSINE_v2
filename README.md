@@ -53,7 +53,7 @@ chmod 755 irf308.linux.exe
 
 ```
 conda activate AnnoSINE
-python3 AnnoSINE_v2.py [options] <mode> <input_filename> <output_filename>
+python AnnoSINE_v2 [options] <mode> <input_filename> <output_filename>
 ```
 If the program stops in a certain step or has no output, this may result from the strict filtering cutoff. You can try the command below:
 ```
