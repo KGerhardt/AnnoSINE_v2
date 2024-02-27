@@ -107,9 +107,12 @@ def parallel_process_chunk(chunk, chunk_idx, qc, output_dir):
     processed_chunk.to_csv(temp_file, sep="\t", header=False, index=False)
     return temp_file
 
-def parallel_process_file(input_file, odir, chunk_size=100000, max_lines=100000000, n_threads=5):
+def parallel_process_file(input_file, odir, chunk_size=100000, max_lines=100000000, n_threads=5,tdir=''):
     qc = QualityCalculations()
-    output_dir = tempfile.mkdtemp()
+    if not tdir=='' and os.path.exists(tdir):
+        output_dir=tdir
+    else:
+        output_dir = tempfile.mkdtemp()
     temp_files = []
 
     # Using ProcessPoolExecutor for parallel processing
@@ -183,7 +186,13 @@ if __name__ == "__main__":
     paf_file = sys.argv[1]
     odir = sys.argv[2]
     n_threads = int(sys.argv[4]) if '-t' in sys.argv else 5
+    if '-t' in sys.argv:
+        tdir=sys.argv[6] if '-d' in sys.argv else ''
+    else:
+        tdir=sys.argv[4] if '-d' in sys.argv else ''
     chunk_size=100000
     max_lines = 100000000 #~10G/output file
     #max_lines=10
-    parallel_process_file(paf_file, odir, chunk_size, max_lines, n_threads)
+    #print(paf_file,odir,n_threads,tdir)
+    #exit()
+    parallel_process_file(paf_file, odir, chunk_size, max_lines, n_threads,tdir)

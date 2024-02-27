@@ -52,6 +52,8 @@ parser.add_argument("-b", "--boundary", metavar='', type=str, default='msa',
                     help="Output SINE seed boundaries based on TSD or MSA (default: msa)")
 parser.add_argument("-f", "--figure", metavar='', type=str, default='n',
                     help="Output the SINE seed MSA figures and copy number profiles (y/n). Please note that this step may take a long time to process. (default: n)")
+parser.add_argument("-temd", "--temp_dir", metavar='',type=str, default='',
+                    help="The temp dir used by paf2blast6 script. If not set, will use /tmp folder automatically.")
 parser.add_argument("-auto", "--automatically_continue", metavar='', type=int, default=0,
                     help="If set to 1, then the program will skip finished steps and continue unifinished steps for a previously processed output dir. (default: 0)")
 parser.add_argument("-r", "--non_redundant", metavar='', type=str, default='y',
@@ -726,7 +728,7 @@ def is_file_size_exceeded(file_path, max_size):
     else:
         return False
 
-def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_assembly_path,cpus,input_num_alignments):
+def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_assembly_path,cpus,input_num_alignments,input_temd):
     print('Minimap2 againist the genome assembly ...', flush=True)
     result = is_file_size_exceeded(out_genome_assembly_path+'/Step2_extend_blast_input_rename.fa',30)
     # make blastdb to allow blastn multithreading, shujun
@@ -742,7 +744,10 @@ def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_ass
             else:
                 os.system('minimap2 -c -t ' + str(cpus) + ' -p 0.01 -k 8 -N ' + str(input_num_alignments) + ' ' + in_genome_assembly_path + ' ' + out_genome_assembly_path + '/Step2_extend_blast_input_rename.fa  > ' + out_genome_assembly_path + '/Step3_blast_output.paf ')
     #os.system('python paf2blast6.py '+out_genome_assembly_path+'/Step3_blast_output.paf '+out_genome_assembly_path)
-    os.system('python ' + script_dir + '/paf2blast6_chunking2_parallel3_ordered_parts.py ' + out_genome_assembly_path + '/Step3_blast_output.paf ' + out_genome_assembly_path+' -t '+str(cpus))
+    if not input_temd=='':
+        os.system('python ' + script_dir + '/paf2blast6_chunking2_parallel3_ordered_parts.py ' + out_genome_assembly_path + '/Step3_blast_output.paf ' + out_genome_assembly_path+' -t '+str(cpus)+' -d '+input_temd)
+    else:
+        os.system('python ' + script_dir + '/paf2blast6_chunking2_parallel3_ordered_parts.py ' + out_genome_assembly_path + '/Step3_blast_output.paf ' + out_genome_assembly_path+' -t '+str(cpus))
     '''
     os.system('makeblastdb -input_type fasta -dbtype nucl -in ' + in_genome_assembly_path + ' > /dev/null 2>&1')
     os.system('blastn -query '+out_genome_assembly_path+'/Step2_extend_blast_input_rename.fa '
@@ -1502,7 +1507,11 @@ def process_sine_finder(genome_assembly_path, sine_finder_out, out_genome_assemb
                 end_position.append(end-50)
                 seq = output_genome_sequence[seq_id][start:end]
                 finder_seq.append(seq)
-    os.system('mv '+sine_finder_out+' '+out_genome_assembly_path)
+    #print('sine_finder_out: ',sine_finder_out,' out_genome_assembly_path: ',out_genome_assembly_path)
+    bname=os.path.basename(sine_finder_out)
+    if not os.path.exists(out_genome_assembly_path+'/'+bname):
+        #os.system('rm '+out_genome_assembly_path+'/'+bname)
+        os.system('mv '+sine_finder_out+' '+out_genome_assembly_path)
     if pattern == 2 or pattern == 3:
         if os.path.exists(out_genome_assembly_path+'/Step1_extend_tsd_input_2.fa'):
             modify_text(out_genome_assembly_path+'/Step1_extend_tsd_input_2.fa')
@@ -1603,12 +1612,17 @@ def main_function():
     input_ani=args.animal
     input_bound = args.boundary
     input_figure = args.figure
+    input_temd=args.temp_dir
+    
     input_non_redundant = args.non_redundant
     input_auto=args.automatically_continue
     if input_auto==1:
         at=False
     else:
         at=True
+    if not input_temd=='':
+        if not os.path.exists(input_temd):
+            os.makedirs(input_temd)
 
     
     cpus = args.threads
@@ -1712,7 +1726,7 @@ def main_function():
     print('================ Step 3: MSA implementation has begun ================', flush=True)
     t1=time.time()
     if check_finished('Step3_MSA',[output_genome_assembly_path+'/Step3_blast_output.out'],at) or at:
-        multiple_sequence_alignment(input_blast_e_value, input_genome_assembly_path, output_genome_assembly_path,cpus,input_num_alignments)
+        multiple_sequence_alignment(input_blast_e_value, input_genome_assembly_path, output_genome_assembly_path,cpus,input_num_alignments,input_temd)
         #print('')
     if check_finished('Step3_process_MSA',[output_genome_assembly_path+'/Step3_blast_process_output.fa'],at) or at:
         process_blast_output_1(input_genome_assembly_path, input_factor_length, input_factor_copy_number,
