@@ -1621,6 +1621,7 @@ def main_function():
     else:
         at=True
     if not input_temd=='':
+        input_temd=input_temd+'/temd'
         if not os.path.exists(input_temd):
             os.makedirs(input_temd)
 
