@@ -109,6 +109,11 @@ def parallel_process_chunk(chunk, chunk_idx, qc, output_dir):
 
 def parallel_process_file(input_file, odir, chunk_size=100000, max_lines=100000000, n_threads=5,tdir=''):
     qc = QualityCalculations()
+    if not tdir=='':
+        tdir=tdir+'/temd'
+        if not os.path.exists(tdir):
+            os.makedirs(tdir)
+
     if not tdir=='' and os.path.exists(tdir):
         output_dir=tdir
     else:
