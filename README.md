@@ -53,7 +53,11 @@ chmod 755 irf308.linux.exe
 Installation via Bioconda.
 
 ```
-mamba install annosine2 or conda install -c bioconda annosine2
+mamba install annosine2
+```
+or
+```
+conda install -c bioconda annosine2
 ```
 
 # Usage
