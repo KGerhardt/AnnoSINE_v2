@@ -37,6 +37,7 @@ To use AnnoSINE_v2, you need to install the tools listed below.
 
 # Installation
 
+Installation via GitHub.
 ```
 # pip
 cd ./AnnoSINE/bin
@@ -47,6 +48,12 @@ conda env create -f AnnoSINE.conda.yaml
 
 ## change the permission of IRF
 chmod 755 irf308.linux.exe
+```
+
+Installation via Bioconda.
+
+```
+mamba install annosine2 or conda install -c bioconda annosine2
 ```
 
 # Usage
