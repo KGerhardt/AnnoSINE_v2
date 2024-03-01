@@ -15,7 +15,7 @@ SINE Annotation Tool for Plant/Animal Genomes
 - [Citations](#Citations)
 
 # Introduction
-AnnoSINE_v2 is a SINE annotation tool for plant/animal genomes. The program is designed to efficiently generate high-quality non-redundant SINE libraries for genome annotation. This program is a new version of AnnoSINE. Thus, it has the same workflow as AnnoSINE (shown below).
+AnnoSINE_v2 is a SINE annotation tool for plant/animal genomes. The program is designed to efficiently generate high-quality non-redundant SINE libraries for genome annotation. This program is a new version of [AnnoSINE](https://github.com/yangli557/AnnoSINE). Thus, it has the same workflow as AnnoSINE (shown below).
 
 <div  align="center">   
 <img src="https://github.com/yangli557/AnnoSINE/blob/main/pipeline.png" width = "700" height = "900" />
