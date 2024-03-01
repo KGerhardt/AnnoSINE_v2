@@ -93,7 +93,6 @@ optional arguments:
   -minc, --copy_number         Minimum threshold of the copy number for each element (default: 20)
   -numa, --num_alignments      --num_alignments value for blast alignments (default: 50000)
   -maxb, --base_copy_number    Maximum threshold of copy number for the first and last base (default: 1)
- 
   -a, --animal                 If set to 1, then Hmmer will search SINE using the animal hmm files from Dfam. If set to 2, then Hmmer will search SINE using both the plant and animal hmm files. (default: 0)
   -b, --boundary               Output SINE seed boundaries based on TSD or MSA (default: msa)
   -f, --figure                 Output the SINE seed MSA figures and copy number profiles (y/n). Please note that this step may take a long time to process. (default: n)
