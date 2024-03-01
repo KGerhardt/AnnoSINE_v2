@@ -91,9 +91,13 @@ optional arguments:
   -s, --shift                  Maximum threshold of the boundary shift (default: 80)
   -g, --gap                    Maximum threshold of the trancated gap (default: 10)
   -minc, --copy_number         Minimum threshold of the copy number for each element (default: 20)
-  -a, --animal                 If set to 1, then Hmmer will search SINE using the animal hmm files from Dfam. (default: 0)
+  -numa, --num_alignments      --num_alignments value for blast alignments (default: 50000)
+  -maxb, --base_copy_number    Maximum threshold of copy number for the first and last base (default: 1)
+ 
+  -a, --animal                 If set to 1, then Hmmer will search SINE using the animal hmm files from Dfam. If set to 2, then Hmmer will search SINE using both the plant and animal hmm files. (default: 0)
   -b, --boundary               Output SINE seed boundaries based on TSD or MSA (default: msa)
-  -f, --figure                 Output the SINE seed MSA figures and copy number profiles (y/n). Please note that this step may take a long time to process. (default: n)  
+  -f, --figure                 Output the SINE seed MSA figures and copy number profiles (y/n). Please note that this step may take a long time to process. (default: n)
+  -temd, --temp_dir            The temp dir used by paf2blast6 script. If not set, will use /tmp folder automatically.
   -auto, --automatically_continue If set to 1, then the program will skip finished steps and continue unifinished steps for a previously processed output dir. (default: 0)
   -r, --non_redundant          Annotate SINE in the whole genome based on the non—redundant library (y/n) (default: y)
   -t, --threads		              Threads for each tool in AnnoSINE (default: 36)
