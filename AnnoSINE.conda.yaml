@@ -96,3 +96,4 @@ dependencies:
     - pyparsing==2.4.7
     - python-dateutil==2.8.1
     - six==1.16.0
+    - pandas
