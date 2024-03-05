@@ -40,6 +40,9 @@ To use AnnoSINE_v2, you need to install the tools listed below.
 Installation via GitHub.
 ```
 # conda
+git clone https://github.com/liaoherui/AnnoSINE_v2.git
+cd AnnoSINE_v2
+
 conda env create -f AnnoSINE.conda.yaml
 
 conda activate AnnoSINE
