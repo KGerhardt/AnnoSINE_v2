@@ -86,6 +86,7 @@ dependencies:
   - irf
   - seqtk
   - cd-hit
+  - minimap2
   - pip:
     - cycler==0.10.0
     - kiwisolver==1.3.1
