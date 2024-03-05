@@ -132,11 +132,11 @@ Genome sequence(fasta format).
 - CD-HIT output: $ Step7_cluster_output.fasta.clstr
 
 # Testing 
-You can test the AnnoSINE with one chromosome in *Arabisopsis thaliana* (it takes about 6 mins).
+You can test the AnnoSINE_v2 with one chromosome in *Arabisopsis thaliana* (it takes about 6 mins).
 ```
-cd ./AnnoSINE/Testing
+cd ./AnnoSINE_v2/Testing
 python ../bin/AnnoSINE_v2 -t 20 3 A.thaliana_Chr4.fasta ./Output_Files
 ```
-Results of AnnoSINE tests on testing data are saved in Output_Files.
+Results of AnnoSINE_v2 tests on testing data are saved in Output_Files.
 
 # Citations
