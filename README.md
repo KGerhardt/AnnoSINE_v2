@@ -140,3 +140,7 @@ python ../bin/AnnoSINE_v2 -t 20 3 A.thaliana_Chr4.fasta ./Output_Files
 Results of AnnoSINE_v2 tests on testing data are saved in Output_Files.
 
 # Citations
+
+```
+Liao, H., Ou, S. & Sun, Y. Accelerating de novo SINE annotation in plant and animal genomes. bioRxiv (2024). https://doi.org/10.1101/2024.03.01.582874
+```
