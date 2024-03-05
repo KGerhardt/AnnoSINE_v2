@@ -39,12 +39,10 @@ To use AnnoSINE_v2, you need to install the tools listed below.
 
 Installation via GitHub.
 ```
-# pip
-cd ./AnnoSINE/bin
-pip3 install -r requirements.txt
-
 # conda
 conda env create -f AnnoSINE.conda.yaml
+
+conda activate AnnoSINE
 
 ## change the permission of IRF
 chmod 755 irf308.linux.exe
