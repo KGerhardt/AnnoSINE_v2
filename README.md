@@ -100,7 +100,7 @@ optional arguments:
   -temd, --temp_dir            The temp dir used by paf2blast6 script. If not set, will use /tmp folder automatically.
   -auto, --automatically_continue If set to 1, then the program will skip finished steps and continue unifinished steps for a previously processed output dir. (default: 0)
   -r, --non_redundant          Annotate SINE in the whole genome based on the non—redundant library (y/n) (default: y)
-  -t, --threads		              Threads for each tool in AnnoSINE (default: 36)
+  -t, --threads                Threads for each tool in AnnoSINE (default: 36)
   -irf, --irf_path	            Path to the irf program (default: '')
   -rpm, --RepeatMasker_enable  If set to 0, then will not run RepearMasker (Step 8 for the code). (default: 1)
 ```
