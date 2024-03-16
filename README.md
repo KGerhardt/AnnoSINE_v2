@@ -61,6 +61,13 @@ or
 conda install -c bioconda annosine2
 ```
 
+It should be noted that some commands have been replaced if you install VirStrain using bioconda/pip. (See below)
+
+Command (Not bioconda/pip)    |	Command (bioconda/pip)
+------------ | ------------- 
+python AnnoSINE_v2.py -h | AnnoSINE_v2 -h
+
+
 # Usage
 
 ```
