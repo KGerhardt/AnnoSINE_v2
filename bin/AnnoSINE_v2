@@ -730,7 +730,7 @@ def is_file_size_exceeded(file_path, max_size):
 
 def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_assembly_path,cpus,input_num_alignments,input_temd):
     print('Minimap2 againist the genome assembly ...', flush=True)
-    result = is_file_size_exceeded(out_genome_assembly_path+'/Step2_extend_blast_input_rename.fa',30)
+    result = is_file_size_exceeded(out_genome_assembly_path+'/Step2_extend_blast_input_rename.fa',10)
     # make blastdb to allow blastn multithreading, shujun
     if not os.path.exists(out_genome_assembly_path+'/Step3_blast_output.paf'):
         if result:
