@@ -128,6 +128,7 @@ def parallel_process_file(input_file, odir, chunk_size=100000, max_lines=1000000
             engine='c',
             sep="\t",
             header=None,
+            on_bad_lines='skip',
             names=[
                 "qname",
                 "qlen",
