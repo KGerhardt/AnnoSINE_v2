@@ -765,16 +765,22 @@ def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_ass
     #exit()
 
 def process_blast_output_1(in_genome_assembly_path, factor_length, factor_copy, max_shift, max_gap, min_copy_number,
-                           pos, out_genome_assembly_path, bound, figure):
+                           pos, out_genome_assembly_path, bound, figure,cpus):
     print('Processing the BLAST output ...', flush=True)
     # ================================ Read BLAST Output ==========================
-    pcount=0
-    for filename in os.listdir(out_genome_assembly_path):
-        if re.search('Step3_blast_output.out',filename):
-            pcount+=1
-    for filename in os.listdir(out_genome_assembly_path):
-        if not re.search('Step3_blast_output.out',filename):
-            continue
+    #pcount=0
+    #for filename in os.listdir(out_genome_assembly_path):
+    #    if re.search('Step3_blast_output.out',filename):
+    #        pcount+=1
+    #for filename in os.listdir(out_genome_assembly_path):
+    #    if not re.search('Step3_blast_output.out',filename):
+    #        continue
+    step3_files = [f for f in os.listdir(out_genome_assembly_path) if re.search('Step3_blast_output.out', f)]
+    pcount = len(step3_files)
+    output_genome_sequence = read_genome_assembly(in_genome_assembly_path)
+    def process_file(filename):
+        if not re.search('Step3_blast_output.out', filename):
+            return
         #exit()
         f=open(out_genome_assembly_path+'/'+filename,'r')
         dp={}
@@ -811,7 +817,7 @@ def process_blast_output_1(in_genome_assembly_path, factor_length, factor_copy, 
         #blast_out_filename = out_genome_assembly_path + '/Step2_extend_blast_input.fa'
         blast_out_filename = uid_s2
         with open(blast_out_filename) as blast_input_file:
-            lines = blast_input_file.readlines()
+            #lines = blast_input_file.readlines()
             previous_seq = []
             previous_start = []
             previous_end = []
@@ -820,7 +826,8 @@ def process_blast_output_1(in_genome_assembly_path, factor_length, factor_copy, 
             tsd_bound_start = []
             tsd_bound_end = []
             sine_info = []
-            for line in lines:
+            #for line in lines:
+            for line in blast_input_file:
                 if line[0] != '>':
                     previous_seq.append(line)
                 else:
@@ -831,7 +838,7 @@ def process_blast_output_1(in_genome_assembly_path, factor_length, factor_copy, 
                     tsd_bound_start.append(int(line.split('|')[2].split(':')[1]))
                     tsd_bound_end.append(int(line.split('|')[3].split(':')[1]))
                     sine_info.append(line)
-        output_genome_sequence = read_genome_assembly(in_genome_assembly_path)
+        #output_genome_sequence = read_genome_assembly(in_genome_assembly_path)
         os.system('rm '+uid_s2)
         #-------------- Pre-load finished
         fpre=filename
@@ -841,8 +848,9 @@ def process_blast_output_1(in_genome_assembly_path, factor_length, factor_copy, 
         tem=[]
         dused={}
         with open(filename_1) as blast_output_file_1:
-            lines = blast_output_file_1.readlines()
-            for line in lines:
+            #lines = blast_output_file_1.readlines()
+            #for line in lines:
+            for line in blast_output_file_1:
                 ele=line.split()
                 #print(ele)
                 #if float(ele[2])==100 and int(ele[6])==1:
@@ -1087,6 +1095,8 @@ def process_blast_output_1(in_genome_assembly_path, factor_length, factor_copy, 
             modify_text(out_genome_assembly_path+'/'+fpre+'.fa')
         save_to_fna_3(out_genome_assembly_path+'/'+fpre+'.fa', finder_seq, sine_info, finder_start,
                       finder_end, blast_count, length)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(cpus, len(step3_files))) as executor:
+        executor.map(process_file, step3_files)
     os.system('cat '+out_genome_assembly_path+'/Step3_blast_output.out*.fa > '+out_genome_assembly_path+'/Step3_blast_process_output.fa')
 
 
@@ -1734,7 +1744,7 @@ def main_function():
     if check_finished('Step3_process_MSA',[output_genome_assembly_path+'/Step3_blast_process_output.fa'],at) or at:
         process_blast_output_1(input_genome_assembly_path, input_factor_length, input_factor_copy_number,
                            input_max_shift, input_max_gap, input_min_copy_number,
-                           1, output_genome_assembly_path, input_bound, input_figure)
+                           1, output_genome_assembly_path, input_bound, input_figure,int(cpus))
     if check_finished('Step3_process_MSA_p2',[output_genome_assembly_path+'/Step4_rna_input.fasta'],at) or at:
         process_blast_output_2(output_genome_assembly_path)
     
