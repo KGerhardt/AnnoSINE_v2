@@ -305,10 +305,10 @@ def prompter(oname, **kwargs):
 
 # Lambda-functions
 
-is_integer = lambda v: type(v) == int or re.match("^\d+$", v)
-is_integer_argv = lambda o: re.match("^\d+$", sys.argv[sys.argv.index(o) + 1])
-is_float = lambda v: type(v) in (int, float) or re.match("^\d+\.?\d*$", v)
-is_float_argv = lambda o: re.match("^\d+\.?\d*$", sys.argv[sys.argv.index(o) + 1])
+is_integer = lambda v: type(v) == int or re.match(r"^\d+$", v)
+is_integer_argv = lambda o: re.match(r"^\d+$", sys.argv[sys.argv.index(o) + 1])
+is_float = lambda v: type(v) in (int, float) or re.match(r"^\d+\.?\d*$", v)
+is_float_argv = lambda o: re.match(r"^\d+\.?\d*$", sys.argv[sys.argv.index(o) + 1])
 get_extension = lambda f: f.split('.')[-1]
 filter_extension = lambda f: get_extension(f) in extensions
 seems_to_be_fasta = lambda f: open(f).read(10).strip().startswith('>')
@@ -343,7 +343,7 @@ class FastaIterator:
 
         remain_len = self.CHUNKSIZE - len(self.seq)
         if remain_len > 0:
-            self.seq += re.sub("\s", "", self.fi.readline(remain_len))
+            self.seq += re.sub(r"\s", "", self.fi.readline(remain_len))
             if self.CHUNKSIZE - len(self.seq) > 0:
                 return True
         return False
@@ -413,7 +413,7 @@ class FastaIterator:
                 return False  # EOF, no new sequence
             elif not line.strip():
                 continue
-            m = re.match("^>(\S+)", line)
+            m = re.match(r"^>(\S+)", line)
             if m:
                 self.id = m.group(1)
                 break
@@ -433,7 +433,7 @@ class FastaIterator:
                 self.cache = line
                 return True
             else:
-                self.seq += re.sub("\s", "", line)
+                self.seq += re.sub(r"\s", "", line)
 
     def __next__(self):
 

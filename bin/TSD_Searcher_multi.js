@@ -21,7 +21,6 @@ const MatchLenThr = 10;
 const MismatchLenThr = 1;
 const TSDNum = 3;
 
-
 function TSDsearch(faSeq) {
   /**console.log("Start searching TSDs for sequence:");**/
   /**console.log(faSeq);**/
@@ -39,22 +38,54 @@ function TSDsearch(faSeq) {
   var Seq =
     sq.substr(LeftOffset, LeftRange) +
     "######" +
-    sq.substr(sq.length - RightOffset - RightRange, RightRange);
+    sq.substr(sq.length - RightOffset - RightRange, RightRange);o
   var TSDptn1 = "^[ACGT]{"; /* left offset */
-  var TSDptn2 = "}([ACGT]{" + R1Len + ",})"; /* #1 subrepeat 1 */
-  TSDptn2 += "([ACGT]{0," + SLen + "}?)"; /* #2 spacer 1/2 */
-  TSDptn2 += "([ACGT]{" + R2Len + ",})"; /* #3 subrepeat 2 */
-  TSDptn2 += "([ACGT]{0," + SLen + "}?)"; /* #4 spacer 2/3 */
-  TSDptn2 += "([ACGT]{" + R3Len + ",})"; /* #5 subrepeat 2 */
+  var TSDptn2 = "}([ACGT]{1,})"; /* #1 subrepeat 1 */
+  TSDptn2 += "([ACGT]{0,1}?)"; /* #2 spacer 1/2 */
+  TSDptn2 += "([ACGT]{1,})"; /* #3 subrepeat 2 */
+  TSDptn2 += "([ACGT]{0,1}?)"; /* #4 spacer 2/3 */
+  TSDptn2 += "([ACGT]{1,})"; /* #5 subrepeat 2 */
   TSDptn2 += "[ACGT]*#{6}[ACGT]{"; /* spacer between repeats */
   var TSDptn3 = ",}?(\\1)"; /* #6 subrepeat 1 */
-  TSDptn3 += "([ACGT]{0," + SLen + "}?)"; /* #7 spacer 1/2 */
+  TSDptn3 += "([ACGT]{0,1}?)"; /* #7 spacer 1/2 */
   TSDptn3 += "(\\3)"; /* #8 subrepeat 2 */
-  TSDptn3 += "([ACGT]{0," + SLen + "}?)"; /* #9 spacer 2/3 */
+  TSDptn3 += "([ACGT]{0,}?)"; /* #9 spacer 2/3 */
   TSDptn3 += "(\\5)"; /* #10 subrepeat 3 */
   TSDptn3 += "([ACGT]*$)"; /* #11 seq after TSD 2 */
+  
+
+  /*
+  What all do we get here?
+  All of the regex expressions here actually use constants and don't need to have this strange construction method.
+  
+  written better:
+	leading_seq = "^[ATCG]{"
+	rep1 = "}([ATCG]{1,})"
+	sp1  = "([ACGT]{0,1}?)"
+	rep2 = "([ACGT]{1,})"
+	sp2  = "([ACGT]{0,1}?)"
+	rep3 = "([ACGT]{1,})"
+	separator = "[ACGT]*#{6}[ACGT]{"
+	rep1_post",}?(\\1)"
+	sp1_post = "([ACGT]{0,1}?)"
+	rep2_post = "(\\3)";
+	sp2_post = "([ACGT]{0,}?)"
+	rep3_post = "(\\5)";
+	trailing_seq = "([ACGT]*$)"
+  
+	These are combined to make a regex string like
+	leading_seq (pat1 spacer? pat2 spacer? pat3) junk (pat1 spacer? pat2 spacer? pat3) trailing_seq
+	
+	where pat1 2, 3, can be any length of at least one.
+	
+	So TSD minimum is length 3, maximum is unbounded but we stop checking after LeftRange leading chars
+	
+  */
 
 
+	/*
+	
+	*/
   while (Pos1 < LeftRange - MatchLenThr) {
     Pos2 = 0;
     TSDre = new RegExp(TSDptn1 + Pos1 + TSDptn2 + Pos2 + TSDptn3, "i");
@@ -66,6 +97,10 @@ function TSDsearch(faSeq) {
         Math.max(Match[4].length, Match[9].length) <=
         MismatchLenThr
     ) {
+		
+		/*
+		This block builds left and right TSD strings by adding '-' spacers where they differ to positions are matched up
+		*/
       TSD1 = Match[1].toUpperCase() + Match[2].toLowerCase();
       TSD2 = Match[6].toUpperCase() + Match[7].toLowerCase();
       while (TSD1.length > TSD2.length) {
@@ -84,20 +119,34 @@ function TSDsearch(faSeq) {
       }
       TSD1 += Match[5].toUpperCase();
       TSD2 += Match[10].toUpperCase();
+	  
+	/*
+	Record the recovered TSD positions and sequences
+	*/
+	  
       TSD[i] = [
         LeftOffset + Match.index + Pos1 + 1,
+		
         TSD1.match(/[ACGT]/gi).length,
+		
         sq.length -
           RightOffset -
           Match[11].length -
           TSD2.match(/[ACGT]/gi).length +
           1,
+		  
         TSD2.match(/[ACGT]/gi).length,
+		
         TSD1,
         TSD2,
         Math.pow(Match[1].length + Match[3].length + Match[5].length, 2) /
           TSD1.length,
       ];
+	  
+	  
+	/*
+	Itrerate over 
+	*/
       for (j = 0; j < TSD.length - 1; ++j) {
         if (
           TSD[i][0] >= TSD[j][0] &&
@@ -125,6 +174,8 @@ function TSDsearch(faSeq) {
     } /* end of while Match && ... */
     Pos1++;
   } /* end of while Pos1 loop */
+  
+  
   TSD = TSD.sort(function (a, b) {
     return b[6] - a[6];
   });
