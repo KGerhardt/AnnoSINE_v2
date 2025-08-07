@@ -18,8 +18,10 @@ import subprocess
 import pyfastx
 import sqlite3
 import shutil
-from genomeSplitter import genomeSplitter
+#from genomeSplitter import genomeSplitter
 from process_blast_output_polars import get_updates_from_blasts
+from pyhmmer_runner import process_pyhmmer, hmm_output_cleaner
+from annosine_tsd_searcher import tsd_searcher
 
 print('Example: python3 AnnoSINE.py 2 ../Input_Files/test.fasta ../Output_Files', flush=True)
 parser = argparse.ArgumentParser(description="SINE Annotation Tool for Plant Genomes",
@@ -370,7 +372,7 @@ def merge_same_hmm_output_raw(hmm_output_record):
 (4) Retrieve genome sequences
 (5) Output modified seqid fasta
 '''
-def process_hmm_output_3(threshold_hmm_e_value, in_genome_assembly_path, pattern, out_genome_assembly_path):
+def process_hmm_output_3(threshold_hmm_e_value, in_genome_assembly_path, pattern, out_genome_assembly_path, hmm_results_file):
 	count = 0
 	seq_ids = {}
 	start = {}
@@ -385,7 +387,8 @@ def process_hmm_output_3(threshold_hmm_e_value, in_genome_assembly_path, pattern
 	print('process_hmm_output_3:read_genome_assembly uses',t2-t1,flush=True)
 	
 	t1=time.time()
-	update_hmm_record, family_name, family_count = process_hmm_output_2(threshold_hmm_e_value, script_dir)
+	#update_hmm_record, family_name, family_count = process_hmm_output_2(threshold_hmm_e_value, script_dir)
+	update_hmm_record, family_name, family_count = hmm_output_cleaner(hmm_results_file, threshold_hmm_e_value)
 	t2=time.time()
 	print('process_hmm_output_3:process_hmm_output uses',t2-t1,flush=True)
 
@@ -525,48 +528,6 @@ def run_tsd_search(infile,outdir,script_dir,outfile):
 	retf = os.path.join(outdir, outfile)
 	return retf
 
-#It would be better to rewrite this in python, but barring that we can just make checkpointing code
-def search_tsd(out_genome_assembly_path, script_dir, cpus=8):
-	was_split_checker = os.path.join(out_genome_assembly_path, 'Step1_check_tsd_was_split.txt')
-	#Do not re-split files
-	if not os.path.exists(was_split_checker):
-		split_file(os.path.join(out_genome_assembly_path, 'Step1_extend_tsd_input.fa'), out_genome_assembly_path, 1000)
-		#Make a marker that this step was completed.
-		with open(was_split_checker, 'w') as temp:
-			pass
-	
-	ifiles=[f for f in os.listdir(out_genome_assembly_path) if 'TSD_input_chunk' in f]
-	pres=[f.replace('input', 'output') for f in ofiles]
-	
-	
-	
-	ofiles = []
-	
-	tsd_outf = os.path.join(out_genome_assembly_path, 'Step2_tsd.txt')
-	
-	#with concurrent.futures.ProcessPoolExecutor(max_workers=cpus) as executor:
-	with multiprocessing.Pool(cpus) as pool:
-		for inf, pre in zip(ifiles, pres):
-			#pre = filename.replace('input','output')
-			#ofiles.append(executor.submit(run_tsd_search, filename, out_genome_assembly_path, script_dir, pre))
-			ofiles.append(executor.submit(run_tsd_search, inf, out_genome_assembly_path, script_dir, pre))
-		
-		if os.path.exists(tsd_outf):
-			needs_header = False
-		else:
-			needs_header = True
-		with open(tsd_outf, 'ab') as out:
-			for ef in concurrent.futures.as_completed(ofiles):
-				tsd_chunk_output = ef.result()
-				with open(tsd_chunk_output, 'rb') as inf:
-					header = inf.readline()#Skip first line if it's happened once
-					if needs_header:
-						out.write(header)
-						needs_header = False
-					shutil.copyfileobj(inf, out)
-					
-				os.remove(tsd_chunk_output)
-				os.remove(tsd_chunk_output.replace('output', 'input'))
 
 #It would be better to rewrite this in python, but barring that we can just make checkpointing code
 def search_tsd(out_genome_assembly_path, script_dir, cpus=8):
@@ -577,27 +538,17 @@ def search_tsd(out_genome_assembly_path, script_dir, cpus=8):
 		#Make a marker that this step was completed.
 		with open(was_split_checker, 'w') as temp:
 			pass
+			
 	
 	ifiles=[f for f in os.listdir(out_genome_assembly_path) if 'TSD_input_chunk' in f]
-	pres=[f.replace('input', 'output') for f in ofiles]
-	
-	
+	pres=[f.replace('input', 'output') for f in ifiles]
+		
+	tsd_outf = os.path.join(out_genome_assembly_path, 'Step2_tsd.txt')
 	
 	ofiles = []
-	
-	tsd_outf = os.path.join(out_genome_assembly_path, 'Step2_tsd.txt')
 	
 	with concurrent.futures.ProcessPoolExecutor(max_workers=cpus) as executor:
-		'''
-		for filename in os.listdir(out_genome_assembly_path):
-			if not re.search('TSD_input_chunk', filename):
-				continue
-			if not check_file_has_rows(os.path.join(out_genome_assembly_path, filename)):
-				continue
-		'''
 		for inf, pre in zip(ifiles, pres):
-			#pre = filename.replace('input','output')
-			#ofiles.append(executor.submit(run_tsd_search, filename, out_genome_assembly_path, script_dir, pre))
 			ofiles.append(executor.submit(run_tsd_search, inf, out_genome_assembly_path, script_dir, pre))
 		
 		if os.path.exists(tsd_outf):
@@ -614,15 +565,9 @@ def search_tsd(out_genome_assembly_path, script_dir, cpus=8):
 						needs_header = False
 					shutil.copyfileobj(inf, out)
 					
-				os.remove(tsd_chunk_output)
-				os.remove(tsd_chunk_output.replace('output'))
-				
-					
-				#tofiles.append(ef.result())
-	
-	#tofiles_sorted = sorted(tofiles, key=lambda x: int(re.search(re.compile(r"TSD_output_chunk_(\d+).fa"), x).group(1)))
+				#os.remove(tsd_chunk_output)
+				#os.remove(tsd_chunk_input)
 
-	
 	#Non os-system remove
 	c1 = os.path.join(out_genome_assembly_path, 'TSD_output_chunk_*')
 	c2 = os.path.join(out_genome_assembly_path, 'TSD_input_chunk_*')
@@ -631,7 +576,7 @@ def search_tsd(out_genome_assembly_path, script_dir, cpus=8):
 	for file in glob.glob(c2):
 		os.remove(file)
 
-def is_at_seq(seq, tolerance):
+def is_at_seq(seq, tolerance = 0):
 	"""
 	Test if a sequence consists with 'A' ('a') and 'T' ('t').
 	Occurrence of other bases cannot be more than `tolerance`.
@@ -689,10 +634,12 @@ def process_tsd_output(in_genome_assembly_path, out_genome_assembly_path):
 				if len(line) != 1:
 					left_tsd = line.split()[0]
 					right_tsd = line.split()[2]
-					if is_at_seq(left_tsd.replace('-', ''), 0) or is_at_seq(right_tsd.replace('-', ''), 0):
-						record_tsd.append(0)
-					else:
-						record_tsd.append(1)
+					record_tsd.append(1)
+					#Poly A/T sequence management moved to annosine_tsd_searcher.py
+					#if is_at_seq(left_tsd.replace('-', ''), 0) or is_at_seq(right_tsd.replace('-', ''), 0):
+					#	record_tsd.append(0)
+					#else:
+					#	record_tsd.append(1)
 				else:
 					record_tsd.append(0)
 
@@ -702,6 +649,7 @@ def process_tsd_output(in_genome_assembly_path, out_genome_assembly_path):
 	input_seq = []
 
 	output_genome_sequence = read_genome_assembly(in_genome_assembly_path)
+	
 	for t in range(len(hmm_pos)):
 		if record_tsd[t] == 0:
 			tsd_info.append('tsd not exist')
@@ -770,9 +718,6 @@ def process_tsd_output(in_genome_assembly_path, out_genome_assembly_path):
 			o.write(line+'\n')
 	o.close()
 	
-	#Create index for later use.
-	pyfastx.Fasta(rename_fa, build_index = True)
-		
 	if count==0:
 		print('No sequences in Step2_extend_blast_input.fa! Please check! Exit.')
 		exit()
@@ -884,7 +829,7 @@ def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_ass
 	comm = f'minimap2 -c -t {cpus} -p 0.01 -K 500M -N {input_num_alignments} {mmidx} {out_genome_assembly} -o {output_paf}'
 
 	comm = comm.split()
-	comm = subprocess.run(comm)	
+	comm = subprocess.run(comm, stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)	
 		
 	chunk_size=100_000 #Read inputs 500k lines at a time using pandas
 	max_lines = 5_000_000 #~500 MB output file size
@@ -894,38 +839,6 @@ def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_ass
 	
 
 
-	
-#Iterate through a blast input one
-class blast_input_parser:
-	def __init__(self, blast_file):
-		self.bf = blast_file
-		
-	def record_iterator(self):
-		with open(self.bf) as inf:
-			starts, ends = [], []
-			segs = inf.readline().strip().split('\t')
-			previous_record_id = segs[0]
-			previous_parent_contig = segs[1]
-			previous_length = int(segs[3])
-			start, end = int(segs[6]), int(segs[7])
-			starts.append(start)
-			ends.append(end)
-			for line in inf:
-				segs = line.strip().split('\t')
-				group_id = segs[0]
-				parent_contig = segs[1]
-				start, end = int(segs[6]), int(segs[7])
-				if previous_record_id != group_id:
-					yield previous_record_id, previous_parent_contig, previous_length, starts, ends
-					previous_record_id = group_id
-					previous_parent_contig = parent_contig
-					previous_length = int(segs[3])
-					starts = []
-					ends = []
-				starts.append(start)
-				ends.append(end)
-				
-		yield previous_record_id, previous_parent_contig, previous_length, starts, ends
 
 '''
 What does this do?
@@ -1378,7 +1291,7 @@ def process_blast_output_1(in_genome_assembly_path, factor_length, factor_copy, 
 				finder_start.append(0)
 				finder_end.append(0)
 			else:
-				#Bound is a step parameter
+				#Bound is a step parameter, default is msa
 				old_pre_start = tsd_bound_start[t]
 				old_pre_end = tsd_bound_end[t]
 				
@@ -1427,8 +1340,8 @@ def save_to_fna_3(filename, sequences, title, bs, be, num, l):
 
 
 def process_blast_output_2(out_genome_assembly_path):
-	input_f1 = out_genome_assembly_path+'/Step3_blast_process_output.fa'
-	input_f2 = out_genome_assembly_path+'/Step4_rna_input.fasta'
+	input_f1 = os.path.join(out_genome_assembly_path, 'Step3_blast_process_output.fa')
+	input_f2 = os.path.join(out_genome_assembly_path, 'Step4_rna_input.fasta')
 	with open(input_f1, 'r')as f1:
 		with open(input_f2, 'w') as f2:
 			flag = False
@@ -1443,22 +1356,26 @@ def process_blast_output_2(out_genome_assembly_path):
 
 
 def blast_rna(out_genome_assembly_path, cpus, script_dir):
-	os.system('blastn -query '+out_genome_assembly_path+'/Step4_rna_input.fasta '
-			  '-subject ' + script_dir + '/../Input_Files/rna_database.fa ' #shujun
-			  '-out '+out_genome_assembly_path+'/Step4_rna_output.out '
-			  '-evalue 1 '
-			  '-num_alignments 50000 '
-			  '-word_size 7 '
-			  '-gapopen 5 '
-			  '-gapextend 2 '
-			  '-penalty -3 '
-			  '-reward 2 '
-			  '-num_threads '+ str(cpus))
+	q = os.path.join(out_genome_assembly_path, 'Step4_rna_input.fasta')
+	query_is_ok = os.path.getsize(q) > 0
+	if query_is_ok:
+		s = os.path.join(script_dir, '..' , 'Input_Files', 'rna_database.fa')
+		o = os.path.join(out_genome_assembly_path, 'Step4_rna_output.out')
+		#command = f'blastn -query {q} -subject {s} -out {o} -evalue 1 -num_alignments 50000 -word_size 7 -gapopen 5 -gapextend 2 -penalty -3 -reward 2 -num_threads {cpus}'
+		#Blast says threads is ignored when subject is specified, so no point passing
+		command = f'blastn -query {q} -subject {s} -out {o} -evalue 1 -num_alignments 50000 -word_size 7 -gapopen 5 -gapextend 2 -penalty -3 -reward 2'
+		command = command.split()
+		subprocess.run(command, stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
+	else:
+		print('There are no sequences to check for RNA heads')
+		
+	return query_is_ok
 
 
 def process_rna(out_genome_assembly_path):
 	rna_database = []
-	with open(script_dir + '/../Input_Files/rna_database.fa') as f: #shujun
+	rnadb = os.path.join(script_dir, '..', 'Input_Files', 'rna_database.fa')
+	with open(rnadb) as f: #shujun
 		num = 0
 		lines = f.readlines()
 		for line in lines:
@@ -1475,7 +1392,7 @@ def process_rna(out_genome_assembly_path):
 	filter_out = []
 	min_e_values = []
 	E_VALUE_PATTERN = re.compile(r'Expect = (?P<e_value>\S+)')
-	input_f = out_genome_assembly_path+'/Step4_rna_output.out'
+	input_f = os.path.join(out_genome_assembly_path, 'Step4_rna_output.out')
 	with open(input_f)as f:
 		rna_id = []
 		title = None
@@ -1513,12 +1430,14 @@ def process_rna(out_genome_assembly_path):
 				hit_record.append('Unknown')
 		else:
 			hit_record.append('Unknown')
-	if os.path.exists(out_genome_assembly_path+'/Step4_rna_output.fasta'):
-		modify_text(out_genome_assembly_path+'/Step4_rna_output.fasta')
-	input_f1 = out_genome_assembly_path+'/Step4_rna_input.fasta'
-	input_f2 = out_genome_assembly_path+'/Step4_rna_output.fasta'
+			
+	modtext_path = os.path.join(out_genome_assembly_path, 'Step4_rna_output.fasta')
+	if os.path.exists(modtext_path):
+		modify_text(modtext_path)
+	input_f1 = os.path.join(out_genome_assembly_path, 'Step4_rna_input.fasta')
+	#input_f2 = modtext_path
 	with open(input_f1, 'r')as rna_input_file:
-		with open(input_f2, 'w')as rna_output_file:
+		with open(modtext_path, 'w')as rna_output_file:
 			flag = False
 			num = -1
 			for line in rna_input_file:
@@ -1554,16 +1473,18 @@ def process_rna(out_genome_assembly_path):
 						rna_output_file.write(line.strip() + '\n')
 			#exit()
 
-
-def tandem_repeat_finder(uid,out_genome_assembly_path):
-	#path = os.path.abspath(os.path.dirname(os.getcwd()))
-	#path = os.path.split(os.path.abspath(__file__))[0]
+#Updated style, filepath building, removed os system calls
+def tandem_repeat_finder(uid, out_genome_assembly_path):
+	input_file = os.path.join(uid, 'Step4_rna_output.fasta')
+	output_filebase = 'Step4_rna_output.fasta.2.5.7.80.10.10.2000.dat'
 	path=os.getcwd()
-	os.system('trf '
-			  + uid + '/Step4_rna_output.fasta '
-			  '2 5 7 80 10 10 2000 -d -h -l 6')
-	if os.path.exists(path+'/Step4_rna_output.fasta.2.5.7.80.10.10.2000.dat'):
-		os.system('mv '+path+'/Step4_rna_output.fasta.2.5.7.80.10.10.2000.dat '+out_genome_assembly_path)
+	output_file = os.path.join(os.getcwd(), output_filebase)
+	moved_file = os.path.join(out_genome_assembly_path, output_filebase)
+	command = f'trf {input_file} 2 5 7 80 10 10 2000 -d -h -l 6'
+	command = command.split()
+	subprocess.run(command, stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
+	if os.path.exists(output_file):
+		shutil.move(output_file, moved_file)
 
 
 
@@ -1753,6 +1674,7 @@ def cluster_sequences(out_genome_assembly_path,cpus):
 				else:
 					f_2.write(line)
 
+#Might want to consider figure stuff - it would not work with my blast polars changes without help
 def re_process_figure(out_genome_assembly_path):
 	comp_1 = []
 	comp_2 = []
@@ -1778,21 +1700,24 @@ def re_process_figure(out_genome_assembly_path):
 			os.remove(+ '/Figures/' + f'MSA_{num}.png')
 			os.remove(out_genome_assembly_path + '/Figures/' + f'profile_{num}.png')
 
+#Cleaned up the style
 def genome_annotate(in_genome_assembly_path, out_genome_assembly_path, in_nonredundant, rm_cpus): #reduce cpu number for RepeatMasker to avoid overutilization
-	#path = os.path.abspath(os.path.dirname(os.getcwd()))
-	print('Genome file: ' + in_genome_assembly_path, flush=True)
-	print('Annotation results: ' + out_genome_assembly_path + '/RepeatMasker/', flush=True)
+	print('Genome file: ' + os.path.normpath(in_genome_assembly_path), flush=True)
+	annot = os.path.join(out_genome_assembly_path, 'RepeatMasker')
+	
+	print(f'Annotation results: {annot}', flush=True)
 	if in_nonredundant == 'y':
-		os.system('RepeatMasker -e ncbi -pa ' + str(rm_cpus) + ' -q -no_is -norna -nolow -div 40 '
-				  '-lib  ' + out_genome_assembly_path + '/Seed_SINE.fa '
-				  '-cutoff 225 ' + in_genome_assembly_path + ' '
-				  '-dir ' + out_genome_assembly_path + '/RepeatMasker/ > /dev/null 2>&1')
+		seed = os.path.join(out_genome_assembly_path, 'Seed_SINE.fa')
+		comm = f'RepeatMasker -e ncbi -pa {rm_cpus} -q -no_is -norna -nolow -div 40 \
+				-lib {seed} -cutoff 225 {in_genome_assembly_path} -dir {annot}'
+		
 	elif in_nonredundant == 'n':
-		os.system('RepeatMasker -e ncbi -pa ' + str(rm_cpus) + ' -q -no_is -norna -nolow -div 40 '
-				  '-lib  ' + out_genome_assembly_path + '/Step7_cluster_output.fasta '
-				  '-cutoff 225 ' + in_genome_assembly_path + ' '
-				  '-dir ' + out_genome_assembly_path + '/RepeatMasker/ > /dev/null 2>&1')
-
+		s7_out = os.path.join(out_genome_assembly_path, 'Step7_cluster_output.fasta')
+		comm = f'RepeatMasker -e ncbi -pa {rm_cpus} -q -no_is -norna -nolow -div 40 \
+				-lib {s7_out} -cutoff 225 {in_genome_assembly_path} -dir {annot}'
+				
+	comm = comm.split()
+	subprocess.run(comm, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 def sine_finder(genome_assembly_path, script_dir):
 	#main_func()
@@ -1874,7 +1799,7 @@ def check_hmm_finished(pre,idir):
 		print(pre+' already finished! Will skip to the next step!')
 	return a
 
-def check_finished(pre,arr,at):
+def check_finished(pre, arr, at):
 	a=True
 	for a in arr:
 		if os.path.exists(a):
@@ -1963,30 +1888,30 @@ def main_function():
 	print('************************************************************************', flush=True)
 	print('*************************** AnnoSINE START! ****************************', flush=True)
 	print('************************************************************************', flush=True)
-	
+	step_1_1_file = os.path.join(output_genome_assembly_path, 'Step1_extend_tsd_input_1.fa')
+	step_1_2_file = os.path.join(output_genome_assembly_path, 'Step1_extend_tsd_input_2.fa')
+
 	if input_pattern == 1 or input_pattern == 3:
 		print('================ HMMER prediction has begun ==================', flush=True)
-		step_1_1_file = os.path.join(output_genome_assembly_path, 'Step1_extend_tsd_input_1.fa')
 		#if check_hmm_finished('S1_hmm_predict',work_dir+'/HMM_out'):
 		if check_finished('Step1_process_hmm',[step_1_1_file], at) or at:
 			t1=time.time()
-			hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir,input_ani,input_hmm_e_value)
+			#hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir,input_ani,input_hmm_e_value)
+			#hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir,input_ani,input_hmm_e_value)
+			hmm_model_dir = os.path.join(os.path.dirname(os.path.abspath(script_dir)), 'hmm_family_seq_easy')
+			hmmsearch_output = os.path.join(output_genome_assembly_path, 'Step1_HMMsearch_results.txt')
+			process_pyhmmer(input_genome_assembly_path, hmm_model_dir, hmmsearch_output, threads = cpus)
 			t2=time.time()
 			print('Step 1 mode-1::hmm_predict uses ',t2-t1,' s',flush=True)
 			
 			t1=time.time()
-			process_hmm_output_3(input_hmm_e_value, input_genome_assembly_path, input_pattern, output_genome_assembly_path)
+			process_hmm_output_3(input_hmm_e_value, input_genome_assembly_path, input_pattern, output_genome_assembly_path, hmmsearch_output)
 			t2=time.time()
 			print('Step 1 mode-1::process_hmm_output_3 uses ',t2-t1,' s',flush=True)
 			
-			if os.path.exists(step_1_1_file):
-				if os.path.getsize(step_1_1_file) == 0:
-					print('HMM can not find any matched SINE! Program exit.')
-					exit()
 	
 	if input_pattern == 2 or input_pattern == 3:
 		print('================ Structure search has begun ==================', flush=True)
-		step_1_2_file = os.path.join(output_genome_assembly_path, 'Step1_extend_tsd_input_2.fa')
 		if check_finished('Step1_sine_part', [step_1_2_file], at) or at:
 			t1=time.time()
 			sine_finder(input_genome_assembly_path, script_dir)
@@ -1996,13 +1921,28 @@ def main_function():
 			process_sine_finder(input_genome_assembly_path, input_sine_finder, output_genome_assembly_path, input_pattern)
 			t2=time.time()
 			print('Step 1 mode-2::process_sine_finder uses ',t2-t1,' s',flush=True)
-			
-			if os.path.exists(step_1_2_file):
-				if os.path.getsize(step_1_2_file) == 0:
-					print('SINEfinder can not find any SINE! Program exit.')
-					exit()
+
 	
 	#Data prep ends here
+	
+	step11_ok = True
+	if os.path.exists(step_1_1_file):
+		if os.path.getsize(step_1_1_file) == 0:
+			print('HMM can not find any matched SINE!')
+			step11_ok = False
+			#exit()
+			
+	step12_ok = True
+	if os.path.exists(step_1_2_file):
+		if os.path.getsize(step_1_2_file) == 0:
+			print('SINEfinder can not find any SINE!')
+			step12_ok = False
+			#exit()
+			
+	if not step11_ok and step12_ok:
+		print('AnnoSINE could not find any SINEs under the requested program parameters.')
+		print('AnnoSINE cannot continue and will exit.')
+		exit()
 	
 	step_1_complete_file = os.path.join(output_genome_assembly_path, 'Step1_extend_tsd_input.fa')
 	if check_finished('Step1_merge_part', [step_1_complete_file], at) or at:
@@ -2018,9 +1958,9 @@ def main_function():
 	print('================ Step 2: TSD identification has begun ================', flush=True)
 	t1=time.time()
 	if check_finished('Step2_search_tsd',[output_genome_assembly_path+'/Step2_tsd.txt'], at) or at:
-		search_tsd(output_genome_assembly_path, script_dir,cpus)
 		#search_tsd(output_genome_assembly_path, script_dir,cpus)
-		#print('')
+		tsd_output = os.path.join(output_genome_assembly_path, 'Step2_tsd.txt')
+		tsd_searcher(step_1_complete_file, tsd_output, lc = 50, rc = 70, minlen = 10, max_mis = 1, threads = cpus)
 	if check_finished('Step2_process_tsd',[output_genome_assembly_path+'/Step2_tsd_output.fa','Step2_extend_blast_input.fa'],at) or at:
 		process_tsd_output(input_genome_assembly_path, output_genome_assembly_path)
 	t2=time.time()
@@ -2037,7 +1977,7 @@ def main_function():
 	'''
 	print('================ Step 3: MSA implementation has begun ================', flush=True)
 	t1=time.time()
-	if check_finished('Step3_MSA', [output_genome_assembly_path+'/Step3_blast_output.out'], at) or at:
+	if check_finished('Step3_MSA', [output_genome_assembly_path+'/Step3_blast_output.out_part1'], at) or at:
 		multiple_sequence_alignment(input_blast_e_value, input_genome_assembly_path, output_genome_assembly_path,cpus,input_num_alignments, input_temd)
 		
 	if check_finished('Step3_process_MSA', [output_genome_assembly_path+'/Step3_blast_process_output.fa'], at) or at:
@@ -2045,7 +1985,6 @@ def main_function():
 		get_updates_from_blasts(output_genome_assembly_path, input_genome_assembly_path, factor_copy = input_factor_copy_number, factor_length = input_factor_length, 
 								min_copy_number = input_min_copy_number, max_gap = input_max_gap, max_shift = input_max_shift, threads = int(cpus))
 		
-	
 	if check_finished('Step3_process_MSA_p2',[output_genome_assembly_path+'/Step4_rna_input.fasta'],at) or at:
 		process_blast_output_2(output_genome_assembly_path)
 	
@@ -2058,12 +1997,13 @@ def main_function():
 	print('========= Step 4: RNA derived head identification has begun ==========', flush=True)
 	t1=time.time()
 	if check_finished('Step4_blast_rna',[output_genome_assembly_path+'/Step4_rna_output.out'],at) or at:
-		blast_rna(output_genome_assembly_path, cpus, script_dir)
-	if check_finished('Step4_process_blast_rna',[output_genome_assembly_path+'/Step4_rna_output.fasta'],at) or at:
+		able_to_process = blast_rna(output_genome_assembly_path, cpus, script_dir)
+	if (check_finished('Step4_process_blast_rna',[output_genome_assembly_path+'/Step4_rna_output.fasta'],at) or at) and able_to_process:
 		process_rna(output_genome_assembly_path)
 	t2=time.time()
 	print('Step 4 uses ',t2-t1,' s',flush=True)
 	print('\n========================= Step 4 has been done =======================\n\n', flush=True)
+	
 	uid=uuid.uuid1().hex 
 	if not os.path.exists(uid):
 		os.makedirs(uid)
@@ -2071,13 +2011,12 @@ def main_function():
 	print('=============== Step 5: Tandem repeat finder has begun ===============', flush=True)
 	t1=time.time()
 	if check_finished('Step5_trf',[work_dir+'/Step4_rna_output.fasta.2.5.7.80.10.10.2000.dat'],at) or at:
-		#tandem_repeat_finder(output_genome_assembly_path)
-		tandem_repeat_finder(uid,output_genome_assembly_path)
+		tandem_repeat_finder(uid, output_genome_assembly_path)
 	if check_finished('Step5_process_trf',[output_genome_assembly_path+'/Step5_trf_output.fasta'],at) or at:
 		process_trf(0.5, output_genome_assembly_path, work_dir)
 	t2=time.time()
 	print('Step 5 uses ',t2-t1,' s',flush=True)
-	os.system('rm -rf '+uid)
+	shutil.rmtree(uid)
 	print('\n======================== Step 5 has been done ========================\n\n', flush=True)
 
 	print('=============== Step 6: Inverted repeat finder has begun =============', flush=True)

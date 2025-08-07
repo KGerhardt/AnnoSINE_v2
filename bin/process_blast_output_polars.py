@@ -44,7 +44,8 @@ def clean_blast_record(args):
 
 	these_cols = [0, 1, 3, 6, 7]
 
-	file, factor_copy, factor_length, min_copy_number, max_gap, max_shift = args
+	#file, factor_copy, factor_length, min_copy_number, max_gap, max_shift = args
+	file, factor_copy, factor_length, min_copy_number, max_gap = args
 
 	df = pl.read_csv(file, has_header = False, separator = '\t', schema = blast_schema, columns = these_cols)
 	
@@ -109,6 +110,9 @@ def clean_blast_record(args):
 		#Calculate ends
 		position_ends = position_starts + runs - 1
 		
+		#Need to implement this.
+		#print('Shift value for your input:',abs(blast_pre[0]['start'] - 100), abs(blast_pre[0]['end'] - (length[m] - 100)),' | Maximum tolerable shift value:',max_shift)
+
 		num_gaps = position_starts.shape[0] - 1
 		
 		#If there is more than one contiguous group of sequences, clean the position start and end records
@@ -135,7 +139,7 @@ def clean_blast_record(args):
 			
 			#Find contiguous groupings separated by <= gap_size
 			#Gap sizes betweed adjacent records have to be less than max_gap to be included
-			gap_sizes = position_starts[1:] - position_ends[0:-1]
+			#gap_sizes = position_starts[1:] - position_ends[0:-1]
 			#Initialize a dict of contiguous groups; pre-load group 0 as the first member of the first grouping
 			groupings = {0:[0]}
 			current_group = 0
@@ -168,25 +172,35 @@ def clean_blast_record(args):
 				position_ends = [position_ends[i] for i in groupings[winning_group]]
 
 	
+		#This would match the original logic, but really it makes no sense.
+		#If the point is that the updated positions have to be within max_shift bp of the original TSD coordinates, this does not achieve that goal
 		#The first position is always zero, so there is no math needed here
-		left_shift = position_starts[0]
+		#left_shift = abs(position_starts[0] - 100)
 		#Length of the query - final position covered adequately
-		right_shift = record_length - position_ends[-1]
+		#right_shift = abs(position_ends[-1] - (record_length - 100))
 		
-		if left_shift < max_shift and right_shift < max_shift:
-			updates.append((seqid, int(position_starts[0]), int(position_ends[-1]), hit_count, record_length))
-		else:
-			updates.append((seqid, None, None, hit_count, record_length))
+		#tolerable_shift = left_shift < max_shift and right_shift < max_shift
+		
+		#print(f'Shift start {left_shift} shift end {right_shift} max ok shift {max_shift}')
+		
+		#if tolerable_shift:
+		#	updates.append((seqid, int(position_starts[0]), int(position_ends[-1]), hit_count, record_length))
+		#else:
+		#	updates.append((seqid, None, None, hit_count, record_length))
+		
+		#We handle the max_shift checks later, now, so every record gets added.
+		updates.append((seqid, int(position_starts[0]), int(position_ends[-1])+1, hit_count, record_length))
 	
 	return file, updates
 
 #Parallel processing for retrieval of many genome subsequences in little memory.
 def ref_sequences_to_partial_file(args):
-	index, seqid, ref_genome, my_output, data = args
+	#index, seqid, ref_genome, my_output, data = args
+	index, seqid, ref_genome, my_output, data, max_shift = args
 	
 	ref = pyfastx.Fasta(ref_genome, build_index = True)
 	
-	sequence = ref[seqid]
+	sequence = ref[seqid].seq.upper()
 	seqlen = len(sequence)
 	
 	with open(my_output, 'w') as outfasta:
@@ -194,12 +208,28 @@ def ref_sequences_to_partial_file(args):
 			#Reference name goes unused
 			full_description, query_name, classifier, old_start, old_end, tsd_start, tsd_end, start_adjustment, end_adjustment, blast_hit_ct, record_length, reference_name_dupe = row
 			if start_adjustment is not None:
-				tsd_start = start_adjustment
-				tsd_end = end_adjustment
+				#I am not sure whether the end shift check is supposed to be with reference to the TSD start and end, or the blast alignment's full length.
+				#ok_start_shift is the same in either case - it is ok_end_shift that is in question
+				
+				#The new start location is within max_shift bp of the original start
+				ok_start_shift = start_adjustment < max_shift
+				#The new end location is within max_shift bp of the original end
+				
+				#This way is with respect to the original TSD boundary
+				#ok_end_shift = abs(tsd_end - (tsd_start + end_adjustment)) < max_shift
+				#This way is with respect to the record length
+				ok_end_shift = (record_length - end_adjustment) < max_shift
+								
+				if ok_start_shift and ok_end_shift:
+					tsd_start = tsd_start + start_adjustment
+					tsd_end = tsd_start + end_adjustment
+					blast_start = tsd_start
+					blast_end = tsd_end
+				else:
+					blast_start = 0
+					blast_end = 0
 				
 				#Sanity fixes
-				if tsd_start < 0:
-					tsd_start = 0
 				if tsd_end > seqlen:
 					tsd_end = seqlen
 					
@@ -207,8 +237,13 @@ def ref_sequences_to_partial_file(args):
 				blast_hit_ct = 0
 			if record_length is None:
 				record_length = 0
+				
+			printable_name = full_description.split()
+			prefix = '_'.join(printable_name[0].split('_')[:-1])
+			suffix = ' '.join(printable_name[1:])
+			printable_name = ' '.join([prefix, suffix])
 								
-			header = f'>{full_description}|blast_s:{tsd_start}|blast_e:{tsd_end}|blast_count:{blast_hit_ct}|blast_l:{record_length}'
+			header = f'>{printable_name}|blast_s:{blast_start}|blast_e:{blast_end}|blast_count:{blast_hit_ct}|blast_l:{record_length}'
 			subseq = sequence[tsd_start:tsd_end]
 			
 			print(header, file = outfasta)
@@ -219,8 +254,8 @@ def ref_sequences_to_partial_file(args):
 #The manager function of this script
 def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_copy = 0.15, factor_length= 0.3, min_copy_number = 1, max_gap = 10, max_shift = 50, threads = 1):
 	
-	changes_file = os.path.join(output_directory, 'Step_3_tsd_update_ledger.txt')
-	completion_marker = os.path.join(output_directory, 'Step_3_blast_processing_log.txt')
+	changes_file = os.path.join(output_directory, 'Step3_tsd_update_ledger.txt')
+	completion_marker = os.path.join(output_directory, 'Step3_blast_processing_log.txt')
 	
 	input_files = [f for f in os.listdir(output_directory) if 'Step3_blast_output.out_part' in f and not f.endswith('.fa')]
 	completed_files = []
@@ -240,7 +275,8 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 	if len(input_files) > 0:
 		print('Processing BLAST outputs for changes to TSDs')
 		
-		commands = [(os.path.join(output_directory, file), factor_copy, factor_length, min_copy_number, max_gap, max_shift) for file in input_files]
+		#commands = [(os.path.join(output_directory, file), factor_copy, factor_length, min_copy_number, max_gap, max_shift) for file in input_files]
+		commands = [(os.path.join(output_directory, file), factor_copy, factor_length, min_copy_number, max_gap) for file in input_files]
 		remaining_chunks = len(commands)
 		
 		print(f'{remaining_chunks} BLAST chunks left to process.')
@@ -273,8 +309,6 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 	#Collect update sequences
 	if not os.path.exists(f'{sequences_to_update}.fxi'):
 		print('Indexing TSD sequences...')
-	else:
-		print('Collecting TSD sequence information')
 	
 	fa = pyfastx.Fasta(sequences_to_update, build_index = True)
 
@@ -339,7 +373,7 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 		refseq = refseq[0] #Polars encodes group by as tuples in case there are multiple cols used
 		output = os.path.join(output_directory, f'Step3_blast_process_output_chunk_{idx}.fa')
 		#index, seqid, ref_genome, data
-		next_arg = (idx, refseq, refgen, output, data)
+		next_arg = (idx, refseq, refgen, output, data, max_shift,)
 		tsds_by_file[idx] = len(data)
 		sequence_retrieval.append(next_arg)
 		idx += 1
@@ -353,7 +387,7 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 			for index, result_file in pool.imap_unordered(ref_sequences_to_partial_file, sequence_retrieval):
 				#Fast file concatenate results to a single final output
 				with open(result_file, 'rb') as infile:
-					shutil.copyfileobj(infile, outfile)
+					shutil.copyfileobj(infile, outfile, 128*1024)
 				
 				#Cleanup
 				os.remove(result_file)

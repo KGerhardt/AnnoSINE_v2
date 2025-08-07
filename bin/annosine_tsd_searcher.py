@@ -208,12 +208,11 @@ def split_seq_indices(size, num_grps):
 	newseq = [((int(round(i*splitsize)), int(round((i+1)*splitsize)),)) for i in range(num_grps)]
 	return newseq
 
-def tsd_search_parallel(sequence_file, output_prefix, lc = 50, rc = 70, minlen = 10, max_mis = 1, threads = 1):
+def tsd_searcher(sequence_file, output_file, lc = 50, rc = 70, minlen = 10, max_mis = 1, threads = 1):
 	fa = pyfastx.Fasta(sequence_file, build_index = True)
 	number_of_seqs = len(fa)
-	print(number_of_seqs)
 	
-	output_file = 'Step2_tsd_new.txt'
+	#output_file = os.path.join(output_prefix, 'Step2_tsd.txt')
 	#Don't bother with parallelization if there's only a few sequences
 	if number_of_seqs < 10000:
 		mn = tsd_finder(sequence_file)
@@ -228,5 +227,6 @@ def tsd_search_parallel(sequence_file, output_prefix, lc = 50, rc = 70, minlen =
 						shutil.copyfileobj(inf, out, 128*1024)
 					os.remove(result)
 
-f = 'Step1_extend_tsd_input.fa'
-tsd_search_parallel(f, 'test', threads = 10)
+#f = 'Step1_extend_tsd_input.fa'
+#o = sys.argv[1]
+#tsd_searcher(f, o, threads = 10)
