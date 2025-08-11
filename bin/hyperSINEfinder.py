@@ -202,7 +202,6 @@ class hyperSINEfinder:
 		sine_candidates = []
 		#Triplets of these groups represent a plausible SINE element
 		for i in range(0, len(groups), 3):
-			sine_candidates = []
 			first_element = groups[i]
 			second_element = groups[i+1]
 			third_element = groups[i+2]
@@ -231,49 +230,20 @@ class hyperSINEfinder:
 				sine_candidates.append(combinations)
 			#More than one hit; return all unique; 
 			if combinations.shape[0] > 1:
-				#These are the distances we calculated earlier subsetted to passing rows
-				first_to_second_ok = first_to_second_ok[valid_sine_trio]
-				second_to_third_ok = second_to_third_ok[valid_sine_trio]
+				#We're doing the simple thing here and taking the single longest first_element start : last_element end; 
+				#it is most likely to capture a real SINE element in its entirety
+				#If tied longest elements, argmax prefers the first
+				combinations = combinations[np.argmax(combinations[:,5] - combinations[:, 0])]
 				
-				
-				
-			
-			print(f'{'forward' if forward else 'reverse'}')
-			print(combinations)
-			print('#############')
-
-			'''
-			#I think this version of the logic possibly misses hits
-			#For first group (a_box fwd, polyAT rev), check if any second group (b_box fwd, b_box rev) is 
-			#at the correct distance of (spacer_1_low <= distance <= spacer_1_high)
-			first_ok = []
-			for i, end_index in enumerate(first_element[:, 2]):
-				spacer_distances = second_element[:, 1] - end_index
-				ok_space = np.logical_and(spacer_distances >= spacer_1_low, spacer_distances <= spacer_1_high)
-				best_match_index = np.where(ok_space)[0][-1] if np.any(ok_space) else False
-				if best_match_index:
-					first_ok.append((i, best_match_index))
-			
-			#Check to see if there are any passing matches; do not bother to check second elements if not
-			any_first_matches = len(first_ok) > 0
-			if any_first_matches:
-				second_ok = []
-				#For second group (b_box fwd, b_box rev), check if any third group (polyAT fwd, a_box rev) is 
-				#at the correct distance of (spacer_2_low <= distance <= spacer_2_high)
-				for i, end_index in enumerate(second_element[:, 2]):
-					spacer_distances = third_element[:, 1] - end_index
-					ok_space = np.logical_and(spacer_distances >= spacer_2_low, spacer_distances <= spacer_2_high)
-					best_match_index = np.where(ok_space)[0][-1] if np.any(ok_space) else False
-					if best_match_index:
-						second_ok.append((i, best_match_index,))
-						
-				#Check to see if there are any passing matches; do not bother to check if matches can be chained if not
-				any_second_matches = len(second_ok) > 0
-				if any_second_matches:
-					#Chain matches together by first_element:best_second_element==second_element:best_third_element on best_second_element == second_element
-					second_ok = {}
-			'''		
+				sine_candidates.append(combinations)
 		
+		#Nice numpy arrays are nice
+		if len(sine_candidates) > 0:
+			sine_candidates = np.vstack(sine_candidates)
+		else:
+			sine_candidates = None
+		
+		return sine_candidates
 
 		
 	#Prepare matches for further processing
@@ -299,7 +269,10 @@ class hyperSINEfinder:
 		forward_hits = self.find_plausible_sine_patterns(forward_hits, forward = True)
 		reverse_hits = self.find_plausible_sine_patterns(reverse_hits, forward = False)
 		
-				
+		#print(forward_hits)
+		#print('########')
+		#print(reverse_hits)
+			
 		return forward_hits, reverse_hits
 	
 		
@@ -311,8 +284,14 @@ class hyperSINEfinder:
 			self.hsdb.scan(sequence.encode(encoding='ascii'), match_event_handler=on_match, context = hits)
 			#Definitely need to remove ungreedy polyAT hits
 			f, r = self.clean_and_group_matches(hits)
-			#print(f)
-			#print(r)
+
+			del hits
+			
+			for row in range(f.shape[0]):
+				left = f[row][0]
+				right = f[row][5]
+				print(sequence[left:right][0:15])
+				#print('')
 			
 			break
 			
