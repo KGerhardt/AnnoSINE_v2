@@ -6,6 +6,8 @@ import pyfastx
 import hyperscan
 import numpy as np
 
+from itertools import product
+
 def on_match(id: int, fr: int, to: int, flags: int, context:  None):
 	context.append((id, fr, to,))
 
@@ -181,61 +183,98 @@ class hyperSINEfinder:
 		rle_groups_hits = np.repeat(rle_array[:,0], rle_array[:,3])
 		
 		#Split by regex pattern index; this will always be 0, 1, 2, 0, 1, 2 .... or 2, 3, 4, 2, 3, 4... depending on forward or reverse
-		groups = np.split(hits, np.unique(rle_groups_hits, return_index=True)[1][1:])
+		#Because we are already splitting on the regex index, we do not need the pattern index in the data here
+		groups = np.split(hits[:, 1:], np.unique(rle_groups_hits, return_index=True)[1][1:])
+		#groups = np.split(hits, np.unique(rle_groups_hits, return_index=True)[1][1:])
+		
+		if forward:
+			spacer_1_low = 25
+			spacer_1_high = 50
+			spacer_2_low = 20
+			spacer_2_high = 500
+		else:
+			spacer_1_low = 20
+			spacer_1_high = 500
+			spacer_2_low = 25
+			spacer_2_high = 50
+		
+		
+		sine_candidates = []
 		#Triplets of these groups represent a plausible SINE element
 		for i in range(0, len(groups), 3):
+			sine_candidates = []
 			first_element = groups[i]
 			second_element = groups[i+1]
 			third_element = groups[i+2]
-			if forward:
-				#Find the lowest start index 0 element for each 1 element where start[1] - end[0] <= 50
-				#For each 1 element with a matching 0 element, find the highest 2 element where start[2] - end[1] <= 500
-				first_ok = []
-				for i, end_index in enumerate(first_element[:, 2]):
-					spacer_distances = second_element[:, 1] - end_index
-					ok_space = np.logical_and(spacer_distances >= 25, spacer_distances <= 50)
+
+			#This one represented regex pattern + start + end indices
+			#combinations = np.array(list(product(first_element, second_element, third_element))).reshape(-1, 9)
+			
+			#this one represents start and end indices only
+			#Really, this could just be first_element[end], second element[start, end], third element[start]
+			#But that's too much work, not better in any way
+			combinations = np.array(list(product(first_element, second_element, third_element))).reshape(-1, 6)
+			
+			first_to_second_ok = combinations[:,2] - combinations[:, 1]
+			second_to_third_ok = combinations[:,4] - combinations[:, 3]
+			
+			#Instances where the spacer distances are OK between the correctly ordered elements
+			valid_sine_trio = np.logical_and(np.logical_and(first_to_second_ok >= spacer_1_low, first_to_second_ok <= spacer_1_high), 
+											 np.logical_and(second_to_third_ok >= spacer_2_low, second_to_third_ok <= spacer_2_high))
+			
+			combinations = combinations[valid_sine_trio]
+			
+			#Implicitly - zero length hits are intrinsically skipped by not having length >= 1
+			
+			#Exactly one hit; it must be the longest hit by definition
+			if combinations.shape[0] == 1:
+				sine_candidates.append(combinations)
+			#More than one hit; return all unique; 
+			if combinations.shape[0] > 1:
+				#These are the distances we calculated earlier subsetted to passing rows
+				first_to_second_ok = first_to_second_ok[valid_sine_trio]
+				second_to_third_ok = second_to_third_ok[valid_sine_trio]
+				
+				
+				
+			
+			print(f'{'forward' if forward else 'reverse'}')
+			print(combinations)
+			print('#############')
+
+			'''
+			#I think this version of the logic possibly misses hits
+			#For first group (a_box fwd, polyAT rev), check if any second group (b_box fwd, b_box rev) is 
+			#at the correct distance of (spacer_1_low <= distance <= spacer_1_high)
+			first_ok = []
+			for i, end_index in enumerate(first_element[:, 2]):
+				spacer_distances = second_element[:, 1] - end_index
+				ok_space = np.logical_and(spacer_distances >= spacer_1_low, spacer_distances <= spacer_1_high)
+				best_match_index = np.where(ok_space)[0][-1] if np.any(ok_space) else False
+				if best_match_index:
+					first_ok.append((i, best_match_index))
+			
+			#Check to see if there are any passing matches; do not bother to check second elements if not
+			any_first_matches = len(first_ok) > 0
+			if any_first_matches:
+				second_ok = []
+				#For second group (b_box fwd, b_box rev), check if any third group (polyAT fwd, a_box rev) is 
+				#at the correct distance of (spacer_2_low <= distance <= spacer_2_high)
+				for i, end_index in enumerate(second_element[:, 2]):
+					spacer_distances = third_element[:, 1] - end_index
+					ok_space = np.logical_and(spacer_distances >= spacer_2_low, spacer_distances <= spacer_2_high)
 					best_match_index = np.where(ok_space)[0][-1] if np.any(ok_space) else False
 					if best_match_index:
-						first_ok.append((i, best_match_index))
-					
-				any_first_matches = len(first_ok) > 0
-				if any_first_matches:
-				for end_index in second_element[:, 2]:
-					spacer_distances = third_element[:, 1] - end_index
-					ok_space = np.logical_and(spacer_distances >= 20, spacer_distances <= 500)
-					
-				
-				
-				
-			else:
-				pass
+						second_ok.append((i, best_match_index,))
+						
+				#Check to see if there are any passing matches; do not bother to check if matches can be chained if not
+				any_second_matches = len(second_ok) > 0
+				if any_second_matches:
+					#Chain matches together by first_element:best_second_element==second_element:best_third_element on best_second_element == second_element
+					second_ok = {}
+			'''		
 		
-		#Now that we have only runs of correctly ordered patterns, we need to find which are at the correct spacings for a SINE
-		#First, groupby final appearance of final regex pattern in sine candidates; 
-		#this will always be every odd-indexed result in the resulting rle_array
-		'''
-		if forward:
-			rle_array = self.rle(hits[:, 0] == 2)
-		else:
-			rle_array = self.rle(hits[:, 0] == 4)
-		
-		
-		#Every other item starting at index 1; these correspond to 2/4 according to above
-		end_item_indices = rle_array[1::2]
-		
-		#Find the last index of that pattern in this group
-		last_appearances = end_item_indices[:,2] + end_item_indices[:, 3]
-		
-		#Might be better to start this by splitting on rle group instead...
-		for plausible_sine_element in np.split(hits, last_appearances[:-1]):
-			if forward:
-				#Find the lowest start index 0 element for each 1 element where start[1] - end[0] <= 50
-				#For each 1 element with a matching 0 element, find the highest 2 element where start[2] - end[1] <= 500
-				#Extract all hits where this matching is happy
-				pass
-			else:
-				pass
-		'''
+
 		
 	#Prepare matches for further processing
 	def clean_and_group_matches(self, hits):
