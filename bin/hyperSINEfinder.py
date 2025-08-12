@@ -179,63 +179,66 @@ class hyperSINEfinder:
 		del rle_groups_hits
 		del ok_rle_ids
 		
-		rle_array = self.rle(hits[:, 0])
-		rle_groups_hits = np.repeat(rle_array[:,0], rle_array[:,3])
-		
-		#Split by regex pattern index; this will always be 0, 1, 2, 0, 1, 2 .... or 2, 3, 4, 2, 3, 4... depending on forward or reverse
-		#Because we are already splitting on the regex index, we do not need the pattern index in the data here
-		groups = np.split(hits[:, 1:], np.unique(rle_groups_hits, return_index=True)[1][1:])
-		#groups = np.split(hits, np.unique(rle_groups_hits, return_index=True)[1][1:])
-		
-		if forward:
-			spacer_1_low = 25
-			spacer_1_high = 50
-			spacer_2_low = 20
-			spacer_2_high = 500
-		else:
-			spacer_1_low = 20
-			spacer_1_high = 500
-			spacer_2_low = 25
-			spacer_2_high = 50
-		
-		
 		sine_candidates = []
-		#Triplets of these groups represent a plausible SINE element
-		for i in range(0, len(groups), 3):
-			first_element = groups[i]
-			second_element = groups[i+1]
-			third_element = groups[i+2]
+		#It's possible no remaining SINE candidates survive, which would cause RLE to break and also be unnecessary
+		if len(hits) > 0:
+			rle_array = self.rle(hits[:, 0])
+			rle_groups_hits = np.repeat(rle_array[:,0], rle_array[:,3])
+			
+			#Split by regex pattern index; this will always be 0, 1, 2, 0, 1, 2 .... or 2, 3, 4, 2, 3, 4... depending on forward or reverse
+			#Because we are already splitting on the regex index, we do not need the pattern index in the data here
+			groups = np.split(hits[:, 1:], np.unique(rle_groups_hits, return_index=True)[1][1:])
+			#groups = np.split(hits, np.unique(rle_groups_hits, return_index=True)[1][1:])
+			
+			if forward:
+				spacer_1_low = 25
+				spacer_1_high = 50
+				spacer_2_low = 20
+				spacer_2_high = 500
+			else:
+				spacer_1_low = 20
+				spacer_1_high = 500
+				spacer_2_low = 25
+				spacer_2_high = 50
+			
+			
+			
+			#Triplets of these groups represent a plausible SINE element
+			for i in range(0, len(groups), 3):
+				first_element = groups[i]
+				second_element = groups[i+1]
+				third_element = groups[i+2]
 
-			#This one represented regex pattern + start + end indices
-			#combinations = np.array(list(product(first_element, second_element, third_element))).reshape(-1, 9)
-			
-			#this one represents start and end indices only
-			#Really, this could just be first_element[end], second element[start, end], third element[start]
-			#But that's too much work, not better in any way
-			combinations = np.array(list(product(first_element, second_element, third_element))).reshape(-1, 6)
-			
-			first_to_second_ok = combinations[:,2] - combinations[:, 1]
-			second_to_third_ok = combinations[:,4] - combinations[:, 3]
-			
-			#Instances where the spacer distances are OK between the correctly ordered elements
-			valid_sine_trio = np.logical_and(np.logical_and(first_to_second_ok >= spacer_1_low, first_to_second_ok <= spacer_1_high), 
-											 np.logical_and(second_to_third_ok >= spacer_2_low, second_to_third_ok <= spacer_2_high))
-			
-			combinations = combinations[valid_sine_trio]
-			
-			#Implicitly - zero length hits are intrinsically skipped by not having length >= 1
-			
-			#Exactly one hit; it must be the longest hit by definition
-			if combinations.shape[0] == 1:
-				sine_candidates.append(combinations)
-			#More than one hit; return all unique; 
-			if combinations.shape[0] > 1:
-				#We're doing the simple thing here and taking the single longest first_element start : last_element end; 
-				#it is most likely to capture a real SINE element in its entirety
-				#If tied longest elements, argmax prefers the first
-				combinations = combinations[np.argmax(combinations[:,5] - combinations[:, 0])]
+				#This one represented regex pattern + start + end indices
+				#combinations = np.array(list(product(first_element, second_element, third_element))).reshape(-1, 9)
 				
-				sine_candidates.append(combinations)
+				#this one represents start and end indices only
+				#Really, this could just be first_element[end], second element[start, end], third element[start]
+				#But that's too much work, not better in any way
+				combinations = np.array(list(product(first_element, second_element, third_element))).reshape(-1, 6)
+				
+				first_to_second_ok = combinations[:,2] - combinations[:, 1]
+				second_to_third_ok = combinations[:,4] - combinations[:, 3]
+				
+				#Instances where the spacer distances are OK between the correctly ordered elements
+				valid_sine_trio = np.logical_and(np.logical_and(first_to_second_ok >= spacer_1_low, first_to_second_ok <= spacer_1_high), 
+												 np.logical_and(second_to_third_ok >= spacer_2_low, second_to_third_ok <= spacer_2_high))
+				
+				combinations = combinations[valid_sine_trio]
+				
+				#Implicitly - zero length hits are intrinsically skipped by not having length >= 1
+				
+				#Exactly one hit; it must be the longest hit by definition
+				if combinations.shape[0] == 1:
+					sine_candidates.append(combinations)
+				#More than one hit; return all unique; 
+				if combinations.shape[0] > 1:
+					#We're doing the simple thing here and taking the single longest first_element start : last_element end; 
+					#it is most likely to capture a real SINE element in its entirety
+					#If tied longest elements, argmax prefers the first
+					combinations = combinations[np.argmax(combinations[:,5] - combinations[:, 0])]
+					
+					sine_candidates.append(combinations)
 		
 		#Nice numpy arrays are nice
 		if len(sine_candidates) > 0:
@@ -266,37 +269,111 @@ class hyperSINEfinder:
 		
 		del hits_array
 		
-		forward_hits = self.find_plausible_sine_patterns(forward_hits, forward = True)
-		reverse_hits = self.find_plausible_sine_patterns(reverse_hits, forward = False)
+		if len(forward_hits) > 0:
+			forward_hits = self.find_plausible_sine_patterns(forward_hits, forward = True)
+		else:
+			forward_hits = None
 		
-		#print(forward_hits)
-		#print('########')
-		#print(reverse_hits)
+		if len(reverse_hits) > 0:
+			reverse_hits = self.find_plausible_sine_patterns(reverse_hits, forward = False)
+		else:
+			reverse_hits = None
 			
 		return forward_hits, reverse_hits
-	
 		
-	def execute_search(self):
-		for record in self.fa:
-			print(record.description)
-			sequence = record.seq
-			hits = []
-			self.hsdb.scan(sequence.encode(encoding='ascii'), match_event_handler=on_match, context = hits)
+	def execute_search(self, sequence_id):
+		record = self.fa[sequence_id]
+		sequence = record.seq
+		seqlen = len(sequence)
+		desc = record.description
+		hits = []
+		self.hsdb.scan(sequence.encode(encoding='ascii'), match_event_handler=on_match, context = hits)
+		
+		f = None
+		r = None
+		
+		if len(hits) > 0:
 			#Definitely need to remove ungreedy polyAT hits
 			f, r = self.clean_and_group_matches(hits)
 
-			del hits
-			
-			for row in range(f.shape[0]):
-				left = f[row][0]
-				right = f[row][5]
-				print(sequence[left:right][0:15])
-				#print('')
-			
-			break
-			
+		del hits
+		
+		f_writeout = []
+		r_writeout = []
+
+		if f is not None:
+			for row in f:
+				a_box_start = row[0]
+				polyAT_end = row[5]
+				
+				left_tsd_length = 40
+				left_tsd_region = a_box_start - left_tsd_length
+				
+				if left_tsd_region < 0:
+					left_tsd_length = 40 + left_tsd_region
+					left_tsd_region = 0
+					
+					
+				right_tsd_length = 40
+				right_tsd_region = polyAT_end + right_tsd_length + 1
+				if right_tsd_region > seqlen:
+					right_tsd_length = right_tsd_region - seqlen
+					right_tsd_region = seqlen
+				
+				subsequence = sequence[left_tsd_region:right_tsd_region]
+				
+				tsd1 = subsequence[0:right_tsd_length]
+				tsd2 = subsequence[-right_tsd_length:]
+				
+				row = row - a_box_start
+				a_box_end = row[1]
+				b_box_start = row[2]
+				b_box_end = row[3]
+				polyAT_start = row[4]
+				polyAT_end = row[5]
+				
+				a_box = subsequence[right_tsd_length:a_box_end]
+				spacer1 = subsequence[a_box_end:b_box_start]
+				b_box = subsequence[b_box_start:b_box_end]
+				spacer2 = subsequence[b_box_end:polyAT_start]
+				polyAT = subsequence[polyAT_start:polyAT_end]
+				
+				next_sine = (tsd1, a_box, spacer1, b_box, spacer2, polyAT, tsd2,)
+				f_writeout.append(next_sine)
+				
+		
+		if r is not None:
+			for row in r:
+				pass
+
+				
+		
+		return desc, f_writeout, r_writeout
+		
+		
+	
+def initialize_sine_worker(genome_file):
+	global sinefinder
+	sinefinder = hyperSINEfinder(genome_file)
+	sinefinder.prep()
+		
+def worker(seqid):
+	id, f, r = sinefinder.execute_search(seqid)
+	return id, f, r
+	
+def jesus_give_me_a_SINE(genome_file, output = None, threads = 1):
+	fa = pyfastx.Fasta(genome_file, build_index = True)
+	ids = list(range(len(fa)))
+	
+	ok_procs = min([threads, len(ids)])
+	
+	with multiprocessing.Pool(ok_procs, initializer = initialize_sine_worker, initargs = (genome_file, )) as pool:
+		with open(output, 'w') as out:
+			print('sequence', 'tsd1', 'a_box', 'spacer1', 'b_box', 'spacer2', 'polyAT', 'tsd2', sep = '\t', file = out)
+			for id, f, r in pool.imap_unordered(worker, ids):
+				for res in f:
+					print(id, *res, sep = '\t', file = out)
+				
 		
 f = '../TEtrimmer/try2/bTaeGut7v0.4_MT_rDNA.fa'
-mn = hyperSINEfinder(f)
-mn.prep()
-mn.execute_search()
+jesus_give_me_a_SINE(f, 'example_zebrafinch_sines.txt', 10)
