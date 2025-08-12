@@ -304,40 +304,25 @@ class hyperSINEfinder:
 		if f is not None:
 			for row in f:
 				a_box_start = row[0]
-				polyAT_end = row[5]
-				
-				left_tsd_length = 40
-				left_tsd_region = a_box_start - left_tsd_length
-				
-				if left_tsd_region < 0:
-					left_tsd_length = 40 + left_tsd_region
-					left_tsd_region = 0
-					
-					
-				right_tsd_length = 40
-				right_tsd_region = polyAT_end + right_tsd_length + 1
-				if right_tsd_region > seqlen:
-					right_tsd_length = right_tsd_region - seqlen
-					right_tsd_region = seqlen
-				
-				subsequence = sequence[left_tsd_region:right_tsd_region]
-				
-				tsd1 = subsequence[0:right_tsd_length]
-				tsd2 = subsequence[-right_tsd_length:]
-				
-				row = row - a_box_start
 				a_box_end = row[1]
 				b_box_start = row[2]
 				b_box_end = row[3]
 				polyAT_start = row[4]
 				polyAT_end = row[5]
 				
-				a_box = subsequence[right_tsd_length:a_box_end]
-				spacer1 = subsequence[a_box_end:b_box_start]
-				b_box = subsequence[b_box_start:b_box_end]
-				spacer2 = subsequence[b_box_end:polyAT_start]
-				polyAT = subsequence[polyAT_start:polyAT_end]
+				left_tsd_region = a_box_start - 40
+					
+				right_tsd_region = polyAT_end + 41
+								
+				tsd1 = sequence[left_tsd_region:a_box_start]
+				a_box = sequence[a_box_start:a_box_end]
+				spacer1 = sequence[a_box_end:b_box_start]
+				b_box = sequence[b_box_start:b_box_end]
+				spacer2 = sequence[b_box_end:polyAT_start]
+				polyAT = sequence[polyAT_start:polyAT_end]
+				tsd2 = sequence[polyAT_end:right_tsd_region]
 				
+
 				next_sine = (tsd1, a_box, spacer1, b_box, spacer2, polyAT, tsd2,)
 				f_writeout.append(next_sine)
 				
