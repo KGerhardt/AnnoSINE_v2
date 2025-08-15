@@ -5,9 +5,12 @@ import numpy as np
 import re
 
 class alignment_tsd_tir_finder:
-	def __init__(self, min_ok_length = 10, max_mismatch = 1, polyAT_ok = False, polyAT_threshold = 1, 
-				check_inverts = False, gap_penalty = 1, extension_penalty = 0):
+	def __init__(self, method = 'tsd_searcher', min_ok_length = 10, max_mismatch = 1, polyAT_ok = False, polyAT_threshold = 1, 
+				check_inverts = False, gap_penalty = 1, extension_penalty = 0, sf_score_thresh = 10, 
+				sf_mismatch_thresh = 2, sf_mismatch_penalty = 1, return_best_only = True):
 				
+				
+		self.method = method
 		self.revcmp_table = str.maketrans('ACGTacgt', 'TGCAtgca')
 		
 		self.np_encoding = {'-':0, 'A':1, 'C':2, 'G':3, 'T':4}
@@ -16,12 +19,21 @@ class alignment_tsd_tir_finder:
 		self.min_ok_length = min_ok_length
 		self.max_mismatch = max_mismatch
 		self.max_consecutive_mismatches = 1
+		
+		self.sf_mm = sf_mismatch_thresh
+		self.sf_pen = sf_mismatch_penalty
+		self.sf_score = sf_score_thresh
+		
 		self.polyAT_ok = polyAT_ok
 		self.polyAT_threshold = polyAT_threshold
 		
 		self.check_inverts = check_inverts
 		self.gap_penalty = gap_penalty
 		self.ext_penalty = extension_penalty
+		
+		self.best = return_best_only
+		
+		self.candidates = []
 
 	#To find inverted repeats, revcmp the right string and realign
 	def revcomp(self, sequence):
@@ -64,8 +76,53 @@ class alignment_tsd_tir_finder:
 		
 		return sequence_is_ok
 	
-	#Sequence alignment based approach using parasail
-	def find_similar_sequences(self, left, right):
+	def extract_hit_from_df(self, df, l_enc, r_enc, gaps_l, gaps_r):
+		#The place in the input strings where the shared subsequence is found
+		start = df[0, 2] #First start index of a group
+		end = df[-1, 2] + df[-1, 1] #last start index of a group + run length
+		left_indices = l_enc[start:end]
+		right_indices = r_enc[start:end]
+
+		#Skip polyAT check; can return TSDs which are polyAT
+		if self.polyAT_ok:
+			is_not_poly_AT_sequence = True
+		#Check sequence for A/T percentage; 
+		else:
+			#Check to see if the recovered sequence is a polyA or polyT or poly AT repeat; these are not TSD candidates
+			is_not_poly_AT_sequence = self.purge_poly_AT_seq(left_indices, right_indices)
+			
+		if is_not_poly_AT_sequence:
+			#Relative locations of start, end in UNGAPPED left/right input strings
+			lstart = int(start - gaps_l[start])
+			lend   = int(end - gaps_l[end-1]) #ends are 1-indexed in string slices, but the gap counts are still 0-indexed; left offset by 1
+			rstart = int(start - gaps_r[start])
+			rend   = int(end - gaps_r[end-1])
+			
+			tsd_length = lend - lstart
+			tsd_mismatches = int(np.sum(df[df[:,0] == 0][:,1]))
+			
+			left = []
+			right = []
+			#Convert numpy ints back to characters; format mismatches accordingly
+			for c1, c2 in zip([self.np_decoding[c] for c in left_indices], [self.np_decoding[c] for c in right_indices]):
+				if c1 != c2:
+					c1 = c1.lower()
+					c2 = c2.lower()
+				left.append(c1)
+				right.append(c2)
+			
+			#Update the result to return
+			left = ''.join(left)
+			right = ''.join(right)
+		else:
+			#Default return case
+			left, lstart, lend, right, rstart, rend, tsd_length, tsd_mismatches = None, None, None, None, None, None, None, None
+			
+		return left, lstart, lend, right, rstart, rend, tsd_length, tsd_mismatches 
+	
+	#Score similar sequences with sinefinder logic: 
+	#TSD score = num_matches - num_mismatches; must exceed score threshold (def. 10) and must start and end with match
+	def find_similar_sequences_sinefinder(self, left, right, is_forward = True):
 		#Convert characters to integers and represent with numpy arrays
 		#We ultimately convert back to strings at the end of this, but this makes RLE work, gap finding, etc. much easier
 		left = self.encode_numpy(left)
@@ -86,6 +143,105 @@ class alignment_tsd_tir_finder:
 		winning_lend = None
 		winning_rstart = None
 		winning_rend = None
+	
+		current_mismatch_score = 0
+		current_match_score = 0
+		
+		possible_candidates = []
+		current_group = []
+		for v, s, l in zip(values, start_positions, run_lengths):
+			#Next group of matches; this will always be added
+			if v:
+				current_match_score += l
+				current_group.append((v, l, s,))
+			#Next group of mismatches; this may be added or skipped
+			else:
+				#the next mismatch run would exceed acceptable mismatch count
+				if current_mismatch_score + (l * self.sf_pen) > self.sf_mm:
+					#The current candidate is acceptable; add it to a list
+					if current_match_score - current_mismatch_score >= self.sf_score and len(current_group) > 0:
+						#This must end in a true because of the way the current group is constructed
+						possible_candidates.append(np.array(current_group))
+					
+					#Reset
+					current_mismatch_score = 0
+					current_match_score = 0
+					
+					#If the next mismatch sequence couldn't be added to any segment, just proceed
+					if (self.sf_pen * l) > self.sf_mm:
+						current_group = []
+					
+					#The next mismatch segment could possibly be added to a sequence of previously observed matches
+					else:
+						#Pop previous true + false pairs, check if the next set of mismatches could be added
+						while len(current_group) > 2:
+							current_group = current_group[2:]
+							for i in current_group:
+								running_match = 0
+								running_mismatch = 0
+								#If it's a match
+								if i[0]:
+									#Add the number of matches
+									running_match += i[1]
+								else:
+									#add the number of mismatches
+									running_mismatch += (self.sf_pen * i[1])
+							
+							#If there is a remaining set of matches, 
+							if running_mismatch + (self.sf_pen * l) < self.sf_mm:
+								current_group.append((v, l, s,))
+								current_match_score = running_match
+								current_mismatch_score = running_mismatch + (self.sf_pen * l)
+								break
+								
+						if len(current_group) == 1:
+							current_mismatch_score = (self.sf_pen * l)
+							current_match_score = current_group[0][1]
+							current_group.append((v, l, s,))
+					
+				else:
+					if len(current_group) > 0:
+						current_group.append((v, l, s,))
+						current_mismatch_score += (l * self.sf_pen)
+		#Leftover group not yet added
+		if len(current_group) > 0:
+			#If the last element was a mismatch, pop it
+			if not current_group[-1][0]:
+				current_mismatch_score -= current_group[-1][1]
+				current_group = current_group[:-1]
+			#Add a candidate	
+			if current_match_score - current_mismatch_score >= self.sf_score and len(current_group) > 0:
+				#This must end in a true because of the way the current group is constructed
+				possible_candidates.append(np.array(current_group))
+
+		for df in possible_candidates:
+			l, ls, le, r, rs, rend, tsdl, tsd_mm = self.extract_hit_from_df(df, left, right, gaps_left, gaps_right)
+			if l is not None:
+				next_candidate = (l, ls, le, r, rs, rend, tsdl, tsd_mm, is_forward,)
+				self.candidates.append(next_candidate)
+	
+	#Score similar sequences with TSD searcher logic
+	def find_similar_sequences_tsd_searcher(self, left, right, is_forward = True):
+		#Convert characters to integers and represent with numpy arrays
+		#We ultimately convert back to strings at the end of this, but this makes RLE work, gap finding, etc. much easier
+		left = self.encode_numpy(left)
+		right = self.encode_numpy(right)
+		
+		gaps_left = np.cumsum(left == 0)  #counts of '-' characters for position adjustments later
+		gaps_right = np.cumsum(right == 0)
+		
+		all_eq = left == right
+		
+		run_lengths, start_positions, values = self.rle(all_eq)
+		
+		lseq = None
+		rseq = None
+		lstart = None
+		rstart = None
+		lend = None
+		rend = None
+		tsd_length = None
+		mismatch_length = None
 		
 		if run_lengths.shape[0] < 3:
 			'''
@@ -103,10 +259,11 @@ class alignment_tsd_tir_finder:
 				if values[0]:
 					if run_lengths[0] >= self.min_ok_length:
 						sufficient_length = True
-						winning_lstart = 0
-						winning_rstart = 0
-						winning_lend = left.shape[0]
-						winning_rend = right.shape[0]
+						tsd_length = run_lengths[0]
+						lstart = 0
+						rstart = 0
+						lend = left.shape[0]
+						rend = right.shape[0]
 						
 				
 			#All matches followed by all mismatches or all mismatches followed by all matches
@@ -115,22 +272,25 @@ class alignment_tsd_tir_finder:
 				if values[0]:
 					if run_lengths[0] >= self.min_ok_length:
 						sufficient_length = True
-						winning_lstart = 0
-						winning_rstart = 0
-						winning_lend = int(run_lengths[0])
-						winning_rend = int(run_lengths[0])
+						tsd_length = run_lengths[0]
+						lstart = 0
+						rstart = 0
+						lend = int(run_lengths[0])
+						rend = int(run_lengths[0])
 
 				#First run is mismatches
 				else:
 					if run_lengths[1] >= self.min_ok_length:
 						sufficient_length = True
-						winning_lstart = int(start_positions[1])
-						winning_rstart = int(start_positions[1])
-						winning_lend = int(winning_lstart + run_lengths[1])
-						winning_rend = int(winning_rstart + run_lengths[1])
+						tsd_length = run_lengths[1]
+						lstart = int(start_positions[1])
+						rstart = int(start_positions[1])
+						lend = int(lstart + run_lengths[1])
+						rend = int(rstart + run_lengths[1])
 						
 			if sufficient_length:
-				left_indices = left[winning_lstart:winning_lend]
+				mismatch_length = 0 #it always will be in these cases
+				left_indices = left[lstart:lend]
 				#Skip polyAT check; can return TSDs which are polyAT
 				if self.polyAT_ok:
 					is_not_poly_AT_sequence = True
@@ -140,14 +300,13 @@ class alignment_tsd_tir_finder:
 					is_not_poly_AT_sequence = self.purge_poly_AT_seq(left_indices, left_indices)
 				
 				if is_not_poly_AT_sequence:
-					winning_left = ''.join([self.np_decoding[c] for c in left_indices])
-					winning_right = winning_left
-				else:
-					winning_lstart = None
-					winning_lend = None
-					winning_rstart = None
-					winning_rend = None
-							
+					lseq = ''.join([self.np_decoding[c] for c in left_indices])
+					rseq = lseq
+					
+					next_candidate = (lseq, lstart, lend, rseq, rstart, rend, tsd_length, tsd_mismatches, is_forward,)
+					self.candidates.append(next_candidate)
+					
+					
 		else:
 			next_group = []					
 			#Group runs of aligned sequences separated by no more than one mismatch
@@ -200,55 +359,23 @@ class alignment_tsd_tir_finder:
 							#The longest shared subsequence passing rules still has a minimum OK size
 							run_size = end - start
 							if run_size >= self.min_ok_length:
-								left_indices = left[start:end]
-								right_indices = right[start:end]
-								
-								#Skip polyAT check; can return TSDs which are polyAT
-								if self.polyAT_ok:
-									is_not_poly_AT_sequence = True
-								#Check sequence for A/T percentage; 
-								else:
-									#Check to see if the recovered sequence is a polyA or polyT or poly AT repeat; these are not TSD candidates
-									is_not_poly_AT_sequence = self.purge_poly_AT_seq(left_indices, right_indices)
-								
-								if is_not_poly_AT_sequence:
-									#Relative locations of start, end in UNGAPPED left/right input strings
-									lstart = int(start - gaps_left[start])
-									lend   = int(end - gaps_left[end-1]) #ends are 1-indexed in string slices, but the gap counts are still 0-indexed; left offset by 1
-									rstart = int(start - gaps_right[start])
-									rend   = int(end - gaps_right[end-1])
-									
-									#Find the longest TSD
-									length_of_seq_between_tsds = rstart - lend
-									if length_of_seq_between_tsds < winning_distance:
-										winning_distance = length_of_seq_between_tsds
-								
-										winning_lstart = lstart
-										winning_lend = lend
-										winning_rstart = rstart
-										winning_rend = rend
-								
-										winning_left = []
-										winning_right = []
-										#Convert numpy ints back to characters; format mismatches accordingly
-										for c1, c2 in zip([self.np_decoding[c] for c in left_indices], [self.np_decoding[c] for c in right_indices]):
-											if c1 != c2:
-												c1 = c1.lower()
-												c2 = c2.lower()
-											winning_left.append(c1)
-											winning_right.append(c2)
-										
-										#Update the result to return
-										winning_left = ''.join(winning_left)
-										winning_right = ''.join(winning_right)	
-										
+								l, ls, le, r, rs, rend, tsdl, tsd_mm = self.extract_hit_from_df(df, left, right, gaps_left, gaps_right)
+								if l is not None:
+									next_candidate = (l, ls, le, r, rs, rend, tsdl, tsd_mm, is_forward,)
+									self.candidates.append(next_candidate)
+
 						#Reset to continue processing
 						next_group = []
 		
-		return winning_left, winning_lstart, winning_lend, winning_right, winning_rstart, winning_rend
+
+	#If requested, return only the best matching TSD
+	#Biologically, this must be the closest to the original candidate, irrespective of length
+	def get_best_hit(self):
+		pass
 	
 	#Sequence alignment based approach using parasail
 	def tsd_by_sequence_alignment(self, left_seq, right_seq):
+		self.candidates = []
 		forward = None
 		reverse = None
 		#Low penalty semi-global sequence alignment to find repeats within substrings
@@ -257,13 +384,13 @@ class alignment_tsd_tir_finder:
 		#Fortunately this never encodes a double '-', so we can ignore a match on that character - it will always be false
 		left = res.traceback.query
 		right = res.traceback.ref
-				
-		lseq, lst, lend, rseq, rst, rend = self.find_similar_sequences(left, right)
 		
-		if lseq is not None:
-			forward = (lseq, lst, lend, rseq, rst, rend,)
+		if self.method == 'tsd_searcher':
+			self.find_similar_sequences_tsd_searcher(left, right, forward = True)
+		if self.method == 'sinefinder':
+			self.find_similar_sequences_sinefinder(left, right, forward = True)
 
-		if self.check_inverts:
+		if self.check_inverts:			
 			rsl = len(right_seq)
 			og_rseq = right_seq
 			right_seq = self.revcomp(right_seq)
@@ -275,8 +402,11 @@ class alignment_tsd_tir_finder:
 			left = res.traceback.query
 			right = res.traceback.ref
 						
-			lseq, lst, lend, rseq, rst, rend = self.find_similar_sequences(left, right)
-
+			if self.method == 'tsd_searcher':
+				self.find_similar_sequences_tsd_searcher(left, right)
+			if self.method == 'sinefinder':
+				self.find_similar_sequences_sinefinder(left, right)
+			
 			#Flip the right sequence, start and stop indices to forward orientation
 			if rseq is not None:
 				fst, fend = rsl-rend, rsl-rst
@@ -290,14 +420,17 @@ class alignment_tsd_tir_finder:
 
 #This code doesn't actually need this, I'm using it for testing
 import pyfastx
-mn = alignment_tsd_tir_finder(check_inverts = False)		
+mn = alignment_tsd_tir_finder(check_inverts = False, polyAT_ok = False, method = 'sinefinder')		
 fa = pyfastx.Fasta('output/Step1_extend_tsd_input.fa')
 for seq in fa:
 	l = seq.seq[0:50]
 	r = seq.seq[-70:]
 	#r = seq.seq
 	f, r = mn.tsd_by_sequence_alignment(l, r)
-	print(f)
+	if len(mn.candidates) > 0:
+		for c in mn.candidates:
+			print(c)
+	
 
 
 	
