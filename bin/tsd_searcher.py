@@ -289,9 +289,9 @@ class alignment_tsd_tir_finder:
 			rich += ctr[char]
 		
 		if isinstance(rich_threshold, int):
-			is_rich_sequence = (seqlen-rich) >= rich_threshold
+			is_rich_sequence = (seqlen-rich) < rich_threshold
 		else:
-			is_rich_sequence = (rich/seqlen) >= rich_threshold
+			is_rich_sequence = (rich/seqlen) < rich_threshold
 		
 		a, c, g, t = ctr['A'], ctr['C'], ctr['G'], ctr['T']
 		
@@ -732,8 +732,10 @@ class alignment_tsd_tir_finder:
 		winning_candidates = []
 		for candidate in extension_strings:			
 			exact_repeat = candidate[2]
-			exact_score = self.score_function(len(exact_repeat), 0, 0)
+			
 			exact_mismatch = 0
+			exact_length = len(exact_repeat)
+			exact_score = self.score_function(exact_length, 0, 0)
 			
 			lq = candidate[0]
 			rq = candidate[3]
@@ -747,7 +749,7 @@ class alignment_tsd_tir_finder:
 			
 			#No extension found
 			if total_left_size == 0 and total_right_size == 0:
-				final_candidate = (exact_repeat, exact_repeat, exact_score, 0, 0, 0, 0,)
+				final_candidate = (exact_repeat, exact_repeat, exact_length, 0, 0, 0, 0, 0, 0, )
 			else:
 				query  = f'{lq}{exact_repeat}{rq}'
 				target = f'{lt}{exact_repeat}{rt}'
@@ -789,11 +791,11 @@ class alignment_tsd_tir_finder:
 							right_left_offset  = total_right_size - rq.count('-')
 							right_right_offset = total_right_size - rt.count('-')
 							#doesn't matter where the exact start is, we're grabbing the whole sequence
-							final_candidate = (self.decode_numpy(query), self.decode_numpy(target), int(score), int(mismatch), int(gaps), 
+							final_candidate = (self.decode_numpy(query), self.decode_numpy(target), int(length), int(mismatch), int(gaps), 
 												left_left_offset, left_right_offset, right_left_offset, right_right_offset,)
 						else:
 							#Just return the exact match
-							final_candidate = (exact_repeat, exact_repeat, exact_score, 0, 0, 0, 0, 0, 0, )
+							final_candidate = (exact_repeat, exact_repeat, exact_length, 0, 0, 0, 0, 0, 0, )
 					else:
 						
 						#Which row corresponds to the start index of the exact match
@@ -807,6 +809,7 @@ class alignment_tsd_tir_finder:
 						best_score = 0
 						best_mismatch = 0
 						best_gaps = 0
+						best_length = 0
 						winning_candidate = candidate_runs[0]
 						offset_left = 0
 						offset_right = 0
@@ -817,7 +820,10 @@ class alignment_tsd_tir_finder:
 							
 							mismatch = np.sum(c[:,2][c[:,0] == 0])
 							
-							gaps = max([np.sum(query[my_start:my_end] == 0), np.sum(target[my_start:my_end] == 0)])
+							left_gaps = np.sum(query[my_start:my_end] == 0)
+							right_gaps = np.sum(target[my_start:my_end] == 0)
+							
+							gaps = max([left_gaps, right_gaps])
 							mismatch -= gaps
 							
 							length = np.sum(c[:,2])
@@ -826,6 +832,7 @@ class alignment_tsd_tir_finder:
 							if score > best_score:
 								best_score = score
 								best_gaps = gaps
+								best_length = length
 								winning_candidate = c
 								best_mismatch = mismatch
 						
@@ -857,21 +864,50 @@ class alignment_tsd_tir_finder:
 							right_left_offset  = offset_from_exact_right - query_gap_right
 							right_right_offset = offset_from_exact_right - target_gap_right
 						
-							final_candidate = (query, target, int(best_score), int(best_mismatch), 
-											int(best_gaps), left_left_offset, left_right_offset, right_left_offset, right_right_offset,)
+							final_candidate = (query, target, int(best_length), int(best_mismatch), int(best_gaps), 
+											   left_left_offset, left_right_offset, right_left_offset, right_right_offset,)
 											
-							if '-' in query or '-' in target:
-								winning_candidates.append(final_candidate)
 						else:
-							final_candidate = (exact_repeat, exact_repeat, exact_score, 0, 0, 0, 0, 0, 0, )
-						
+							final_candidate = (exact_repeat, exact_repeat, exact_length, 0, 0, 0, 0, 0, 0, )
+			
+			winning_candidates.append(final_candidate)
+			
 		return winning_candidates
 
 
 	#If requested, return only the best matching TSD
 	#Biologically, this must be the closest to the original candidate, irrespective of length
-	def get_best_hit(self, candidates):
-		pass
+	def get_best_hit(self, candidates, is_polyAT):
+		windex = None
+		if len(candidates) > 0:
+			winning_score = 0
+			winning_mismatch = 0
+			winning_length = 0
+			
+			index = 0
+			
+			for w, p in zip(candidates, is_polyAT):
+				#sequence is not polyAT or we're not checking, in which case is_polyAT is all False
+				if not p:
+					#(query TSD, target TSD, TSD length, tsd_mismatches, tsd_gap, move_left_left, move_left_right, move_right_left, move_right_right)
+					length = w[2]
+					mismatch = w[3]
+					gaps = w[4]
+					
+					score = length - (mismatch + gaps)
+					
+					#print(w, p, score)
+					
+					if score > winning_score:
+						windex = index
+						winning_score = score
+				
+				#Index update needs to happen even if the sequence is polyAT
+				index += 1
+					
+			return windex
+						
+	
 	
 	#Runner function
 	def operate(self, left_sequence, right_sequence):
@@ -913,13 +949,11 @@ def main():
 									prevent_polyAT_extend = True,
 									return_best_only = opts.return_best_only)
 		
-		terminate = 0
 		for seq in fa:
+			final_tsds = []
 			sequence = seq.seq.upper()
 			l = sequence[0:opts.left_window]
 			r = sequence[-opts.right_window:]
-			
-			print(seq.description)
 			
 			#Find the start loci in l and r of all longest exactly shared substrings of l and r and the length of that shared substring
 			#A specific substring may repeat twice in this list, but it must be in a different location to do so
@@ -965,34 +999,54 @@ def main():
 				if opts.poly_at_ok:
 					is_polyAT = [False] * len(winners)
 				else:
-					is_polyAT = [mn.is_polyAT(w[0], clean_sequence = False)[0] or 
-								 mn.is_polyAT(w[1], clean_sequence = False)[0] for w in winners]
+					#Check if the sequence contains a polyA or polyT sequence
+					#is_polyAT = [mn.is_polyAT(w[0], clean_sequence = False)[0] or 
+					#			 mn.is_polyAT(w[1], clean_sequence = False)[0] for w in winners]
 					
-					#is_polyAT = [mn.check_sequence_richness(w[0], )[0] or mn.check_sequence_richness(w[1])[0] for w in winners]
+					#Check if the sequence is all A/T
+					is_polyAT = [mn.check_sequence_richness(w[0], )[0] or mn.check_sequence_richness(w[1])[0] for w in winners]
 				
-				if False:
-					for sh, e, w, p in zip(shared_substrings, extension_loci, winners, is_polyAT):
-						#Exclude polyAT
-						if not p:
-							print(sh)
-							print(e)
-							print(w)
-							print(p)
-							print('##########')
-				
+				#Filter to best hit
+				if mn.best:
+					best_index = mn.get_best_hit(winners, is_polyAT)
+					if best_index is not None:
+						winners = [winners[best_index]]
+						shared_substrings = shared_substrings[best_index, None]
+					else:
+						#Basically this happens when all sequences are polyAT
+						#print('Big sad')
+						#print(winners)
+						winners = None
+						shared_substrings = None
 
-				
-				
-				
-				
-			terminate += 1
-			#if terminate == 10:
-			#	break
-			
-			#Should I try to find adjacent runs of sequence?
-			
-			#Since exact matches have been found, try to align surrounding sequences
+				if winners is not None:
+					#Winners has form
+					#(query TSD, target TSD, TSD length, tsd_mismatches, tsd_gap, move_left_left, move_left_right, move_right_left, move_right_right)
+					for original_indices, updates in zip(shared_substrings, winners):
+						left_string_start = int(original_indices[0] - updates[5])
+						right_string_start = int(original_indices[1] - updates[6])
+						left_string_end = int(original_indices[0] + original_indices[2] + updates[7])
+						right_string_end = int(original_indices[1] + original_indices[2] + updates[8])
+						tsd = (updates[0], updates[1], left_string_start, left_string_end, right_string_start, right_string_end, updates[2], updates[3]+updates[4], )
 						
+						#if '-' in updates[0] or '-' in updates[1]:
+						#	print(seq.description)
+						#	print(f'{updates[0]} {updates[1]} {left_string_start}:{left_string_end} {right_string_start}:{right_string_end} tsd_length:{updates[2]} tsd_mismatches:{updates[3]+updates[4]}')
+						#	print('')
+						#print(f'left_seq     {tsd[0]}')
+						#print(f'right_seq    {tsd[1]}')
+						#print(f'left select  {l[tsd[2]:tsd[3]]}')
+						#print(f'right select {r[tsd[4]:tsd[5]]}')
+						
+						final_tsds.append(tsd)
+			
+			if len(final_tsds) == 0:
+				final_tsds = 'No TSD found'
+			print(seq.description)
+			print(final_tsds)
+			print('')
+			
+				
 			
 			'''
 			mn.tsd_by_sequence_alignment(l, r)
