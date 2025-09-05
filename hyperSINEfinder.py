@@ -6,6 +6,12 @@ import pyfastx
 import hyperscan
 import numpy as np
 
+from itertools import product
+
+#Set OMP threads for TSD searcher to 1
+os.environ['OMP_NUM_THREADS'] = '1'
+from tsd_searcher import alignment_tsd_tir_finder
+
 def on_match(id: int, fr: int, to: int, flags: int, context:  None):
 	context.append((id, fr, to,))
 
@@ -18,6 +24,25 @@ class hyperSINEfinder:
 		curs.close()
 		conn.close()
 		
+		#All possible SINE forward patterns exploded out to explicit regex with no ambiguity
+		self.patterns = None
+		self.pattern_reverser = None
+		#Genome sequence to search
+		self.sequence = None
+		#Hyperscan database of regex patterns
+		self.hsdb = None
+		
+		#self.tsd_checker = alignment_tsd_tir_finder(method = 'sinefinder', return_best_only = True)
+		#self.tsd_checker = alignment_tsd_tir_finder(method = 'tsd_searcher', return_best_only = True)
+		self.tsd_checker = 	alignment_tsd_tir_finder(min_ok_length = 10, max_mismatch = 2, return_best_only = True, best_hit_approach = 'closest')
+
+	
+	def revcomp(self, string):
+		switcher = {'A':'T', 'C':'G', 'G':'C', 'T':'A'}
+		revcmp = ''.join([switcher[c] if c in switcher else 'N' for c in string[::-1]])
+		return revcmp
+		
+	def set_patterns(self):
 		'''
 		#Original pattern - I omit spacers because we do not need to explicitly search for them
 		pattern = (
@@ -29,22 +54,7 @@ class hyperSINEfinder:
 		('polyA', "A{6,}|T{6,}"),
 		('TSD_region_2', ".{,40}"),
 		'''
-		
-		#All possible SINE forward patterns exploded out to explicit regex with no ambiguity
-		self.patterns = None
-		self.pattern_reverser = None
-		#Genome sequence to search
-		self.sequence = None
-		#Hyperscan database of regex patterns
-		self.hsdb = None
 	
-	
-	def revcomp(self, string):
-		switcher = {'A':'T', 'C':'G', 'G':'C', 'T':'A'}
-		revcmp = ''.join([switcher[c] if c in switcher else 'N' for c in string[::-1]])
-		return revcmp
-		
-	def set_patterns(self):
 		a_box_fwd = ('AATGG',
 					 'ACTGG',
 					 'AGTGG',
@@ -60,7 +70,6 @@ class hyperSINEfinder:
 				   
 		a_box_rev = [self.revcomp(rgx) for rgx in a_box_fwd]
 		b_box_rev = [self.revcomp(rgx) for rgx in b_box_fwd]
-		
 		
 		self.patterns = (a_box_fwd, b_box_fwd, poly_AT, b_box_rev, a_box_rev)
 		
@@ -105,7 +114,8 @@ class hyperSINEfinder:
 		del filterer
 		
 		return hits_array
-			
+	
+	'''
 	#Fast numpy run length encoding
 	#https://stackoverflow.com/questions/1066758/find-length-of-sequences-of-identical-values-in-a-numpy-array-run-length-encodi
 	def rle(self, inarray):
@@ -123,118 +133,195 @@ class hyperSINEfinder:
 			
 			return rle_arr
 	
-	#okay, so there's a lot of math here to basically replicate the spacer-matching component of the original regex method
+	'''	
+	'''
+	#Find zeros close enough to ones, should record which pairs pass this 
 	
-	def find_plausible_sine_patterns(self, hits, forward = True):			
-		'''
-		Where the original regex explicitly searched for spacers, we only have start/stop indices for hyperscan
-		
-		So, what we do here is we select instances where the correct ordering of SINE elements is found within a max distance of the 
-		relevant spacer of the next OK element, maximizing distance between OK elements up to spacer size
-		
-		Achieved by
-		Find instances where hit[ok_order[0]] end within spacers[0] or hit[ok_order[1]] start and
-							 hit[ok_order[1]] end within spacers[1] or hit[ok_order[2]] start
-							 
-		We need to know where the nearest OK hit is for each item
-		
-		
-		'''
-		
-		#Find rows in hits where regex pattern changes - this is cases where it's plausible a match could occur
-		#We do not know which of a run of matches is the best candidate from this, only if it's possible that a run of candidates might be a match
-		
-		#Run length encoding of regex pattern matches
-		#columns: 0 = RLE index, 1 = value, 2 = position, 3 = run_length
-		rle_array = self.rle(hits[:, 0])
-		
-		#Index original hits with an RLE ID matching that in the rle_array, but repeated to the sizes of runs
-		#Can we decode from positions instead? Probably
-		rle_groups_hits = np.repeat(rle_array[:,0], rle_array[:,3])
-
-		#filterer = np.zeros(rle_array.shape[0], dtype = np.bool_)
-		
-		#regex pattern order is SINE-like; either a_box -> b_box fwd OR polyAT -> b_box rev
-		first_ok = (rle_array[:-2, 1] + 1) == rle_array[1:-1, 1]
-		#regex pattern order 2 is SINE-like; either b_box -> polyAT fwd OR b_box -> a_box rev
-		second_ok = (rle_array[1:-1, 1] + 1) == rle_array[2:, 1]
-		
-		#This finds the indices of first patterns where the next two patterns are correct
-		correct_pattern_order = np.where(np.logical_and(first_ok, second_ok))[0]
-		
-		del first_ok
-		del second_ok
-		
-		#Add the ensuing two indices so that we can select the entire runs of correct patterns
-		correct_pattern_order = (correct_pattern_order[:, None] + np.arange(3)).flatten()
-		
-		ok_rle_ids = rle_array[correct_pattern_order, 0]
-		
-		del correct_pattern_order
-		
-		hits = hits[np.isin(rle_groups_hits, ok_rle_ids)]
-		
-		del rle_groups_hits
-		del ok_rle_ids
-		
-		rle_array = self.rle(hits[:, 0])
-		rle_groups_hits = np.repeat(rle_array[:,0], rle_array[:,3])
-		
-		#Split by regex pattern index; this will always be 0, 1, 2, 0, 1, 2 .... or 2, 3, 4, 2, 3, 4... depending on forward or reverse
-		groups = np.split(hits, np.unique(rle_groups_hits, return_index=True)[1][1:])
+	In this, I refer to zero pattern, one pattern, and two pattern. This is a_box, b_box, polyAT for forward, polyAT, b_box, a_box for reverse
+	'''
+	def find_plausible_sine_patterns(self, hits, forward = True):
 		
 		if forward:
-			spacer_1_low = 25
-			spacer_1_high = 50
-			spacer_2_low = 20
-			spacer_2_high = 500
+			#I encoded these patterns as 0, 1, 2 forward, 2 3, 4 reverse. PolyAT is identical both directions, so grouping 2 with both works
+			first = 0
+			second = 1
+			third = 2
+			#Original SINEfinder pattern searcher uses these distances to identify what is OK offset
+			dist1_low = 25
+			dist1_high = 50
+			dist2_low = 20
+			dist2_high = 500
 		else:
-			spacer_1_low = 20
-			spacer_1_high = 500
-			spacer_2_low = 25
-			spacer_2_high = 50
+			first = 2
+			second = 3
+			third = 4
+			#In the reverse search, distance orders are inverted
+			dist1_low = 20
+			dist1_high = 500
+			dist2_low = 25
+			dist2_high = 50
 		
-		#Triplets of these groups represent a plausible SINE element
-		for i in range(0, len(groups), 3):
-			sine_candidates = []
-			first_element = groups[i]
-			second_element = groups[i+1]
-			third_element = groups[i+2]
-
-			#For first group (a_box fwd, polyAT rev), check if any second group (b_box fwd, b_box rev) is 
-			#at the correct distance of (spacer_1_low <= distance <= spacer_1_high)
-			first_ok = []
-			for i, end_index in enumerate(first_element[:, 2]):
-				spacer_distances = second_element[:, 1] - end_index
-				ok_space = np.logical_and(spacer_distances >= spacer_1_low, spacer_distances <= spacer_1_high)
-				best_match_index = np.where(ok_space)[0][-1] if np.any(ok_space) else False
-				if best_match_index:
-					first_ok.append((i, best_match_index))
+		#Final return
+		sine_candidates = None
+		
+		#First pass - identify first and second patterns close enough together; keep all twos
+		zero_mask = hits[:, 0] == first
+		zeros = hits[zero_mask]
+		zero_orig_indices = np.flatnonzero(zero_mask)
+		
+		one_mask = hits[:, 0] == second
+		ones = hits[one_mask]
+		one_orig_indices = np.flatnonzero(one_mask)
+		
+		sort_order = zeros[:, 2].argsort()
+		sorted_zeros = zeros[sort_order]
+		sorted_zero_orig_indices = zero_orig_indices[sort_order]
+		sorted_zeros_end = sorted_zeros[:, 2]
+		
+		#Find loci where the end of a zero pattern would be inserted into offset arrays of the start of a one pattern
+		left = np.searchsorted(sorted_zeros_end, ones[: , 1]-dist1_high, side = 'left')
+		right = np.searchsorted(sorted_zeros_end, ones[: , 1]-dist1_low, side = 'right')
+		
+		#Places where the indices differ indicate that a zero pattern is close enough to at least one one pattern
+		worthwhile_indices = np.where(left < right)[0]
+		#passing_ones = one_orig_indices[worthwhile_indices]
 			
-			#Check to see if there are any passing matches; do not bother to check second elements if not
-			any_first_matches = len(first_ok) > 0
-			if any_first_matches:
-				second_ok = []
-				#For second group (b_box fwd, b_box rev), check if any third group (polyAT fwd, a_box rev) is 
-				#at the correct distance of (spacer_2_low <= distance <= spacer_2_high)
-				for i, end_index in enumerate(second_element[:, 2]):
-					spacer_distances = third_element[:, 1] - end_index
-					ok_space = np.logical_and(spacer_distances >= spacer_2_low, spacer_distances <= spacer_2_high)
-					best_match_index = np.where(ok_space)[0][-1] if np.any(ok_space) else False
-					if best_match_index:
-						second_ok.append((i, best_match_index,))
-						
-				#Check to see if there are any passing matches; do not bother to check if matches can be chained if not
-				any_second_matches = len(second_ok) > 0
-				if any_second_matches:
-					#Chain matches together by first_element:best_second_element==second_element:best_third_element on best_second_element == second_element
-					first_ok = np.array(first_ok)
-					second_ok = np.array(second_ok)
-					print(first_ok)
-					print(second_ok)
+		acceptable_zero_ones = []
 		
+		for i in worthwhile_indices:
+			l, r = left[i], right[i]
+			for zidx in sorted_zero_orig_indices[l:r]:
+				acceptable_zero_ones.append((zidx, one_orig_indices[i]))
+		
+		acceptable_zero_ones = np.array(acceptable_zero_ones, dtype = np.int32)
+		
+		#two_mask = np.flatnonzero(hits[:, 0] == third)
+		
+		#ok_first_pass = np.union1d(acceptable_zero_ones.flatten(), two_mask)
+		
+		#if ok_first_pass.shape[0] > 0:
+		if acceptable_zero_ones.shape[0] > 0:
+			#Second pass - of the remaining ones, identify all ones and twos close enough together; keep all zeros
+			
+			#No need to redo this
+			#one_mask = hits[:, 0] == second
+			#ones = hits[one_mask]
+			#one_orig_indices = np.flatnonzero(one_mask)
+			
+			two_mask = hits[:, 0] == third
+			twos = hits[two_mask]
+			two_orig_indices = np.flatnonzero(two_mask)
+			
+			sort_order = ones[:, 2].argsort()
+			sorted_ones = ones[sort_order]
+			sorted_one_orig_indices = one_orig_indices[sort_order]
+			sorted_ones_end = sorted_ones[:, 2]
+			
+			left = np.searchsorted(sorted_ones_end, twos[: , 1]- dist2_high, side = 'left')
+			right = np.searchsorted(sorted_ones_end, twos[: , 1]- dist2_low, side = 'right')
+			worthwhile_indices = np.where(left < right)[0]
+			
+			acceptable_one_twos = []
+			
+			for i in worthwhile_indices:
+				l, r = left[i], right[i]
+				for oidx in sorted_one_orig_indices[l:r]:
+					acceptable_one_twos.append((oidx, two_orig_indices[i],))
 
+			acceptable_one_twos = np.array(acceptable_one_twos, dtype = np.int32)
+			
+			#zero_mask = np.flatnonzero(hits[:, 0] == first)			
+			
+			#ok_second_pass = np.union1d(acceptable_one_twos.flatten(), zero_mask)
+						
+			#if ok_second_pass.shape[0] > 0:
+			if acceptable_one_twos.shape[0] > 0:
+				
+				#Cross-check
+				#which zeros have a one in the one_two index
+				acceptable_zero_ones = acceptable_zero_ones[np.isin(acceptable_zero_ones[:, 1], acceptable_one_twos[:, 0])]
+				#Which ones have a two in the zero_one index after filtering
+				acceptable_one_twos = acceptable_one_twos[np.isin(acceptable_one_twos[:, 0], acceptable_zero_ones[:, 1])]
+				
+				#Do we need some filter here to check and make sure that we're only constructing max-length patterns?
+				
+				#Union between all zero - ones, drop ones from one_twos because they're already checked, add two-twos
+				#all_acceptable = np.union1d(acceptable_zero_ones.flatten(), acceptable_one_twos[:, 1])
+				
+				#if all_acceptable.shape[0] > 0:
+				#	hits = hits[all_acceptable]
+				
+				#Remove pattern ID
+				hits = hits[:, 1:]
+			
+				#What we want to do here is to find the furthest away zero for each one value and the furthest away two for each one value,
+				#But, if the same zero and two appear on either side of the one, then we want to choose the one that maximizes 0-1 distance?
+				
+				
+				#For each distinct 2, the last time a specific zero value appears must be the max 0 -> 1 distance with a valid two, because ones are ascending
+				#For each distinct 1, the first time a specific zero appears 
+				
+				if acceptable_zero_ones.shape[0] > 0 and acceptable_one_twos.shape[0] > 0:
+					#sine_candidates = []
+					patterns = {}
+					pp = []
+					
+					#Effective grouping mechanism
+					left = np.searchsorted(acceptable_one_twos[:,0], acceptable_zero_ones[:, 1], side = 'left')
+					right = np.searchsorted(acceptable_one_twos[:,0], acceptable_zero_ones[:, 1], side = 'right')
+					
+					
+					for zero, one, l, r in zip(acceptable_zero_ones[:, 0], acceptable_zero_ones[:, 1], left, right):
+						#if zero not in patterns:
+						#	patterns[zero] = {}
+						for two in acceptable_one_twos[l:r, 1]:
+							#patterns[zero][one] = two
+							pp.append((zero, one, two,))
+					
+					pp = np.array(pp)
+					
+					if forward:
+						#Distance from 0 -> 1
+						dist1 = pp[:, 1] - pp[:, 0]
+						dist2 = pp[:, 2] - pp[:, 1]
+					else:
+						#We would be searching in reverse here, so we'd favor a_box -> b_box distance anyway
+						dist1 = pp[:, 2] - pp[:, 1]
+						dist2 = pp[:, 1] - pp[:, 0]
+						
+					#Sort to maximize a_box to b_box distance, then by b_box to polyAT distance
+					pp = pp[np.lexsort((dist2, dist1,))]
+					
+					#Find first appearance of each 0, 1, and 2 pattern in order
+					unique_elements, first_indices = np.unique(pp[:, 0], return_index=True)
+					pp = pp[first_indices]
+					unique_elements, first_indices = np.unique(pp[:, 1], return_index=True)
+					pp = pp[first_indices]
+					unique_elements, first_indices = np.unique(pp[:, 2], return_index=True)
+					pp = pp[first_indices]
+						
+					#Fix ordering for pretty print
+					pp = pp[np.argsort(pp[:, 0])]
+					
+					
+					sine_candidates = []	
+					for row in pp:
+						z, o, t = row[0], row[1], row[2]
+						next_candidate = np.concatenate([hits[z], hits[o], hits[t]],)
+						sine_candidates.append(next_candidate)
+					
+					sine_candidates = np.array(sine_candidates)
+					#print(sine_candidates[0:75])
+					#print(sine_candidates.shape)
+					#print('##########')
+					
+			else:
+				hits = None
+		else:
+			hits = None
 		
+		return sine_candidates
+
 	#Prepare matches for further processing
 	def clean_and_group_matches(self, hits):
 		#Convert recovered hits to numpy
@@ -249,34 +336,232 @@ class hyperSINEfinder:
 		#Sort by start location irrespective of pattern
 		hits_array = hits_array[hits_array[:,1].argsort()]
 		
+		np.savetxt('raw_hits.txt', hits_array, delimiter='\t', fmt = '%d')
+		
 		#Break into forward and reverse hits; include polyAT in both
 		forward_hits = hits_array[hits_array[:, 0] < 3]
 		reverse_hits = hits_array[hits_array[:, 0] > 1]
 		
 		del hits_array
 		
-		forward_hits = self.find_plausible_sine_patterns(forward_hits, forward = True)
-		reverse_hits = self.find_plausible_sine_patterns(reverse_hits, forward = False)
+		if len(forward_hits) > 0:
+			forward_hits = self.find_plausible_sine_patterns(forward_hits, forward = True)
+		else:
+			forward_hits = None
+			
 		
-				
+		if len(reverse_hits) > 0:
+			reverse_hits = self.find_plausible_sine_patterns(reverse_hits, forward = False)
+		else:
+			reverse_hits = None
+			
 		return forward_hits, reverse_hits
-	
 		
-	def execute_search(self):
-		for record in self.fa:
-			print(record.description)
-			sequence = record.seq
-			hits = []
-			self.hsdb.scan(sequence.encode(encoding='ascii'), match_event_handler=on_match, context = hits)
+	def extract_match(self, sequence, recovery, description, forward = True):
+		writeout = []
+		
+		for row in recovery:
+			if forward:
+				a_box_start  = row[0]
+				a_box_end    = row[1]
+				b_box_start  = row[2]
+				b_box_end    = row[3]
+				polyAT_start = row[4]
+				polyAT_end   = row[5]
+				
+				left_tsd_region  = a_box_start - 40
+					
+				right_tsd_region = polyAT_end + 41
+								
+				tsd1    = sequence[left_tsd_region:a_box_start]
+				a_box   = sequence[a_box_start:a_box_end]
+				spacer1 = sequence[a_box_end:b_box_start]
+				b_box   = sequence[b_box_start:b_box_end]
+				spacer2 = sequence[b_box_end:polyAT_start]
+				polyAT  = sequence[polyAT_start:polyAT_end]
+				tsd2    = sequence[polyAT_end:right_tsd_region]
+				
+			else:
+				polyAT_start = row[0]
+				polyAT_end   = row[1]
+				b_box_start  = row[2]
+				b_box_end    = row[3]
+				a_box_start  = row[4]
+				a_box_end    = row[5]
+				
+				left_tsd_region  = polyAT_start - 40
+				right_tsd_region = a_box_end + 41
+				
+				tsd2    = self.revcomp(sequence[left_tsd_region:polyAT_start])
+				polyAT  = self.revcomp(sequence[polyAT_start:polyAT_end])
+				spacer2 = self.revcomp(sequence[polyAT_end:b_box_start])
+				b_box   = self.revcomp(sequence[b_box_start:b_box_end])
+				spacer1 = self.revcomp(sequence[b_box_end:a_box_start])
+				a_box   = self.revcomp(sequence[a_box_start:a_box_end])
+				tsd1    = self.revcomp(sequence[a_box_end:right_tsd_region])
+		
+			#Assess whether this SINE candidate actually starts and ends with a TSD
+			tsds = self.tsd_checker.operate(tsd1, tsd2)
+			#If it does, the best hit is the first hit according to tsd_checker with options selected
+			if tsds is not None:
+				#tsd = (updates[0], updates[1], left_string_start, left_string_end, right_string_start, right_string_end, updates[2], updates[3]+updates[4], )
+				left_tsd, right_tsd, ls, le, rs, rend, tsdl, tsd_mm = tsds[0]
+			
+				tsd1_spacer = tsd1[le:]
+				tsd1 = tsd1[ls:le]
+				tsd2_spacer = tsd2[:rs]
+				tsd2 = tsd2[rs:rend]
+				#SINEfinder output header format
+				#>chr1_pat F 876520:876774 TSD-len=10;TSD-score=10;TSD-mism=0
+				next_sine_header = f'>{description} {'+' if forward else '-'} {left_tsd_region+ls}:{polyAT_end+rend} TSD-len={tsdl};TSD-score={tsdl-tsd_mm};TSD-mism={tsd_mm}'
+				
+				#SINEfinder sequence format alternates caps and lowercase with TSDs, a + b boxes, polyAT caps and all else lower
+				tsd1 = tsd1.upper()
+				tsd1_spacer = tsd1_spacer.lower()
+				a_box = a_box.upper()
+				spacer1 = spacer1.lower()
+				b_box = b_box.upper()
+				spacer2 = spacer2.lower()
+				polyAT = polyAT.upper()
+				tsd2_spacer = tsd2_spacer.lower()
+				tsd2 = tsd2.upper()
+				next_sine_sequence = f'{tsd1}{tsd1_spacer}{a_box}{spacer1}{b_box}{spacer2}{polyAT}{tsd2_spacer}{tsd2}'
+				
+				writeout.append(next_sine_header)
+				writeout.append(next_sine_sequence)
+		
+		return writeout
+		
+	def execute_search(self, sequence_id):
+		record = self.fa[sequence_id]
+		sequence = record.seq.upper()
+		seqlen = len(sequence)
+		desc = record.description.split()[0]
+		hits = []
+		
+		#print(f'{sequence_id} loaded')
+		
+		self.hsdb.scan(sequence.encode(encoding='ascii'), match_event_handler=on_match, context = hits)
+		
+		#print(f'{sequence_id} scanned')
+		
+		f = None
+		r = None
+		
+		if len(hits) > 0:
 			#Definitely need to remove ungreedy polyAT hits
 			f, r = self.clean_and_group_matches(hits)
-			#print(f)
-			#print(r)
+
+		#print(f'{sequence_id} cleaned')
+
+		'''
+		if f is None:
+			fseq = []
+		else:
+			fseq = []
+			for row in f:
+				a_box_start  = row[0]
+				a_box_end    = row[1]
+				b_box_start  = row[2]
+				b_box_end    = row[3]
+				polyAT_start = row[4]
+				polyAT_end   = row[5]
+				
+				left_tsd_region  = a_box_start - 40
+					
+				right_tsd_region = polyAT_end + 41
+				
+				myseq = sequence[left_tsd_region:right_tsd_region]
+				fseq.append('>'+sequence_id)
+				fseq.append(myseq)
+				
+				
 			
-			break
+		if r is None:
+			rseq = []
 			
+		else:
+			rseq = []
+			for row in r:
+				polyAT_start = row[0]
+				polyAT_end   = row[1]
+				b_box_start  = row[2]
+				b_box_end    = row[3]
+				a_box_start  = row[4]
+				a_box_end    = row[5]
+				
+				left_tsd_region  = polyAT_start - 40
+				right_tsd_region = a_box_end + 41
+				
+				myseq = sequence[left_tsd_region:right_tsd_region]
+				
+				rseq.append('>'+sequence_id)
+				rseq.append(myseq)
+
+		return fseq, rseq
+		'''
+
+		del hits
+				
+		if f is not None:
+			#print(f'{len(f)} forward hits in {sequence_id}')
+			f_writeout = self.extract_match(sequence, f, desc, forward = True)
+			#print(f'{int(len(f_writeout)/2)} fwd remain in {sequence_id}')
+		else:
+			f_writeout = None
 		
-f = '../TEtrimmer/try2/bTaeGut7v0.4_MT_rDNA.fa'
-mn = hyperSINEfinder(f)
-mn.prep()
-mn.execute_search()
+		if r is not None:
+			#print(f'{len(f)} reverse hits in {sequence_id}')
+			r_writeout = self.extract_match(sequence, r, desc, forward = False)
+			#print(f'{int(len(r_writeout)/2)} rev remain in {sequence_id}')
+		else:
+			r_writeout = None
+		
+		return f_writeout, r_writeout
+		
+def initialize_sine_worker(genome_file):
+	global sinefinder
+	sinefinder = hyperSINEfinder(genome_file)
+	sinefinder.prep()
+		
+def worker(seqid):
+	f, r = sinefinder.execute_search(seqid)
+	return f, r, seqid
+	
+def jesus_give_me_a_SINE(genome_file, output = None, threads = 1):
+	fa = pyfastx.Fasta(genome_file, build_index = True)
+	#ids = list(range(len(fa)))
+	ids = list(fa.keys())
+	#ids = [0]
+	
+	ok_procs = min([threads, len(ids)])
+	
+	
+	if output is None:
+		import io
+		out = io.StringIO('')
+	else:
+		out = open(output, 'w')
+	
+	with multiprocessing.Pool(ok_procs, initializer = initialize_sine_worker, initargs = (genome_file, )) as pool:
+		fwd = []
+		rev = []
+		for f, r, s in pool.map(worker, ids):				
+		#for f, r, s in pool.imap_unordered(worker, ids):				
+			if f is not None:
+				for rec in f:
+					print(rec, file = out)
+			if r is not None:
+				for rec in r:
+					print(rec, file = out)
+
+	if output is None:
+		output = out
+
+	return output
+
+#f = '../TEtrimmer/try2/pyhmmer_vs_hmmer_test/bTaeGut7v0.4_MT_rDNA.fa'
+#jesus_give_me_a_SINE(f, 'example_zebrafinch_sines.txt', 10)
+#oot = jesus_give_me_a_SINE(f, None, 10)
+
+#print(oot.getvalue())
