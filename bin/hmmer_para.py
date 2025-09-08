@@ -1,91 +1,76 @@
 import sys
 import os
-import pyfastx
-import pyhmmer
-import multiprocessing
-import io
 
-class pyhmmer_manager:
-	def __init__(self, genome_file):
-		self.fa = pyfastx.Fasta(genome_file)
-		self.hmms = None
-		self.sequence = None
-		
-	def load_model_from_file(self, hmm_file):
-		ar = open(hmm_file, mode = 'rb')
-		hmm_text = ar.read()
-		hmm_io = io.BytesIO(hmm_text)
+import multiprocessing
+import subprocess
+import shutil
+
+
+def prep_hmmsearch(genome_file, hmm_directory, working_dir = '.', threads = 1):
+	base = os.path.join(working_dir, 'annosine_hmmsearch')
+	gendir = os.path.join(base, 'genomes')
+	hmmdir = os.path.join(base, 'hmmsearch_output')
+	#work_dir = os.path.join(working_dir, 'annosine_hmmsearch', 'genomes')
+	if not os.path.exists(base):
+		os.mkdir(base)
 	
-		#Faster to load the file via binary read and then load pyhmmer in memory than to directly use pyhmmer method. Odd, but it works.
-		with pyhmmer.plan7.HMMFile(hmm_io) as fh:
-			self.hmms = list(fh)
+	if not os.path.exists(gendir):
+		os.mkdir(gendir)
+	else:
+		for f in os.listdir(gendir):
+			os.remove(os.path.join(gendir, f))
 		
-	#Use pyfastx to load a sequence and digitize it for search
-	def load_sequence(self, sequence_id):
-		seqid = sequence_id.encode(encoding = "ascii")
-		self.sequence = pyhmmer.easel.TextSequence(name = seqid, sequence = self.fa[sequence_id].seq)
-		self.sequence = self.sequence.digitize(pyhmmer.easel.Alphabet.dna())
-		self.sequence = [self.sequence]
-			
-	#Run nhmmer, write results
-	def nhmmer(self):
-		results = io.BytesIO()
-		for hit in pyhmmer.hmmer.nhmmer(self.hmms, self.sequence, cpus = 1):
-			hit.write(results, format = 'targets', header = False)
-			
-		return results.getvalue().decode()
-	
-def hmm_init(gf, hmms):
-	global genome_file
-	global hmm_paths
-	genome_file = gf
-	hmm_paths = hmms
-	
-def one_process(args):
-	seqid, hmm = args
-	#print(f'Process {seqid} vs {hmm} begin')
-	mn = pyhmmer_manager(genome_file)
-	mn.load_model_from_file(hmm_paths[hmm])
-	mn.load_sequence(sequence_id = seqid)
-	results = mn.nhmmer()
-	#print(f'Process {seqid} vs {hmm} end')
-	return results, hmm
+	if not os.path.exists(hmmdir):
+		os.mkdir(hmmdir)
 		
-def process_pyhmmer(genome_file, hmm_model_dir, output_file, threads = 1):
-	if not os.path.exists(f'{genome_file}.fxi'):
-		print('Indexing genome_file')
-		
-	fa = pyfastx.Fasta(genome_file, build_index = True)
-	sequences = list(fa.keys())	
+	pfx_split = f'pyfastx split {genome_file} -n {threads} -o {gendir}'
+	subprocess.run(pfx_split.split())
 	
-	#Sort hmm models from longest to shortest as an approximation for runtime.
-	hmm_models = [os.path.join(hmm_model_dir, h) for h in os.listdir(hmm_model_dir) if h.endswith('.hmm')]
+	outs = [os.path.join(gendir, f) for f in os.listdir(gendir) if os.path.getsize(os.path.join(gendir, f)) > 0]
+		
+	hmm_models = [os.path.join(hmm_directory, h) for h in os.listdir(hmm_directory) if h.endswith('.hmm')]
 	hmm_models = sorted(hmm_models, key = os.path.getsize, reverse = True)
-	hmm_models = {os.path.basename(h):h for h in hmm_models}
 	
-	#This could end up being a quite large list.
+	return outs, hmm_models
+	
+def run_one_hmm(args):
+	hmm_mod, ingen = args
+	hmm_base = os.path.basename(hmm_mod)
+	hmm_base = hmm_base.replace('.hmm', '')
+	
+	outfile = ingen.replace('genomes', 'hmmsearch_output')
+	outfile = f'{outfile}_{hmm_base}.txt'
+	
+	hmm_one = f'nhmmer --cpu 1 --tblout {outfile} {hmm_mod} {ingen}'
+	hmm_one = hmm_one.split()
+	
+	
+	subprocess.run(hmm_one, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+	#subprocess.run(hmm_one)
+	
+	return outfile
+	
+def parse_hmmfile(file, outhandle):
+	with open(file) as infh:
+		for line in infh:
+			if not line.startswith('#'):
+				outhandle.write(line)
+				
+	os.remove(file)
+
+def run_hmmsearch(queries, targets, output, threads = 1):
 	args = []
-	for h in hmm_models:
-		for s in sequences:
-			args.append((s, h,))
+	for t in targets:
+		for q in queries:
+			args.append((t, q,))
+			print(t, q)
 			
-	print(f'Search plan initiated. {len(hmm_models)} HMM models will be searched against {len(sequences)} genomic sequences')
-	total_search = len(args)
-	search_bite = max([total_search // 1000, 1])
-	ct = 0
-			
-	with open(output_file, 'w') as out:
-		with multiprocessing.Pool(threads, initializer = hmm_init, initargs = (genome_file, hmm_models,), maxtasksperchild = 1) as pool:
-			for result, hmm in pool.imap_unordered(one_process, args):
-				ct += 1
-				if ct % search_bite == 0:
-					print(f'HMM search is {round(100 * ct / total_search)}% complete')
-				#print(f'HMM model: {hmm} complete')
-				if len(result) > 0:
-					out.write(result)
-					
+	with open(output, 'w') as out:
+		with multiprocessing.Pool(threads) as pool:
+			for result in pool.imap_unordered(run_one_hmm, args):
+				parse_hmmfile(result, out)
+		
 def hmm_output_cleaner(hmm_results_file, threshold_hmm_e_value = 1e-10):
-	#fa = pyfastx.Fasta(genome_file)
 	
 	'''
 	print('Processing the hmm prediction ...', flush=True)
@@ -227,14 +212,9 @@ def hmm_output_cleaner(hmm_results_file, threshold_hmm_e_value = 1e-10):
 
 	return update_hmm_record, family_name, family_count
 	
-	
-'''
-md = 'AnnoSINE_v2/hmm_family_seq_easy/'
-output = 'test_pyhmmer.txt'
-genome_file = sys.argv[1]
-threads = 10
+					
+#f = sys.argv[1]
 
-process_pyhmmer(genome_file, md, output, threads)
+#hmms = prep_search(f, 'AnnoSINE_v2/hmm_family_seq_easy/', 'test_pfx', 20)
+#run_search(inputs, hmms, 'test_pfx/hmm_mp.txt', 20)
 
-hmm_output_cleaner('test_pyhmmer.txt')
-'''

@@ -24,8 +24,10 @@ import sqlite3
 import shutil
 #from genomeSplitter import genomeSplitter
 from process_blast_output_polars import get_updates_from_blasts
-from pyhmmer_runner import process_pyhmmer, hmm_output_cleaner
+#from pyhmmer_runner import process_pyhmmer, hmm_output_cleaner
 #from annosine_tsd_searcher import tsd_searcher
+
+from hmmer_para import prep_hmmsearch, run_hmmsearch, hmm_output_cleaner
 
 from tsd_searcher import alignment_tsd_tir_finder
 from hyperSINEfinder import jesus_give_me_a_SINE
@@ -1913,7 +1915,9 @@ def main_function():
 			finished_check = os.path.join(output_genome_assembly_path, 'hmmsearch_complete.txt')
 			
 			if not os.path.exists(finished_check):
-				process_pyhmmer(input_genome_assembly_path, hmm_model_dir, hmmsearch_output, threads = cpus)
+				#process_pyhmmer(input_genome_assembly_path, hmm_model_dir, hmmsearch_output, threads = cpus)
+				inputs, hmms = prep_hmmsearch(input_genome_assembly_path, hmm_model_dir, output_genome_assembly_path, cpus)
+				run_hmmsearch(inputs, hmms, step_1_1_file, 20)
 				out = open(finished_check, 'w')
 				out.close()
 			else:
