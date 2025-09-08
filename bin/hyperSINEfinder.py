@@ -413,7 +413,7 @@ class hyperSINEfinder:
 				tsd2 = tsd2[rs:rend]
 				#SINEfinder output header format
 				#>chr1_pat F 876520:876774 TSD-len=10;TSD-score=10;TSD-mism=0
-				next_sine_header = f'>{description} {'+' if forward else '-'} {left_tsd_region+ls}:{polyAT_end+rend} TSD-len={tsdl};TSD-score={tsdl-tsd_mm};TSD-mism={tsd_mm}'
+				next_sine_header = f'>{description} {"+" if forward else "-"} {left_tsd_region+ls}:{polyAT_end+rend} TSD-len={tsdl};TSD-score={tsdl-tsd_mm};TSD-mism={tsd_mm}'
 				
 				#SINEfinder sequence format alternates caps and lowercase with TSDs, a + b boxes, polyAT caps and all else lower
 				tsd1 = tsd1.upper()
