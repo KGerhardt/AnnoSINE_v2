@@ -50,10 +50,6 @@ def clean_blast_record(args):
 	df = pl.read_csv(file, has_header = False, separator = '\t', schema = blast_schema, columns = these_cols)
 	
 	#Instead of trying to clean at the paf2blast outputs, we filter unique over hits here because these files are made to be contiguous
-	#Ah, but the paf2blast has overlaps so the end of a previous record is possibly > the start of the next record.
-	#So... how do we handle that?
-	#df = pl.df.unique(subset['qname', 'tname', 'tstart', 'tend'], maintain_order = True)
-	
 
 	#BLAST is 1-indexed, fix this for python by subtracting 1 from all starts
 	df = df.with_columns(
@@ -110,9 +106,6 @@ def clean_blast_record(args):
 		#Calculate ends
 		position_ends = position_starts + runs - 1
 		
-		#Need to implement this.
-		#print('Shift value for your input:',abs(blast_pre[0]['start'] - 100), abs(blast_pre[0]['end'] - (length[m] - 100)),' | Maximum tolerable shift value:',max_shift)
-
 		num_gaps = position_starts.shape[0] - 1
 		
 		#If there is more than one contiguous group of sequences, clean the position start and end records
@@ -171,23 +164,6 @@ def clean_blast_record(args):
 				position_starts = [position_starts[i] for i in groupings[winning_group]]
 				position_ends = [position_ends[i] for i in groupings[winning_group]]
 
-	
-		#This would match the original logic, but really it makes no sense.
-		#If the point is that the updated positions have to be within max_shift bp of the original TSD coordinates, this does not achieve that goal
-		#The first position is always zero, so there is no math needed here
-		#left_shift = abs(position_starts[0] - 100)
-		#Length of the query - final position covered adequately
-		#right_shift = abs(position_ends[-1] - (record_length - 100))
-		
-		#tolerable_shift = left_shift < max_shift and right_shift < max_shift
-		
-		#print(f'Shift start {left_shift} shift end {right_shift} max ok shift {max_shift}')
-		
-		#if tolerable_shift:
-		#	updates.append((seqid, int(position_starts[0]), int(position_ends[-1]), hit_count, record_length))
-		#else:
-		#	updates.append((seqid, None, None, hit_count, record_length))
-		
 		#We handle the max_shift checks later, now, so every record gets added.
 		updates.append((seqid, int(position_starts[0]), int(position_ends[-1])+1, hit_count, record_length))
 	

@@ -43,13 +43,13 @@ def hmm_init(gf, hmms):
 	
 def one_process(args):
 	seqid, hmm = args
-	print(f'Process {seqid} vs {hmm} begin')
+	#print(f'Process {seqid} vs {hmm} begin')
 	mn = pyhmmer_manager(genome_file)
 	mn.load_model_from_file(hmm_paths[hmm])
 	mn.load_sequence(sequence_id = seqid)
 	results = mn.nhmmer()
-	print(f'Process {seqid} vs {hmm} end')
-	return results
+	#print(f'Process {seqid} vs {hmm} end')
+	return results, hmm
 		
 def process_pyhmmer(genome_file, hmm_model_dir, output_file, threads = 1):
 	if not os.path.exists(f'{genome_file}.fxi'):
@@ -69,13 +69,21 @@ def process_pyhmmer(genome_file, hmm_model_dir, output_file, threads = 1):
 		for s in sequences:
 			args.append((s, h,))
 			
+	print(f'Search plan initiated. {len(hmm_models)} HMM models will be searched against {len(sequences)} genomic sequences')
+	total_search = len(args)
+	search_bite = max([total_search // 100, 1])
+	ct = 0
+			
 	with open(output_file, 'w') as out:
 		with multiprocessing.Pool(threads, initializer = hmm_init, initargs = (genome_file, hmm_models,)) as pool:
-			for result in pool.imap_unordered(one_process, args):
+			for result, hmm in pool.imap_unordered(one_process, args):
+				ct += 1
+				if ct % search_bite == 0:
+					print(f'HMM search is {round(100 * ct / total_search)}% complete')
+				#print(f'HMM model: {hmm} complete')
 				if len(result) > 0:
 					out.write(result)
 					
-		
 def hmm_output_cleaner(hmm_results_file, threshold_hmm_e_value = 1e-10):
 	#fa = pyfastx.Fasta(genome_file)
 	
@@ -185,7 +193,6 @@ def hmm_output_cleaner(hmm_results_file, threshold_hmm_e_value = 1e-10):
 				family = family.replace('-aln-stockholm', '')
 				strand = segs[11] == "+"
 				
-
 				first_loc = int(segs[6])
 				second_loc = int(segs[7])
 				
@@ -204,7 +211,7 @@ def hmm_output_cleaner(hmm_results_file, threshold_hmm_e_value = 1e-10):
 
 								'family': family,
 								'id': query_seq,
-								'strand': 'C'}
+								'strand': '-'}
 					
 				#And this is basically process_hmm_output_2
 				update_hmm_record.append(next_record)

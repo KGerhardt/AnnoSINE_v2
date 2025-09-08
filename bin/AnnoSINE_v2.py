@@ -1,5 +1,9 @@
 import time
 import os
+
+#Set openMP multithreads to 1 for the purposes of preventing libdivsufsort parallelism
+os.environ['OMP_NUM_THREADS'] = '1'
+
 import math
 import re
 from collections import Counter
@@ -21,7 +25,11 @@ import shutil
 #from genomeSplitter import genomeSplitter
 from process_blast_output_polars import get_updates_from_blasts
 from pyhmmer_runner import process_pyhmmer, hmm_output_cleaner
-from annosine_tsd_searcher import tsd_searcher
+#from annosine_tsd_searcher import tsd_searcher
+
+from tsd_searcher import alignment_tsd_tir_finder
+from hyperSINEfinder import jesus_give_me_a_SINE
+
 
 print('Example: python3 AnnoSINE.py 2 ../Input_Files/test.fasta ../Output_Files', flush=True)
 parser = argparse.ArgumentParser(description="SINE Annotation Tool for Plant Genomes",
@@ -383,23 +391,48 @@ def process_hmm_output_3(threshold_hmm_e_value, in_genome_assembly_path, pattern
 	
 	t1=time.time()
 	output_genome_sequence = read_genome_assembly(in_genome_assembly_path)
+	genome_seqlens = {}
+	for s in output_genome_sequence:
+		genome_seqlens[s] = len(output_genome_sequence[s])
+		
 	t2=time.time()
 	print('process_hmm_output_3:read_genome_assembly uses',t2-t1,flush=True)
 	
 	t1=time.time()
 	#update_hmm_record, family_name, family_count = process_hmm_output_2(threshold_hmm_e_value, script_dir)
 	update_hmm_record, family_name, family_count = hmm_output_cleaner(hmm_results_file, threshold_hmm_e_value)
+	print(f'Found {len(update_hmm_record)} HMM-based SINE candidates')
 	t2=time.time()
 	print('process_hmm_output_3:process_hmm_output uses',t2-t1,flush=True)
 
 	t1=time.time()
 	update_hmm_output = merge_same_hmm_output(update_hmm_record)
+	print(f'After merging, {len(update_hmm_output)} HMM SINE candidates remain')
 	t2=time.time()
 	print('process_hmm_output_3:merge_same_hmm_output uses',t2-t1,flush=True)
 	
 	#Collect sequences from the genome file based on the output.
 	#This makes much more sense to do by sequence ID loading either 1 seq/thread or just one at a time instead of keeping the whole genome in mem.
 	t1=time.time()
+	
+	hmm_output_fasta = os.path.join(out_genome_assembly_path, 'Step1_extend_tsd_input_1.fa')
+	with open(hmm_output_fasta, 'w') as out:
+		for record in update_hmm_output:
+			seqid = record['id']
+			start = record['start']
+			end = record['end']
+			strand = record['strand']
+			
+			#Adjusted offsets
+			sstart = max([start - 30, 0])
+			send = min([genome_seqlens[seqid], end + 50])
+			
+			sequence = output_genome_sequence[seqid][sstart:send]
+			
+			print(f'>{seqid} {strand} {start}:{end}', file = out)
+			print(sequence, file = out)
+	
+	'''
 	for num_return_pos in range(len(update_hmm_output)):
 		pre_num = count
 		start[pre_num] = update_hmm_output[num_return_pos]['start']
@@ -411,60 +444,57 @@ def process_hmm_output_3(threshold_hmm_e_value, in_genome_assembly_path, pattern
 																	  update_hmm_output[num_return_pos]['end']+50]
 		pre_strand[pre_num] = update_hmm_output[num_return_pos]['strand']
 		count += 1
+	'''
+	
 	t2=time.time()
-	print('process_hmm_output_3:for_loop uses',t2-t1,flush=True)
+	print('process_hmm_output_3:sequence writeout uses',t2-t1,flush=True)
 
+	'''
 	new_start = list(start.values())
 	new_end = list(end.values())
 	new_sequence_id = list(seq_ids.values())
+	
+	save_to_fna_1(hmm_output_fasta, input_tsd_sequences, pre_strand,
+				  new_sequence_id, 0, 0, new_start, new_end)
+	'''
 
-	#This should only be called for pattern == 1 or 3
-	#Looks like this is just writing the sequences to a file using a modified seqid and fasta format.
-	if pattern == 1 or pattern == 3:
-		#Is this just opening files? No - it's functionally deleting old files but isn't just deleting them. Why?
-		if os.path.exists(out_genome_assembly_path+'/Step1_extend_tsd_input_1.fa'):
-			modify_text(out_genome_assembly_path+'/Step1_extend_tsd_input_1.fa')
-		
-		save_to_fna_1(out_genome_assembly_path+'/Step1_extend_tsd_input_1.fa', input_tsd_sequences, pre_strand,
-					  new_sequence_id, 0, 0, new_start, new_end)
+'''
+def save_to_fna_1(filename, sequences, strands, ids, left_offset, right_offset, starts, ends):
+	with open(filename, 'w') as out:
+		for seq in sequences:
+			print(f'>{ids[seq]} {strands[seq]} {starts[seq]-left_offset}:{ends[seq]+right_offset}', file = out)
+			print(sequences[seq], file = out)
+'''
 
+#An infinitely cleaner way of merging TSD outputs
+def parse_and_clean_step1_input(filename):
+	with open(filename) as inf:
+		for line in inf:
+			line = line.strip()
+			#Check if is not header
+			if not line.startswith('>'):
+				#Clean sequence lines
+				line = re.sub('[^ATCGatcg]', 'N', line)
+			
+			yield line
 
-#There has to be a more elegant way of doing this. Probably pyfastx is better.
 def merge_tsd_input(pattern, out_genome_assembly_path):
-	if os.path.exists(out_genome_assembly_path+'/Step1_extend_tsd_input.fa'):
-		modify_text(out_genome_assembly_path+'/Step1_extend_tsd_input.fa')
-	if pattern == 1:
-		with open(out_genome_assembly_path+'/Step1_extend_tsd_input_1.fa', 'r') as f1:
-			lines1 = f1.readlines()
-			lines = lines1
-	if pattern == 2:
-		with open(out_genome_assembly_path+'/Step1_extend_tsd_input_2.fa', 'r') as f2:
-			lines2 = f2.readlines()
-			lines = lines2
-	elif pattern == 3:
-		with open(out_genome_assembly_path+'/Step1_extend_tsd_input_1.fa', 'r') as f1:
-			with open(out_genome_assembly_path+'/Step1_extend_tsd_input_2.fa', 'r') as f2:
-				lines1 = f1.readlines()
-				lines2 = f2.readlines()
-				if pattern == 1:
-					lines = lines1
-				elif pattern == 2:
-					lines = lines2
-				elif pattern == 3:
-					lines = lines1 + lines2
-	with open(out_genome_assembly_path+'/Step1_extend_tsd_input.fa', 'w') as f3:
-		for line in lines:
-			if line[0] == '>':
-				head=line
-				#f3.write(line)
-			else:
-				# replace non-ACGT characters to Ns, shujun
-				line = line.rstrip('\n')  # Remove newline character
-				cleaned_line = ''.join(['N' if c not in 'ACGTacgt' else c for c in line])
-				cleaned_line=cleaned_line.strip()
-				if not cleaned_line=='':
-					f3.write(head+cleaned_line + '\n') # Add newline character back
+	#HMM, SINEFinder inputs
+	hmm_s1_in        = os.path.join(out_genome_assembly_path, 'Step1_extend_tsd_input_1.fa')
+	sinefinder_s1_in = os.path.join(out_genome_assembly_path, 'Step1_extend_tsd_input_2.fa')
+	#Merged output - a concatenation of the above with the caveat of replacing non-ATCGatcg characters in the sequences with 'N'
+	final_s1_out = os.path.join(out_genome_assembly_path, 'Step1_extend_tsd_input.fa')
+	
+	with open(final_s1_out, 'w') as out:
+		if pattern == 1 or pattern == 3:
+			for line in parse_and_clean_step1_input(hmm_s1_in):
+				print(line, file = out)	
+		if pattern == 2 or pattern == 3:
+			for line in parse_and_clean_step1_input(sinefinder_s1_in):
+				print(line, file = out)	
 
+
+'''
 #Looks like chunk genome to sequences for TSD searcher
 def split_file(input_file, output_directory, max_lines_per_chunk=1000):
 	# Create the output directory if it doesn't exist
@@ -509,90 +539,21 @@ def split_file(input_file, output_directory, max_lines_per_chunk=1000):
 			os.remove(chunk_file)
 
 	print(f'Successfully split the file into {chunk_count+1} chunks, with a maximum of {max_lines_per_chunk} lines per chunk.')
+'''
 
 def check_file_has_rows(input_file):
 	# Open the input file in text mode for reading
 	with open(input_file, 'r') as file:
 		# Read the first line from the input file
 		first_line = file.readline()
-
 		# Check if the first line is not empty
 		if first_line.strip():
 			return True  # File has at least one row
 		else:
 			return False  # File has no rows
 
-def run_tsd_search(infile,outdir,script_dir,outfile):
-	command = f'node {os.path.join(script_dir, 'TSD_Searcher_multi.js')} {outdir} {infile} {outfile}'
-	os.system(command)
-	retf = os.path.join(outdir, outfile)
-	return retf
 
-
-#It would be better to rewrite this in python, but barring that we can just make checkpointing code
-def search_tsd(out_genome_assembly_path, script_dir, cpus=8):
-	was_split_checker = os.path.join(out_genome_assembly_path, 'Step1_check_tsd_was_split.txt')
-	#Do not re-split files
-	if not os.path.exists(was_split_checker):
-		split_file(os.path.join(out_genome_assembly_path, 'Step1_extend_tsd_input.fa'), out_genome_assembly_path, 1000)
-		#Make a marker that this step was completed.
-		with open(was_split_checker, 'w') as temp:
-			pass
-			
-	
-	ifiles=[f for f in os.listdir(out_genome_assembly_path) if 'TSD_input_chunk' in f]
-	pres=[f.replace('input', 'output') for f in ifiles]
-		
-	tsd_outf = os.path.join(out_genome_assembly_path, 'Step2_tsd.txt')
-	
-	ofiles = []
-	
-	with concurrent.futures.ProcessPoolExecutor(max_workers=cpus) as executor:
-		for inf, pre in zip(ifiles, pres):
-			ofiles.append(executor.submit(run_tsd_search, inf, out_genome_assembly_path, script_dir, pre))
-		
-		if os.path.exists(tsd_outf):
-			needs_header = False
-		else:
-			needs_header = True
-		with open(tsd_outf, 'ab') as out:
-			for ef in concurrent.futures.as_completed(ofiles):
-				tsd_chunk_output = ef.result()
-				with open(tsd_chunk_output, 'rb') as inf:
-					header = inf.readline()#Skip first line if it's happened once
-					if needs_header:
-						out.write(header)
-						needs_header = False
-					shutil.copyfileobj(inf, out)
-					
-				#os.remove(tsd_chunk_output)
-				#os.remove(tsd_chunk_input)
-
-	#Non os-system remove
-	c1 = os.path.join(out_genome_assembly_path, 'TSD_output_chunk_*')
-	c2 = os.path.join(out_genome_assembly_path, 'TSD_input_chunk_*')
-	for file in glob.glob(c1):
-		os.remove(file)
-	for file in glob.glob(c2):
-		os.remove(file)
-
-def is_at_seq(seq, tolerance = 0):
-	"""
-	Test if a sequence consists with 'A' ('a') and 'T' ('t').
-	Occurrence of other bases cannot be more than `tolerance`.
-
-	:param seq: sequence to test
-	:param tolerance: Maximum number of occurrence of other bases.
-
-	:return: Whether the tested sequence matches the condition.
-	"""
-	base_dict = Counter(seq.lower())
-	if 'a' in base_dict:
-		base_dict.pop('a')
-	if 't' in base_dict:
-		base_dict.pop('t')
-	return sum(base_dict.values()) <= tolerance
-
+#I don't really understand the modification thought process here
 def process_tsd_output(in_genome_assembly_path, out_genome_assembly_path):
 	#Allow previous checkpointing code to take over again
 	was_split_checker = os.path.join(out_genome_assembly_path, 'Step1_check_tsd_was_split.txt')
@@ -605,6 +566,8 @@ def process_tsd_output(in_genome_assembly_path, out_genome_assembly_path):
 	hmm_start = []
 	hmm_end = []
 	hmm_id = []
+	
+	#Open recovered TSD coordinates file from TSD searcher and see what TSDs were found
 	with open(tsd_output_file) as tsd_file:
 		lines = tsd_file.readlines()
 		hmm_tsd = []
@@ -623,7 +586,8 @@ def process_tsd_output(in_genome_assembly_path, out_genome_assembly_path):
 				else:
 				  hmm_tsd.append(0)
 			  
-
+	
+	#Find the positions of TSDs according to either HMM search or SINEfinder
 	hmm_pos = []
 	record_tsd = []
 	with open(filename) as f2:
@@ -650,6 +614,7 @@ def process_tsd_output(in_genome_assembly_path, out_genome_assembly_path):
 
 	output_genome_sequence = read_genome_assembly(in_genome_assembly_path)
 	
+	#For each element, if a TSD was found
 	for t in range(len(hmm_pos)):
 		if record_tsd[t] == 0:
 			tsd_info.append('tsd not exist')
@@ -673,7 +638,9 @@ def process_tsd_output(in_genome_assembly_path, out_genome_assembly_path):
 	
 	tsd_outfa = os.path.join(out_genome_assembly_path, 'Step2_tsd_output.fa')
 	if os.path.exists(tsd_outfa):
-		modify_text(tsd_outfa)
+		os.remove(tsd_outfa)
+		#modify_text(tsd_outfa)
+	
 	save_to_fna_2(tsd_outfa, input_seq, title, tsd_info, starts, ends)
 
 	s2_extend_blast_fa = os.path.join(out_genome_assembly_path, 'Step2_extend_blast_input.fa')
@@ -699,12 +666,13 @@ def process_tsd_output(in_genome_assembly_path, out_genome_assembly_path):
 						blast_input_file.write(tem)
 						blast_input_file.write(line+'\n')
 						count+=1
+						
 	blast_input_file.close()
 	
-	rename_fa = os.path.join(out_genome_assembly_path,'Step2_extend_blast_input_rename.fa')
+	rename_fa = os.path.join(out_genome_assembly_path, 'Step2_extend_blast_input_rename.fa')
 	
 	f=open(s2_extend_blast_fa, 'r')
-	o=open(rename_fa,'w+')
+	o=open(rename_fa,'w+')	
 	c=1
 	while True:
 		line=f.readline().strip()
@@ -722,26 +690,12 @@ def process_tsd_output(in_genome_assembly_path, out_genome_assembly_path):
 		print('No sequences in Step2_extend_blast_input.fa! Please check! Exit.')
 		exit()
 
+
+#This is the worst function I have ever seen
+#Absolutely everything about this is as wrong as it could be.
 def modify_text(modify_name):
 	with open(modify_name, "r+") as f:
 		f.truncate()
-
-
-def save_to_fna_1(filename, sequences, strands, ids, left_offset, right_offset, starts, ends):
-	header = '>{} {} {}:{}\n'
-	index = 0
-	payload = []
-	for seq in sequences:
-		seq_header = header.format(ids[seq], strands[seq], starts[seq] - left_offset, ends[seq] + right_offset)
-		payload.append(seq_header)
-		payload.append(sequences[seq] + '\n')
-		index += 1
-	with open(filename, 'a') as file:
-		file.writelines(payload)
-	if len(payload)==0:
-		print('Warning! No SINE can be detected by HMM!')
-		#exit()
-
 
 def save_to_fna_2(filename, sequences, input_title, input_tsd, input_start, input_end):
 	HEADER = '{}'.strip() + '|tsd_l:{}|tsd_s:{}|tsd_e:{}'.strip() + '\n'
@@ -1592,11 +1546,13 @@ def inverted_repeat_finder(out_genome_assembly_path, irf_path):
 		os.system('mv Step6_irf_input.fasta.2.3.5.80.10.20.500000.10000.dat '+out_genome_assembly_path)
 	
 
-
+#This probably makes more sense to do with TSD searcher's TIR finder behavior under best hit + longest criteria settings. I guess I have to compare notes on these
 def process_irf(out_genome_assembly_path):
-	irf_file = out_genome_assembly_path+'/Step6_irf_input.fasta.2.3.5.80.10.20.500000.10000.dat'
-
+	irf_file = os.path.join(out_genome_assembly_path, 'Step6_irf_input.fasta.2.3.5.80.10.20.500000.10000.dat')
+	irf_hits = {}
+	#Select the IRF records which record an inverted repeat somewhere, log that IR
 	with open(irf_file)as irf_f:
+		#this really should be a dict with sequence names instead of an enumerated list
 		irf_list = []
 		num = -1
 		irf_lines = irf_f.readlines()
@@ -1608,15 +1564,20 @@ def process_irf(out_genome_assembly_path):
 				irf_list.append([])
 				flag_1 = True
 			if len(line.split()) == 19 and len(line.split()) != 0 and flag_1:
+				#Flag 2 doesn't actually get used
 				flag_2 = True
 				irf_list[num].append(line.strip())
-			if 'Sequence: ' in line and flag_1 and flag_2:
+			#I don't think this works correctly. If the point is to reset it, then the ands are not needed.
+			if 'Sequence: ' in line:
 				flag_1 = False
 				flag_2 = False
 
 	input_f1 = out_genome_assembly_path+'/Step5_trf_output.fasta'
 	input_f2 = out_genome_assembly_path+'/Step6_irf_output.fasta'
-
+	
+	#Just collect the lengths of the current SINE candidates after TRF processing
+	#These don't get used at all. This block of code is pointless
+	'''
 	with open(input_f1)as f:
 		seq_length = []
 		tsd_length = []
@@ -1625,8 +1586,11 @@ def process_irf(out_genome_assembly_path):
 				seq_length.append(len(line.strip()))
 			else:
 				tsd_length.append(int(line.split('|')[1].split(':')[1]))
+	'''
 
+	#Reopen the TRF output... I guess instead of just opening it once and doing whatever was needed in one pass?
 	with open(input_f1, 'r')as f1:
+		#Create IRF output
 		with open(input_f2, 'w') as f2:
 			counter = -1
 			flag = False
@@ -1635,13 +1599,20 @@ def process_irf(out_genome_assembly_path):
 					counter += 1
 					if len(irf_list[counter]) != 0:
 						for num_irf in range(len(irf_list[counter])):
-							irf_left_s = int(irf_list[counter][num_irf].split()[0])
-							irf_left_e = int(irf_list[counter][num_irf].split()[1])
+							#Looks like:
+							#7 23 17 31 45 15 7 88.2353 11.7647 20 93.7500 6.2500 93.3333 6.6667 0.0000 54 52 TTTAATTTAATTTAATG CATTAATTAATTAAA
+							this_irf = irf_list[counter][num_irf].split()
+							
+							#These aren't used
+							#irf_left_s = int(this_irf[0])
+							#irf_left_e = int(this_irf[1])
 
-							irf_length = int(irf_list[counter][num_irf].split()[2])
+							irf_length = int(this_irf[2])
 
-							irf_right_s = int(irf_list[counter][num_irf].split()[3])
-							irf_right_e = int(irf_list[counter][num_irf].split()[4])
+							#Nor are these
+							#irf_right_s = int(this_irf[3])
+							#irf_right_e = int(this_irf[4])
+							
 							if irf_length >= 10:
 								flag = True
 								break
@@ -1737,6 +1708,11 @@ def save_to_fna_4(filename, input_sequences, input_id, input_direct, input_start
 		file.writelines(payload)
 
 
+#So this is designed to extend the start and end of the sinefinder output for a subsequent TSD search, but why? 
+#SINEfinder already had a TSD search step and this literally just grabs some extra crap past the ends to extend it
+#But we could have just parameterized how large the TSD search space was to begin with and skip this.
+
+#I think this whole step is not useful.
 def process_sine_finder(genome_assembly_path, sine_finder_out, out_genome_assembly_path, pattern):
 	output_genome_sequence = read_genome_assembly(genome_assembly_path)
 	with open(sine_finder_out, 'r')as f1:
@@ -1771,6 +1747,8 @@ def process_sine_finder(genome_assembly_path, sine_finder_out, out_genome_assemb
 				end_position.append(end-50)
 				seq = output_genome_sequence[seq_id][start:end]
 				finder_seq.append(seq)
+	
+	
 	#print('sine_finder_out: ',sine_finder_out,' out_genome_assembly_path: ',out_genome_assembly_path)
 	bname=os.path.basename(sine_finder_out)
 	if not os.path.exists(out_genome_assembly_path+'/'+bname):
@@ -1819,26 +1797,56 @@ def check_finished(pre, arr, at):
 		print(pre+' not finished! Will regenerate the result!')
 	return a
 
-def convert_ingenome(ingenome,odir):
+def convert_ingenome(ingenome, odir):
 	uid=uuid.uuid1().hex
 	fdir=os.path.dirname(ingenome)
 	ig=os.path.basename(ingenome)
+	
 	name, ext = os.path.splitext(ig)
 	nf=name+'_'+uid+ext
 	nd=odir+'/'+nf
-	'''
-	if fdir=='':
-		nd=nf
-	else:
-		nd=fdir+'/'+nf
-	'''
-	#print('seqtk seq '+ingenome+' > '+nd)
-	#exit()
+	
 	os.system('seqtk seq '+ingenome+' > '+nd)
 	res=nd
 	return res
-			
+	
 
+def tsd_search_init(gf, ml, mm, bh, appr):
+	global tsd_mn
+	global my_fa
+	tsd_mn = alignment_tsd_tir_finder(min_ok_length = ml, max_mismatch = mm, return_best_only = bh, best_hit_approach = appr)
+	my_fa = pyfastx.Fasta(gf)
+	
+def parallel_tsd_search(args):
+	sequence, left_window, right_window = args
+	seq = my_fa[sequence]
+	name = seq.description
+	seq = seq.seq.upper()
+	l = seq[0:left_window]
+	r = seq[-right_window:]
+	#tsds = mn.operate(l, r, is_TIR = False)
+	tsds = tsd_mn.operate(l, r, is_TIR = False)
+		
+	if tsds is None:
+		tsd_found = False
+	else:
+		tsd_found = True
+		#tsd = (updates[0], updates[1], left_string_start, left_string_end, right_string_start, right_string_end, updates[2], updates[3]+updates[4], )
+		left_tsd, right_tsd, ls, le, rs, rend, tsdl, tsd_mm = tsds[0]
+		
+		if rend < right_window:
+			seq = seq[ls:-(right_window - rend)]
+		else:
+			seq = seq[ls:]
+			
+		name = name.split()
+		loc = name[2].split(':')
+		og_start, og_end = int(loc[0]), int(loc[1])
+		name = ' '.join(name[0:2])
+		name = f'{name} {og_start+ls}:{og_end-(right_window - rend)}'
+		
+	return tsd_found, name, seq
+	
 def main_function():
 	print('Please input the path of genomic sequence', flush=True) # print out message immediately
 	input_pattern = args.mode
@@ -1847,7 +1855,7 @@ def main_function():
 	if not os.path.exists(output_genome_assembly_path):
 	  os.makedirs(output_genome_assembly_path)
 	
-	input_genome_assembly_path= convert_ingenome(input_genome_assembly_path, output_genome_assembly_path)
+	input_genome_assembly_path = convert_ingenome(input_genome_assembly_path, output_genome_assembly_path)
 	
 	ensure_path(output_genome_assembly_path)
 	pre=os.path.splitext(input_genome_assembly_path)[0]
@@ -1892,15 +1900,25 @@ def main_function():
 	step_1_2_file = os.path.join(output_genome_assembly_path, 'Step1_extend_tsd_input_2.fa')
 
 	if input_pattern == 1 or input_pattern == 3:
+		has_tsds = f'{step_1_1_file}.hmm_contains_TSD.txt'
+		food_for_blast = f'{step_1_1_file}.hmm_blast_candidates.txt'
+		
 		print('================ HMMER prediction has begun ==================', flush=True)
-		#if check_hmm_finished('S1_hmm_predict',work_dir+'/HMM_out'):
-		if check_finished('Step1_process_hmm',[step_1_1_file], at) or at:
+		if check_finished('Step1_process_hmm', [food_for_blast], at) or at:
 			t1=time.time()
 			#hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir,input_ani,input_hmm_e_value)
 			#hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir,input_ani,input_hmm_e_value)
 			hmm_model_dir = os.path.join(os.path.dirname(os.path.abspath(script_dir)), 'hmm_family_seq_easy')
 			hmmsearch_output = os.path.join(output_genome_assembly_path, 'Step1_HMMsearch_results.txt')
-			process_pyhmmer(input_genome_assembly_path, hmm_model_dir, hmmsearch_output, threads = cpus)
+			finished_check = os.path.join(output_genome_assembly_path, 'hmmsearch_complete.txt')
+			
+			if not os.path.exists(finished_check):
+				process_pyhmmer(input_genome_assembly_path, hmm_model_dir, hmmsearch_output, threads = cpus)
+				out = open(finished_check, 'w')
+				out.close()
+			else:
+				print('HMMsearch already done')
+			
 			t2=time.time()
 			print('Step 1 mode-1::hmm_predict uses ',t2-t1,' s',flush=True)
 			
@@ -1909,21 +1927,51 @@ def main_function():
 			t2=time.time()
 			print('Step 1 mode-1::process_hmm_output_3 uses ',t2-t1,' s',flush=True)
 			
+			my_fa = pyfastx.Fasta(step_1_1_file, build_index = True)
+			seqs = list(range(len(my_fa.keys())))
+			tsd_args = [(s, 40, 40,) for s in seqs]
+			tsd_mn = alignment_tsd_tir_finder(min_ok_length = 5, max_mismatch = 2, return_best_only = True, best_hit_approach = 'closest')
+			
+			#We still need to keep the no-TSD sequences somewhere, and we need to adjust the sequence 
+			#location boundaries according to the TSD loci in the sequence headers
+			
+			#Apply TSD searcher to these outputs separately, here
+
+			tsd_out = open(has_tsds, 'w')
+			blast_out = open(food_for_blast, 'w')
+			with multiprocessing.Pool(cpus, initializer = tsd_search_init, initargs = (step_1_1_file, 5, 2, True, 'closest',)) as pool:
+				for has_tsd, name, seq in pool.map(parallel_tsd_search, tsd_args):
+					if has_tsd:
+						print(f'>{name}', file = tsd_out)
+						print(f'{seq}', file = tsd_out)
+					else:
+						print(f'>{name}', file = blast_out)
+						print(f'{seq}', file = blast_out)
+			
+			#os.remove(step_1_1_file)
+			#os.remove(f'{step_1_1_file}.fxi')
+			#os.remove(finished_check)	
+			
 	
 	if input_pattern == 2 or input_pattern == 3:
 		print('================ Structure search has begun ==================', flush=True)
 		if check_finished('Step1_sine_part', [step_1_2_file], at) or at:
 			t1=time.time()
-			sine_finder(input_genome_assembly_path, script_dir)
+			#sine_finder(input_genome_assembly_path, script_dir)
+			jesus_give_me_a_SINE(input_genome_assembly_path, step_1_2_file, threads = cpus)
 			t2=time.time()
 			print('Step 1 mode-2::sine_finder uses ',t2-t1,' s',flush=True)
 			t1=time.time()
-			process_sine_finder(input_genome_assembly_path, input_sine_finder, output_genome_assembly_path, input_pattern)
-			t2=time.time()
-			print('Step 1 mode-2::process_sine_finder uses ',t2-t1,' s',flush=True)
+			#process_sine_finder(input_genome_assembly_path, input_sine_finder, output_genome_assembly_path, input_pattern)
+			#t2=time.time()
+			#print('Step 1 mode-2::process_sine_finder uses ',t2-t1,' s',flush=True)
 
-	
 	#Data prep ends here
+	
+	if stop_at_tsd_searcher:
+		print('AnnoSINE was instructed to stop at TSD searching results.')
+		print('This will break EDTA if used in that context; this option was meant as a developer aide and kept for its marginal utility.')
+		return None
 	
 	step11_ok = True
 	if os.path.exists(step_1_1_file):
@@ -1950,11 +1998,15 @@ def main_function():
 		merge_tsd_input(input_pattern, output_genome_assembly_path)
 		t2=time.time()
 		print('Step 1::merge_tsd_input uses ',t2-t1,' s',flush=True)
+		
+		
 	t2=time.time()
 	print('Step 1 totally uses ',t2-start_time, ' s',flush=True)
 	print('\n======================== Step 1 has been done ========================\n\n', flush=True)
 
+	#This code block is no longer needed since we do it as part of the HMM result processing and hyperSINEfinder
 	#here's the part of the program where crashes begin
+	'''
 	print('================ Step 2: TSD identification has begun ================', flush=True)
 	t1=time.time()
 	if check_finished('Step2_search_tsd',[output_genome_assembly_path+'/Step2_tsd.txt'], at) or at:
@@ -1966,11 +2018,9 @@ def main_function():
 	t2=time.time()
 	print('Step 2 uses ',t2-t1,' s',flush=True)
 	print('\n======================== Step 2 has been done ========================\n\n', flush=True)
+	'''
+	
 
-	if stop_at_tsd_searcher:
-		print('AnnoSINE was instructed to stop at TSD searching results.')
-		print('This will break EDTA if used in that context; this option was meant as a developer aide and kept for its marginal utility.')
-		return None
 
 	'''
 	I think the process blast output part is the rate limiting step, but memory use by minimap is also a concern

@@ -56,8 +56,8 @@ class tsd_finder:
 		left = self.encode_numpy(left)
 		right = self.encode_numpy(right)
 	
-		gaps_left = np.cumsum(left == -1)  #counts of '-' characters for position adjustments later
-		gaps_right = np.cumsum(right == -1)
+		gaps_left = np.cumsum(left == 0)  #counts of '-' characters for position adjustments later
+		gaps_right = np.cumsum(right == 0)
 		
 		all_eq = left == right
 		run_lengths, start_positions, values = rle(all_eq)
@@ -130,9 +130,9 @@ class tsd_finder:
 								#Relative locations of start, end in UNGAPPED input strings
 								#+1 to switch back to 1-indexing
 								lstart = int(start - gaps_left[start]) + 1
-								lend   = int(end - gaps_left[end]) + 1
+								lend   = int(end - gaps_left[end-1]) + 1
 								rstart = right_offset + int(start - gaps_right[start]) + 1
-								rend   = right_offset + int(end - gaps_right[end]) + 1
+								rend   = right_offset + int(end - gaps_right[end-1]) + 1
 								
 								#Check if the sequence is more likely to be biologically correct;
 								#i.e., TSDs are closer together / closer to the ends of the SINE

@@ -4,6 +4,11 @@ import parasail
 import numpy as np
 import re
 import argparse
+import pyfastx
+
+
+#os.environ['OMP_NUM_THREADS'] = '1'
+
 import pydivsufsort
 from collections import Counter
 
@@ -67,7 +72,6 @@ def options():
 	args = parser.parse_args()
 	return parser, args
 
-#Ugh, gonna need to rework the args a LOT
 class alignment_tsd_tir_finder:
 	def __init__(self, min_ok_length = 10, max_mismatch = 1, polyAT_TSD_ok = False, AT_rich_threshold = 1,
 				check_inverts = False, gap_penalty = 1, extension_penalty = 0, lookaround = 10, prevent_polyAT_extend = False, 
@@ -956,9 +960,10 @@ class alignment_tsd_tir_finder:
 			final_tsds = None
 
 		return final_tsds
+		
+		
 	
 def main():
-	import pyfastx
 	parser, opts = options()
 	
 	if opts.sequences is None:
