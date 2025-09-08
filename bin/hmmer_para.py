@@ -34,16 +34,15 @@ def prep_hmmsearch(genome_file, hmm_directory, working_dir = '.', threads = 1):
 	return outs, hmm_models
 	
 def run_one_hmm(args):
-	hmm_mod, ingen = args
+	hmm_mod, ingen, mythreads = args
 	hmm_base = os.path.basename(hmm_mod)
 	hmm_base = hmm_base.replace('.hmm', '')
 	
 	outfile = ingen.replace('genomes', 'hmmsearch_output')
 	outfile = f'{outfile}_{hmm_base}.txt'
 	
-	hmm_one = f'nhmmer --cpu 1 --tblout {outfile} {hmm_mod} {ingen}'
+	hmm_one = f'nhmmer --cpu {mythreads} --tblout {outfile} {hmm_mod} {ingen}'
 	hmm_one = hmm_one.split()
-	
 	
 	subprocess.run(hmm_one, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 	#subprocess.run(hmm_one)
@@ -59,14 +58,20 @@ def parse_hmmfile(file, outhandle):
 	os.remove(file)
 
 def run_hmmsearch(queries, targets, output, threads = 1):
+	
+	if threads <= 6:
+		thread_chunk = threads
+	else:
+		thread_chunk = threads // 6
+		
 	args = []
 	for t in targets:
 		for q in queries:
-			args.append((t, q,))
-			print(t, q)
-			
+			args.append((t, q, thread_chunk,))
+		
 	with open(output, 'w') as out:
-		with multiprocessing.Pool(threads) as pool:
+		#Between 1 and # threads / 6
+		with multiprocessing.Pool(threads // thread_chunk) as pool:
 			for result in pool.imap_unordered(run_one_hmm, args):
 				parse_hmmfile(result, out)
 		
