@@ -62,7 +62,7 @@ def run_hmmsearch(queries, targets, output, threads = 1):
 	if threads <= 6:
 		thread_chunk = threads
 	else:
-		thread_chunk = threads // 6
+		thread_chunk = 6
 		
 	args = []
 	for t in targets:
@@ -71,6 +71,7 @@ def run_hmmsearch(queries, targets, output, threads = 1):
 		
 	with open(output, 'w') as out:
 		#Between 1 and # threads / 6
+		print(f'Executing HMM search using {threads//thread_chunk} blocks of {thread_chunk} processors.')
 		with multiprocessing.Pool(threads // thread_chunk) as pool:
 			for result in pool.imap_unordered(run_one_hmm, args):
 				parse_hmmfile(result, out)
