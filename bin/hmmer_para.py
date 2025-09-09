@@ -5,6 +5,8 @@ import multiprocessing
 import subprocess
 import shutil
 
+import sqlite3
+
 
 def prep_hmmsearch(genome_file, hmm_directory, working_dir = '.', threads = 1):
 	base = os.path.join(working_dir, 'annosine_hmmsearch')
@@ -26,22 +28,30 @@ def prep_hmmsearch(genome_file, hmm_directory, working_dir = '.', threads = 1):
 	pfx_split = f'pyfastx split {genome_file} -n {threads} -o {gendir}'
 	subprocess.run(pfx_split.split())
 	
+	conn = sqlite3.connect(f'{genome_file}.fxi')
+	curs = conn.cursor()
+	
+	total_megabases = curs.execute('SELECT sum(slen) FROM seq').fetchone()[0] / 1_000_000
+	
+	curs.close()
+	conn.close()
+		
 	outs = [os.path.join(gendir, f) for f in os.listdir(gendir) if os.path.getsize(os.path.join(gendir, f)) > 0]
 		
 	hmm_models = [os.path.join(hmm_directory, h) for h in os.listdir(hmm_directory) if h.endswith('.hmm')]
 	hmm_models = sorted(hmm_models, key = os.path.getsize, reverse = True)
 	
-	return outs, hmm_models
+	return outs, hmm_models, total_megabases
 	
 def run_one_hmm(args):
-	hmm_mod, ingen, mythreads = args
+	hmm_mod, ingen, mythreads, z_adj = args
 	hmm_base = os.path.basename(hmm_mod)
 	hmm_base = hmm_base.replace('.hmm', '')
 	
 	outfile = ingen.replace('genomes', 'hmmsearch_output')
 	outfile = f'{outfile}_{hmm_base}.txt'
 	
-	hmm_one = f'nhmmer --cpu {mythreads} --tblout {outfile} {hmm_mod} {ingen}'
+	hmm_one = f'nhmmer --cpu {mythreads} -Z {z_adj} --tblout {outfile} {hmm_mod} {ingen}'
 	hmm_one = hmm_one.split()
 	
 	subprocess.run(hmm_one, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
@@ -57,17 +67,18 @@ def parse_hmmfile(file, outhandle):
 				
 	os.remove(file)
 
-def run_hmmsearch(queries, targets, output, threads = 1):
+def run_hmmsearch(queries, targets, output, z, threads = 1):
+	hmmer_thread_saturation = 4
 	
-	if threads <= 6:
+	if threads <= hmmer_thread_saturation:
 		thread_chunk = threads
 	else:
-		thread_chunk = 6
+		thread_chunk = hmmer_thread_saturation
 		
 	args = []
 	for t in targets:
 		for q in queries:
-			args.append((t, q, thread_chunk,))
+			args.append((t, q, thread_chunk, z,))
 		
 	with open(output, 'w') as out:
 		#Between 1 and # threads / 6
@@ -221,6 +232,6 @@ def hmm_output_cleaner(hmm_results_file, threshold_hmm_e_value = 1e-10):
 					
 #f = sys.argv[1]
 
-#hmms = prep_search(f, 'AnnoSINE_v2/hmm_family_seq_easy/', 'test_pfx', 20)
-#run_search(inputs, hmms, 'test_pfx/hmm_mp.txt', 20)
+#inputs, hmms, z_adj = prep_hmmsearch(f, 'AnnoSINE_v2/hmm_family_seq_easy/', 'test_pfx', 20)
+#run_hmmsearch(inputs, hmms, 'test_pfx/hmm_mp.txt', z_adj, 20)
 
