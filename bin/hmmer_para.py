@@ -79,12 +79,24 @@ def run_hmmsearch(queries, targets, output, z, threads = 1):
 	for t in targets:
 		for q in queries:
 			args.append((t, q, thread_chunk, z,))
-		
+	
+	print(f'Executing HMM search using {threads//thread_chunk} blocks of {thread_chunk} processors.')
+	total_chunks = len(args)
+	print(f'There are {total_chunks} chunks to process.')
+	
+	print(f'The search is arranged from slowest HMM models to fastest; progress will speed up as this step proceeds.')
+	
+	chunk_size = max([int(round(total_chunks/100)), 1])
+	processed_chunks = 0
+	
 	with open(output, 'w') as out:
 		#Between 1 and # threads / 6
-		print(f'Executing HMM search using {threads//thread_chunk} blocks of {thread_chunk} processors.')
 		with multiprocessing.Pool(threads // thread_chunk) as pool:
 			for result in pool.imap_unordered(run_one_hmm, args):
+				processed_chunks += 1
+				if processed_chunks % chunk_size == 0:
+					print(f'HMM search is {100 * processed_chunks / total_chunks}% complete')
+				
 				parse_hmmfile(result, out)
 		
 def hmm_output_cleaner(hmm_results_file, threshold_hmm_e_value = 1e-10):
