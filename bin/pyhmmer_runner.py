@@ -30,7 +30,7 @@ class pyhmmer_manager:
 	#Run nhmmer, write results
 	def nhmmer(self):
 		results = io.BytesIO()
-		for hit in pyhmmer.hmmer.nhmmer(self.hmms, self.sequence, cpus = 1):
+		for hit in pyhmmer.hmmer.nhmmer(self.hmms, self.sequence, cpus = 4):
 			hit.write(results, format = 'targets', header = False)
 			
 		return results.getvalue().decode()
@@ -73,7 +73,7 @@ def process_pyhmmer(genome_file, hmm_model_dir, output_file, threads = 1):
 	total_search = len(args)
 	search_bite = max([total_search // 1000, 1])
 	ct = 0
-			
+	
 	with open(output_file, 'w') as out:
 		with multiprocessing.Pool(threads, initializer = hmm_init, initargs = (genome_file, hmm_models,), maxtasksperchild = 1) as pool:
 			for result, hmm in pool.imap_unordered(one_process, args):

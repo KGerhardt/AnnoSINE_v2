@@ -51,7 +51,7 @@ def run_one_hmm(args):
 	outfile = ingen.replace('genomes', 'hmmsearch_output')
 	outfile = f'{outfile}_{hmm_base}.txt'
 	
-	hmm_one = f'nhmmer --cpu {mythreads} -Z {z_adj} --tblout {outfile} {hmm_mod} {ingen}'
+	hmm_one = f'nhmmer --cpu {mythreads} --dna -Z {z_adj} --tblout {outfile} {hmm_mod} {ingen}'
 	hmm_one = hmm_one.split()
 	
 	subprocess.run(hmm_one, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
@@ -64,8 +64,8 @@ def parse_hmmfile(file, outhandle):
 		for line in infh:
 			if not line.startswith('#'):
 				outhandle.write(line)
-				
-	os.remove(file)
+	
+	#os.remove(file)
 
 def run_hmmsearch(queries, targets, output, z, threads = 1):
 	hmmer_thread_saturation = 4
@@ -95,7 +95,7 @@ def run_hmmsearch(queries, targets, output, z, threads = 1):
 			for result in pool.imap_unordered(run_one_hmm, args):
 				processed_chunks += 1
 				if processed_chunks % chunk_size == 0:
-					print(f'HMM search is {100 * processed_chunks / total_chunks}% complete')
+					print(f'HMM search is {round(100 * processed_chunks / total_chunks)}% complete')
 				
 				parse_hmmfile(result, out)
 		

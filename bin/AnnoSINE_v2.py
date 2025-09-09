@@ -25,6 +25,7 @@ import shutil
 #from genomeSplitter import genomeSplitter
 from process_blast_output_polars import get_updates_from_blasts
 #from pyhmmer_runner import process_pyhmmer, hmm_output_cleaner
+from pyhmmer_runner import process_pyhmmer
 #from annosine_tsd_searcher import tsd_searcher
 
 from hmmer_para import prep_hmmsearch, run_hmmsearch, hmm_output_cleaner
