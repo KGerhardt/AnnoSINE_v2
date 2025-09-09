@@ -1916,8 +1916,10 @@ def main_function():
 			
 			if not os.path.exists(finished_check):
 				#process_pyhmmer(input_genome_assembly_path, hmm_model_dir, hmmsearch_output, threads = cpus)
-				inputs, hmms = prep_hmmsearch(input_genome_assembly_path, hmm_model_dir, output_genome_assembly_path, cpus)
-				run_hmmsearch(inputs, hmms, hmmsearch_output, cpus)
+				inputs, hmms, num_megabases = prep_hmmsearch(input_genome_assembly_path, hmm_model_dir, output_genome_assembly_path, cpus)
+				
+				#Manually set Z in nhmmer to reflect e value calculation as if the whole genome had been passed rather than the chunks
+				run_hmmsearch(inputs, hmms, hmmsearch_output, num_megabases, cpus)
 				
 				out = open(finished_check, 'w')
 				out.close()
