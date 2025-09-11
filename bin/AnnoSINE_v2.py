@@ -25,7 +25,7 @@ import shutil
 #from genomeSplitter import genomeSplitter
 from process_blast_output_polars import get_updates_from_blasts
 #from pyhmmer_runner import process_pyhmmer, hmm_output_cleaner
-from pyhmmer_runner import process_pyhmmer
+#from pyhmmer_runner import process_pyhmmer
 #from annosine_tsd_searcher import tsd_searcher
 
 from hmmer_para import prep_hmmsearch, run_hmmsearch, hmm_output_cleaner
@@ -45,6 +45,7 @@ parser.add_argument("mode", type=int,
 					"\t1--Homology-based method;\n"
 					"\t2--Structure-based method;\n"
 					"\t3--Hybrid of homology-based and structure-based method.")
+					
 parser.add_argument("input_filename", type=str, help="input genome assembly path")
 parser.add_argument("output_filename", type=str, help="output files path")
 
@@ -68,8 +69,9 @@ parser.add_argument("-numa", "--num_alignments", metavar='', type=int, default=5
 
 #parser.add_argument("-maxb", "--base_copy_number", type=int, default=1,
 					#help="Maximum threshold of copy number for the first and last base (default: 1)")
-parser.add_argument("-a", "--animal",metavar='', type=int, default=0,
-					help='If set to 1, then Hmmer will search SINE using the animal hmm files from Dfam. If set to 2, then Hmmer will search SINE using both the plant and animal hmm files. (default: 0)')
+parser.add_argument("-a", "--animal", action = 'store_true',
+					help='If set, AnnoSINE will perform an HMM search using animal HMMs isntead of plant HMMs. Use this when your genome is not a plant (default off).')
+
 parser.add_argument("-b", "--boundary", metavar='', type=str, default='msa',
 					help="Output SINE seed boundaries based on TSD or MSA (default: msa)")
 parser.add_argument("-f", "--figure", metavar='', type=str, default='n',
@@ -183,110 +185,6 @@ def read_genome_assembly(genome_assembly_path):
 		del sequence_buffer
 	return genome_sequences
 
-'''
-(1) Read the file, check if hits exist
-(2) If hits exist, read them and don't read alignment
-(3) Filter hits by e value
-
-Solving problems like this is exactly why nEfficient is useful
-'''
-def process_hmm_output_1(out_file, threshold_hmm_e_value, script_dir):
-	# ============================ HMM prediction start and end annotation =======================
-	hmm_predict_record_unsort = []
-	hmm_predict_record_sort = []
-	hmm_predict_family_number = 0
-	ani=0
-	#Check opening lines, remove '-' characters
-	with open(out_file) as predict_f: #shujun
-		lines = predict_f.readlines()
-		for line in lines[15:]:
-			if 'E-value' in line: ani=1
-			if 'inclusion threshold' in line or 'No hits detected' in line or line == '\n':
-				break
-			else:
-				check=re.sub('-','',line)
-				check=check.strip()
-				if not check=='':
-					hmm_predict_record_unsort.append(line.split())
-	
-	#This terminates upon reaching the alignment section, but surely that can be gotten around by just changing the output format to tabular
-	if ani==1:
-		hmm_predict_record_unsort = []
-		#Why reread the file? We already have the lines read into a list
-		#with open(out_file) as predict_f:
-		#	lines = predict_f.readlines()
-		for line in lines[17:]:
-			if 'inclusion threshold' in line or 'No hits detected' in line or line == '\n':
-				break
-			if not line:break
-			else:
-				check=re.sub('-','',line) 
-				check=check.strip()
-					
-				if not check=='':
-					hmm_predict_record_unsort.append(line.split())
-
-
-	if [] not in hmm_predict_record_unsort:
-		#print(hmm_predict_record_unsort)
-		out_data = sorted(hmm_predict_record_unsort, key=lambda x: int(x[4]))
-		#print(out_data)
-		for i in range(len(out_data)):
-			if float(out_data[i][0]) < threshold_hmm_e_value:
-				if int(out_data[i][4]) < int(out_data[i][5]):
-					hmm_predict_record_sort.append({'start': int(out_data[i][4]) - 1,
-													'end': int(out_data[i][5]),
-													'e_value': float(out_data[i][0]),
-
-													'family': out_file.split('/', 1)[0],
-													'id': out_data[i][3],
-													'strand': '+'})
-					if float(out_data[i][0]) <= 1:
-						hmm_predict_family_number += 1
-				else:
-					hmm_predict_record_sort.append({'start': int(out_data[i][5]) - 1,
-													'end': int(out_data[i][4]),
-													'e_value': float(out_data[i][0]),
-													'family': out_file.split('/', 1)[0],
-													'id': out_data[i][3],
-													'strand': 'C'})
-					if float(out_data[i][0]) <= 1:
-						hmm_predict_family_number += 1
-	#print(hmm_predict_record_sort)
-	#exit()
-	return hmm_predict_record_sort, hmm_predict_family_number
-
-
-'''
-(1) Retrieve all outputs from hmmsearch
-(2) Call process_hmm_output_1 on each output file to select only the hits - why not output in tabular format and save the alignment space if they aren't used?
-(3) Count the number of famies with hits and how many hits per family
-(4) Create a list of all the results in total? What is going on here?
-'''
-def process_hmm_output_2(threshold_hmm_e_value, script_dir):
-	print('Processing the hmm prediction ...', flush=True)
-	family_count = {}
-	family_name = []
-	update_hmm_record = []
-#	dir_file = os.listdir(work_dir + '/HMM_out/') #shujun
-	out_file = glob.glob(work_dir + '/HMM_out/' + '*.out') #shujun
-	for a in range(len(out_file)):
-		if out_file[a] != '.DS_Store':
-			list_pre = process_hmm_output_1(out_file[a], threshold_hmm_e_value, script_dir)[0] #shujun
-			for num_pre in range(len(list_pre)):
-				if list_pre[num_pre]['e_value'] <= threshold_hmm_e_value:
-					family_name.append(os.path.splitext(out_file[a])[0]) #shujun
-					if os.path.splitext(out_file[a])[0] not in family_count:
-						family_count[os.path.splitext(out_file[a])[0]] = 1 #shujun
-					else:
-						family_count[os.path.splitext(out_file[a])[0]] += 1 #shujun
-			#Iterate through the list again? There's no filtering condition			
-			#for num_return_broken in range(len(list_pre)):
-			#	update_hmm_record.append(list_pre[num_return_broken])
-			update_hmm_record.extend(list_pre)
-				
-	return update_hmm_record, family_name, family_count
-
 
 def merge_same_hmm_output(hmm_output_record):
 	def is_overlapping(record1, record2):
@@ -320,62 +218,6 @@ def merge_same_hmm_output(hmm_output_record):
 
 	return [record for records in update_positions.values() for record in records]
 
-def merge_same_hmm_output_raw(hmm_output_record):
-	print('Merging the same hmm prediction ...', flush=True)
-	update_positions = {}
-	# check=0
-	# check2=0
-	# check3=0
-	for num_record in hmm_output_record:
-		record_id = num_record['id']
-		# if record_id=='chr16':
-		#	 check+=1
-
-		if record_id in update_positions:
-			add_pos = True
-			for index in range(len(update_positions[record_id])):
-				update_pos = update_positions[record_id][index]
-				if (num_record['start'] >= update_pos['start'] and num_record['end'] <= update_pos['end']) or \
-						(num_record['start'] <= update_pos['start'] and num_record['end'] > update_pos['end']) or \
-						(num_record['start'] < update_pos['start'] and num_record['end'] == update_pos['end']) or \
-						(((update_pos['start'] < num_record['start'] < update_pos['end'] < num_record['end'] and
-						   abs(num_record['start'] - update_pos['end']) >= 0.5 * abs(
-									num_record['start'] - num_record['end'])) or
-						  (num_record['start'] < update_pos['start'] < num_record['end'] < update_pos['end']) and
-						  abs(update_pos['start'] - num_record['end']) >= 0.5 * abs(
-									num_record['start'] - num_record['end']))):
-					if num_record['strand'] == update_pos['strand']:
-						update_positions[record_id][index] = {'start': min(num_record['start'], update_pos['start']),
-													   'end': max(num_record['end'], update_pos['end']),
-													   'id': num_record['id'],
-													   'strand': num_record['strand'],
-													   'family': num_record['family'] + '/' + update_pos['family'],
-													   'e_value': num_record['e_value']}
-						add_pos = False
-						# if record_id == 'chr16':
-						#	 print('check2-numrecord-', check2, ':', num_record)
-						#	 print('check2-posrecord-', check2, ':', update_pos)
-						#	 check2+=1
-						break
-			if add_pos:
-				update_positions[record_id].append(num_record)
-				# if record_id == 'chr16':
-				#	 check3+=1
-
-		else:
-			update_positions[record_id] = [num_record]
-	# print('Check:',check,check2,check3)
-	# exit()
-	# print('Output merged array...')
-	# t1=time.time()
-	res = [e for r in update_positions for e in update_positions[r]]
-	t2=time.time()
-	# print('Output uses ',t2-t1)
-	return res
-
-
-
-
 '''
 (1) Read entire genome into mem. Aggressive.
 (2) Call process_hmm_output_3 to get (hmm_records, families_with_hits, counts_of_hits_by_family,)
@@ -402,7 +244,6 @@ def process_hmm_output_3(threshold_hmm_e_value, in_genome_assembly_path, pattern
 	print('process_hmm_output_3:read_genome_assembly uses',t2-t1,flush=True)
 	
 	t1=time.time()
-	#update_hmm_record, family_name, family_count = process_hmm_output_2(threshold_hmm_e_value, script_dir)
 	update_hmm_record, family_name, family_count = hmm_output_cleaner(hmm_results_file, threshold_hmm_e_value)
 	print(f'Found {len(update_hmm_record)} HMM-based SINE candidates')
 	t2=time.time()
@@ -744,34 +585,6 @@ def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_ass
 	else:
 		ksize = 8
 	
-	'''
-	gs = genomeSplitter(genome_file = in_genome_assembly_path, 
-				output_directory = workspace, 
-				chunk_size = 2_000_000_000, #Basically allow any size of genome that will fit into mmseqs2 to minimize long sequence breakup. Mostly this just chunks whole genomes.
-				overlap_size = 0, #This is a fundamentally inelegant solution for which solutions are also inelegant
-				procs = cpus,
-				smart = False,
-				post_index = False,
-				verbose = False,			
-				overwrite = False,
-				quiet = True)
-	
-	output_subsets = gs.run()
-	
-	
-	
-	ok_num = min([len(output_subsets), cpus])
-	args = [(genome_subset, ksize,) for genome_subset in output_subsets]
-	
-	print("Creating mmseqs index for search...")
-	with multiprocessing.Pool(ok_num) as pool:
-		for s in pool.starmap(mmindex, args):
-			print(f'Created minimap index {s}')
-			
-	mmseqs_indices = [os.path.join(workspace, f) for f in os.listdir(workspace) if 'mmseqs2db' in f]
-
-	outputs = [idx.replace('mmseqs2db', 'mmseqs.paf') for idx in mmseqs_indices]
-	'''
 	
 	
 	mmidx = os.path.join(out_genome_assembly_path, 'Step2_mimimap_index.idx')
@@ -1800,6 +1613,7 @@ def check_finished(pre, arr, at):
 		print(pre+' not finished! Will regenerate the result!')
 	return a
 
+#This is just copying the genome. This is dumb.
 def convert_ingenome(ingenome, odir):
 	uid=uuid.uuid1().hex
 	fdir=os.path.dirname(ingenome)
@@ -1855,13 +1669,16 @@ def main_function():
 	input_pattern = args.mode
 	input_genome_assembly_path = args.input_filename
 	output_genome_assembly_path = args.output_filename
+	
 	if not os.path.exists(output_genome_assembly_path):
 	  os.makedirs(output_genome_assembly_path)
 	
-	input_genome_assembly_path = convert_ingenome(input_genome_assembly_path, output_genome_assembly_path)
+	#This was literally just copying the genome in a way that's totally unnecessary
+	#input_genome_assembly_path = convert_ingenome(input_genome_assembly_path, output_genome_assembly_path)
 	
 	ensure_path(output_genome_assembly_path)
-	pre=os.path.splitext(input_genome_assembly_path)[0]
+	
+	pre=os.path.splitext(os.path.basename(input_genome_assembly_path))[0]
 
 	input_sine_finder = pre+'-matches.fasta'
 
@@ -1873,7 +1690,9 @@ def main_function():
 	input_max_gap = args.gap
 	input_min_copy_number = args.copy_number
 	input_num_alignments=args.num_alignments
-	input_ani=args.animal
+	
+	input_animal=args.animal
+	
 	input_bound = args.boundary
 	input_figure = args.figure
 	input_temd=args.temp_dir
@@ -1903,15 +1722,22 @@ def main_function():
 	step_1_2_file = os.path.join(output_genome_assembly_path, 'Step1_extend_tsd_input_2.fa')
 
 	if input_pattern == 1 or input_pattern == 3:
+	
+
 		has_tsds = f'{step_1_1_file}.hmm_contains_TSD.txt'
 		food_for_blast = f'{step_1_1_file}.hmm_blast_candidates.txt'
 		
 		print('================ HMMER prediction has begun ==================', flush=True)
 		if check_finished('Step1_process_hmm', [food_for_blast], at) or at:
 			t1=time.time()
-			#hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir,input_ani,input_hmm_e_value)
-			#hmm_predict(input_genome_assembly_path, cpus, script_dir, work_dir,input_ani,input_hmm_e_value)
-			hmm_model_dir = os.path.join(os.path.dirname(os.path.abspath(script_dir)), 'hmm_family_seq_easy')
+
+			if input_animal:
+				print('HMM search will proceed using animal HMMs.')
+				hmm_model_dir = os.path.join(os.path.dirname(os.path.abspath(script_dir)), 'hmm_animals')
+			else:
+				print('HMM search will proceed using plant HMMs')
+				hmm_model_dir = os.path.join(os.path.dirname(os.path.abspath(script_dir)), 'hmm_plants')
+	
 			hmmsearch_output = os.path.join(output_genome_assembly_path, 'Step1_HMMsearch_results.txt')
 			finished_check = os.path.join(output_genome_assembly_path, 'hmmsearch_complete.txt')
 			

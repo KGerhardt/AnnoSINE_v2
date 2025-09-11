@@ -25,12 +25,15 @@ def prep_hmmsearch(genome_file, hmm_directory, working_dir = '.', threads = 1):
 	if not os.path.exists(hmmdir):
 		os.mkdir(hmmdir)
 		
+	print(f'Chunking input genome into {threads} partitions...')
 	pfx_split = f'pyfastx split {genome_file} -n {threads} -o {gendir}'
 	subprocess.run(pfx_split.split())
+	print('Chunking complete!')
 	
 	conn = sqlite3.connect(f'{genome_file}.fxi')
 	curs = conn.cursor()
 	
+	#This is needed to adjust the e-value scaling of the HMM searches later on
 	total_megabases = curs.execute('SELECT sum(slen) FROM seq').fetchone()[0] / 1_000_000
 	
 	curs.close()
@@ -43,6 +46,9 @@ def prep_hmmsearch(genome_file, hmm_directory, working_dir = '.', threads = 1):
 	
 	return outs, hmm_models, total_megabases
 	
+#Use of the original HMMer method is possibly unneeded with better pyhmmer implementation but
+#I want to check pyhmmer nhmmer and comparative speed more carefully first_loc
+#There will be some cases where this approach is faster, can't be sure about which always.
 def run_one_hmm(args):
 	hmm_mod, ingen, mythreads, z_adj = args
 	hmm_base = os.path.basename(hmm_mod)
@@ -65,7 +71,7 @@ def parse_hmmfile(file, outhandle):
 			if not line.startswith('#'):
 				outhandle.write(line)
 	
-	#os.remove(file)
+	os.remove(file)
 
 def run_hmmsearch(queries, targets, output, z, threads = 1):
 	hmmer_thread_saturation = 4
@@ -84,7 +90,7 @@ def run_hmmsearch(queries, targets, output, z, threads = 1):
 	total_chunks = len(args)
 	print(f'There are {total_chunks} chunks to process.')
 	
-	print(f'The search is arranged from slowest HMM models to fastest; progress will speed up as this step proceeds.')
+	print(f'The search is arranged from slowest HMM models to fastest; progress will generally speed up as this step proceeds.')
 	
 	chunk_size = max([int(round(total_chunks/100)), 1])
 	processed_chunks = 0
@@ -243,7 +249,8 @@ def hmm_output_cleaner(hmm_results_file, threshold_hmm_e_value = 1e-10):
 	
 					
 #f = sys.argv[1]
+#hmm_dir = sys.argv[2]
 
-#inputs, hmms, z_adj = prep_hmmsearch(f, 'AnnoSINE_v2/hmm_family_seq_easy/', 'test_pfx', 20)
+#inputs, hmms, z_adj = prep_hmmsearch(f, hmm_dir, 'test_pfx', 20)
 #run_hmmsearch(inputs, hmms, 'test_pfx/hmm_mp.txt', z_adj, 20)
 
