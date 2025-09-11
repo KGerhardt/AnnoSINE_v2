@@ -1,0 +1,1088 @@
+HMMER3/f [3.1b2 | February 2015]
+NAME  MIRb
+ACC   DF0000975.4
+DESC  MIRb (Mammalian-wide Interspersed Repeat - variant b)
+LENG  268
+MAXL  422
+ALPH  DNA
+RF    yes
+MM    no
+CONS  yes
+CS    no
+MAP   yes
+DATE  Mon Aug 17 22:36:35 2015
+NSEQ  2000
+EFFN  24.234589
+CKSUM 677496444
+GA    32.77;
+TC    32.77;
+NC    32.77;
+TH    TaxId:9606; TaxName:Homo sapiens; GA:12.40; TC:32.04; NC:12.35; fdr:0.002;
+TH    TaxId:10090; TaxName:Mus musculus; GA:12.10; TC:31.81; NC:12.05; fdr:0.002;
+TH    TaxId:185453; TaxName:Chrysochloris asiatica; GA:12.70; TC:32.43; NC:12.65; fdr:0.002;
+TH    TaxId:9358; TaxName:Choloepus hoffmanni; GA:12.40; TC:32.08; NC:12.35; fdr:0.002;
+TH    TaxId:30608; TaxName:Microcebus murinus; GA:12.00; TC:31.68; NC:11.95; fdr:0.002;
+TH    TaxId:9915; TaxName:Bos indicus; GA:12.10; TC:31.78; NC:12.05; fdr:0.002;
+TH    TaxId:9555; TaxName:Papio anubis; GA:12.20; TC:31.93; NC:12.15; fdr:0.002;
+TH    TaxId:77214; TaxName:Eidolon helvum; GA:11.60; TC:31.25; NC:11.55; fdr:0.002;
+TH    TaxId:59476; TaxName:Pteronotus parnellii; GA:11.70; TC:31.34; NC:11.65; fdr:0.002;
+TH    TaxId:37548; TaxName:Cavia aperea; GA:12.10; TC:31.80; NC:12.05; fdr:0.002;
+TH    TaxId:143292; TaxName:Manis pentadactyla; GA:11.80; TC:31.51; NC:11.75; fdr:0.002;
+TH    TaxId:30538; TaxName:Vicugna pacos; GA:11.70; TC:31.38; NC:11.65; fdr:0.002;
+TH    TaxId:37293; TaxName:Aotus nancymaae; GA:12.20; TC:31.88; NC:12.15; fdr:0.002;
+TH    TaxId:9923; TaxName:Capra aegagrus; GA:12.20; TC:31.86; NC:12.15; fdr:0.002;
+TH    TaxId:33556; TaxName:Balaenoptera bonaerensis; GA:11.80; TC:31.53; NC:11.75; fdr:0.002;
+TH    TaxId:87288; TaxName:Eulemur flavifrons; GA:11.80; TC:31.45; NC:11.75; fdr:0.002;
+TH    TaxId:10096; TaxName:Mus spretus; GA:12.10; TC:31.76; NC:12.05; fdr:0.002;
+TH    TaxId:439328; TaxName:Giraffa tippelskirchi; GA:12.10; TC:31.80; NC:12.05; fdr:0.002;
+TH    TaxId:86973; TaxName:Okapia johnstoni; GA:12.20; TC:31.89; NC:12.15; fdr:0.002;
+TH    TaxId:39086; TaxName:Ellobius lutescens; GA:11.90; TC:31.60; NC:11.85; fdr:0.002;
+TH    TaxId:329620; TaxName:Ellobius talpinus; GA:11.90; TC:31.55; NC:11.85; fdr:0.002;
+TH    TaxId:9691; TaxName:Panthera pardus; GA:12.00; TC:31.73; NC:11.95; fdr:0.002;
+TH    TaxId:9622; TaxName:Lycaon pictus; GA:11.90; TC:31.60; NC:11.85; fdr:0.002;
+TH    TaxId:89399; TaxName:Rhinolophus sinicus; GA:11.70; TC:31.42; NC:11.65; fdr:0.002;
+TH    TaxId:186990; TaxName:Hipposideros armiger; GA:11.80; TC:31.53; NC:11.75; fdr:0.002;
+TH    TaxId:9739; TaxName:Tursiops truncatus; GA:11.80; TC:31.46; NC:11.75; fdr:0.002;
+TH    TaxId:9646; TaxName:Ailuropoda melanoleuca; GA:12.00; TC:31.65; NC:11.95; fdr:0.002;
+TH    TaxId:9649; TaxName:Ailurus fulgens; GA:11.90; TC:31.59; NC:11.85; fdr:0.002;
+TH    TaxId:9874; TaxName:Odocoileus virginianus; GA:11.90; TC:31.62; NC:11.85; fdr:0.002;
+TH    TaxId:29088; TaxName:Neomonachus schauinslandi; GA:11.90; TC:31.63; NC:11.85; fdr:0.002;
+TH    TaxId:9899; TaxName:Ammotragus lervia; GA:12.10; TC:31.77; NC:12.05; fdr:0.002;
+TH    TaxId:48139; TaxName:Psammomys obesus; GA:11.90; TC:31.61; NC:11.85; fdr:0.002;
+TH    TaxId:99837; TaxName:Spermophilus dauricus; GA:12.30; TC:32.00; NC:12.25; fdr:0.002;
+TH    TaxId:43332; TaxName:Elaphurus davidianus; GA:12.00; TC:31.73; NC:11.95; fdr:0.002;
+TH    TaxId:9483; TaxName:Callithrix jacchus; GA:12.20; TC:31.87; NC:12.15; fdr:0.002;
+TH    TaxId:591936; TaxName:Piliocolobus tephrosceles; GA:12.30; TC:31.96; NC:12.25; fdr:0.002;
+TH    TaxId:89632; TaxName:Dicerorhinus sumatrensis; GA:12.20; TC:31.92; NC:12.15; fdr:0.002;
+TH    TaxId:9598; TaxName:Pan troglodytes; GA:12.30; TC:31.96; NC:12.25; fdr:0.002;
+TH    TaxId:9601; TaxName:Pongo abelii; GA:12.30; TC:31.98; NC:12.25; fdr:0.002;
+TH    TaxId:9430; TaxName:Desmodus rotundus; GA:11.70; TC:31.41; NC:11.65; fdr:0.002;
+TH    TaxId:189058; TaxName:Neophocaena asiaeorientalis; GA:11.90; TC:31.56; NC:11.85; fdr:0.002;
+TH    TaxId:210652; TaxName:Mungos mungo; GA:12.00; TC:31.66; NC:11.95; fdr:0.002;
+TH    TaxId:9690; TaxName:Panthera onca; GA:12.00; TC:31.69; NC:11.95; fdr:0.002;
+TH    TaxId:494514; TaxName:Vulpes lagopus; GA:12.10; TC:31.79; NC:12.05; fdr:0.002;
+TH    TaxId:210647; TaxName:Helogale parvula; GA:11.90; TC:31.62; NC:11.85; fdr:0.002;
+TH    TaxId:9716; TaxName:Mirounga angustirostris; GA:11.90; TC:31.63; NC:11.85; fdr:0.002;
+TH    TaxId:94188; TaxName:Cryptoprocta ferox; GA:12.00; TC:31.66; NC:11.95; fdr:0.002;
+TH    TaxId:37032; TaxName:Suricata suricatta; GA:12.00; TC:31.67; NC:11.95; fdr:0.002;
+TH    TaxId:61379; TaxName:Felis nigripes; GA:12.00; TC:31.64; NC:11.95; fdr:0.002;
+TH    TaxId:95912; TaxName:Hyaena hyaena; GA:12.00; TC:31.65; NC:11.95; fdr:0.002;
+TH    TaxId:30551; TaxName:Spilogale gracilis; GA:12.00; TC:31.66; NC:11.95; fdr:0.002;
+TH    TaxId:9704; TaxName:Zalophus californianus; GA:12.00; TC:31.70; NC:11.95; fdr:0.002;
+TH    TaxId:71117; TaxName:Paradoxurus hermaphroditus; GA:12.00; TC:31.67; NC:11.95; fdr:0.002;
+TH    TaxId:9672; TaxName:Pteronura brasiliensis; GA:12.10; TC:31.74; NC:12.05; fdr:0.002;
+TH    TaxId:9664; TaxName:Mellivora capensis; GA:12.30; TC:31.99; NC:12.25; fdr:0.002;
+TH    TaxId:47180; TaxName:Mirza coquereli; GA:11.90; TC:31.59; NC:11.85; fdr:0.002;
+TH    TaxId:9447; TaxName:Lemur catta; GA:11.90; TC:31.57; NC:11.85; fdr:0.002;
+TH    TaxId:323379; TaxName:Dipodomys stephensi; GA:11.90; TC:31.60; NC:11.85; fdr:0.002;
+TH    TaxId:68415; TaxName:Moschus moschiferus; GA:12.30; TC:31.98; NC:12.25; fdr:0.002;
+TH    TaxId:9460; TaxName:Cheirogaleus medius; GA:11.90; TC:31.62; NC:11.85; fdr:0.002;
+TH    TaxId:51154; TaxName:Catagonus wagneri; GA:12.10; TC:31.76; NC:12.05; fdr:0.002;
+TH    TaxId:160400; TaxName:Zapus hudsonius; GA:12.10; TC:31.75; NC:12.05; fdr:0.002;
+TH    TaxId:9509; TaxName:Ateles geoffroyi; GA:12.20; TC:31.90; NC:12.15; fdr:0.002;
+TH    TaxId:234690; TaxName:Xerus inauris; GA:12.10; TC:31.74; NC:12.05; fdr:0.002;
+TH    TaxId:54133; TaxName:Pygathrix nemaeus; GA:12.40; TC:32.05; NC:12.35; fdr:0.002;
+TH    TaxId:171122; TaxName:Tonatia saurophila; GA:11.80; TC:31.44; NC:11.75; fdr:0.002;
+TH    TaxId:9407; TaxName:Rousettus aegyptiacus; GA:11.70; TC:31.35; NC:11.65; fdr:0.002;
+TH    TaxId:9491; TaxName:Saguinus imperator; GA:12.50; TC:32.16; NC:12.45; fdr:0.002;
+TH    TaxId:9802; TaxName:Tapirus indicus; GA:12.00; TC:31.64; NC:11.95; fdr:0.002;
+TH    TaxId:71119; TaxName:Scalopus aquaticus; GA:11.70; TC:31.42; NC:11.65; fdr:0.002;
+TH    TaxId:182669; TaxName:Uropsilus gracilis; GA:11.80; TC:31.45; NC:11.75; fdr:0.002;
+TH    TaxId:9849; TaxName:Tragulus javanicus; GA:12.10; TC:31.74; NC:12.05; fdr:0.002;
+TH    TaxId:2069564; TaxName:Saiga tatarica tatarica; GA:12.20; TC:31.89; NC:12.15; fdr:0.002;
+TH    TaxId:9438; TaxName:Tadarida brasiliensis; GA:12.10; TC:31.80; NC:12.05; fdr:0.002;
+TH    TaxId:9801; TaxName:Tapirus terrestris; GA:12.00; TC:31.73; NC:11.95; fdr:0.002;
+TH    TaxId:42415; TaxName:Sigmodon hispidus; GA:12.10; TC:31.81; NC:12.05; fdr:0.002;
+TH    TaxId:88029; TaxName:Semnopithecus entellus; GA:12.30; TC:31.96; NC:12.25; fdr:0.002;
+TH    TaxId:10169; TaxName:Thryonomys swinderianus; GA:12.10; TC:31.78; NC:12.05; fdr:0.002;
+TH    TaxId:48850; TaxName:Tamandua tetradactyla; GA:12.60; TC:32.30; NC:12.55; fdr:0.002;
+TH    TaxId:183749; TaxName:Tolypeutes matacus; GA:12.70; TC:32.40; NC:12.65; fdr:0.002;
+TH    TaxId:9433; TaxName:Miniopterus schreibersii; GA:11.50; TC:31.20; NC:11.45; fdr:0.002;
+TH    TaxId:118852; TaxName:Mormoops blainvillei; GA:11.80; TC:31.45; NC:11.75; fdr:0.002;
+TH    TaxId:9870; TaxName:Rangifer tarandus; GA:12.20; TC:31.90; NC:12.15; fdr:0.002;
+TH    TaxId:94963; TaxName:Noctilio leporinus; GA:11.80; TC:31.44; NC:11.75; fdr:0.002;
+TH    TaxId:10060; TaxName:Ondatra zibethicus; GA:12.00; TC:31.72; NC:11.95; fdr:0.002;
+TH    TaxId:59474; TaxName:Pipistrellus pipistrellus; GA:11.70; TC:31.43; NC:11.65; fdr:0.002;
+TH    TaxId:43777; TaxName:Pithecia pithecia; GA:12.20; TC:31.91; NC:12.15; fdr:0.002;
+TH    TaxId:1453894; TaxName:Murina aurata feae; GA:11.90; TC:31.59; NC:11.85; fdr:0.002;
+TH    TaxId:40151; TaxName:Monodon monoceros; GA:12.00; TC:31.67; NC:11.95; fdr:0.002;
+TH    TaxId:176115; TaxName:Microgale talazaci; GA:12.40; TC:32.05; NC:12.35; fdr:0.002;
+TH    TaxId:38674; TaxName:Onychomys torridus; GA:12.40; TC:32.04; NC:12.35; fdr:0.002;
+TH    TaxId:71006; TaxName:Myrmecophaga tridactyla; GA:12.50; TC:32.18; NC:12.45; fdr:0.002;
+TH    TaxId:148065; TaxName:Micronycteris hirsuta; GA:11.90; TC:31.58; NC:11.85; fdr:0.002;
+TH    TaxId:10047; TaxName:Meriones unguiculatus; GA:12.10; TC:31.76; NC:12.05; fdr:0.002;
+TH    TaxId:258930; TaxName:Lasiurus borealis; GA:12.20; TC:31.88; NC:12.15; fdr:0.002;
+TH    TaxId:330464; TaxName:Hemitragus hylocrius; GA:12.10; TC:31.80; NC:12.05; fdr:0.002;
+TH    TaxId:77598; TaxName:Heterohyrax brucei; GA:12.50; TC:32.21; NC:12.45; fdr:0.002;
+TH    TaxId:48086; TaxName:Lepus americanus; GA:12.30; TC:32.00; NC:12.25; fdr:0.002;
+TH    TaxId:9413; TaxName:Megaderma lyra; GA:12.10; TC:31.75; NC:12.05; fdr:0.002;
+TH    TaxId:10137; TaxName:Hystrix cristata; GA:12.00; TC:31.67; NC:11.95; fdr:0.002;
+TH    TaxId:1973248; TaxName:Procavia capensis capensis; GA:12.60; TC:32.32; NC:12.55; fdr:0.002;
+TH    TaxId:37174; TaxName:Ovis canadensis; GA:12.20; TC:31.88; NC:12.15; fdr:0.002;
+TH    TaxId:10183; TaxName:Petromus typicus; GA:11.90; TC:31.62; NC:11.85; fdr:0.002;
+TH    TaxId:51298; TaxName:Myotis myotis; GA:11.90; TC:31.56; NC:11.85; fdr:0.002;
+TH    TaxId:39082; TaxName:Muscardinus avellanarius; GA:12.00; TC:31.70; NC:11.95; fdr:0.002;
+TH    TaxId:10157; TaxName:Myocastor coypus; GA:12.20; TC:31.90; NC:12.15; fdr:0.002;
+TH    TaxId:9833; TaxName:Hippopotamus amphibius; GA:12.10; TC:31.81; NC:12.05; fdr:0.002;
+TH    TaxId:48745; TaxName:Mesoplodon bidens; GA:12.20; TC:31.85; NC:12.15; fdr:0.002;
+TH    TaxId:43780; TaxName:Nasalis larvatus; GA:12.30; TC:31.97; NC:12.25; fdr:0.002;
+TH    TaxId:31869; TaxName:Daubentonia madagascariensis; GA:12.00; TC:31.68; NC:11.95; fdr:0.002;
+TH    TaxId:43321; TaxName:Ctenomys sociabilis; GA:12.20; TC:31.87; NC:12.15; fdr:0.002;
+TH    TaxId:41261; TaxName:Glis glis; GA:12.00; TC:31.66; NC:11.95; fdr:0.002;
+TH    TaxId:10166; TaxName:Ctenodactylus gundi; GA:11.90; TC:31.58; NC:11.85; fdr:0.002;
+TH    TaxId:482537; TaxName:Galeopterus variegatus; GA:12.40; TC:32.10; NC:12.35; fdr:0.002;
+TH    TaxId:13515; TaxName:Eulemur fulvus; GA:12.10; TC:31.82; NC:12.05; fdr:0.002;
+TH    TaxId:29091; TaxName:Dolichotis patagonum; GA:12.40; TC:32.08; NC:12.35; fdr:0.002;
+TH    TaxId:310714; TaxName:Diceros bicornis michaeli; GA:12.30; TC:31.97; NC:12.25; fdr:0.002;
+TH    TaxId:9538; TaxName:Erythrocebus patas; GA:12.50; TC:32.16; NC:12.45; fdr:0.002;
+TH    TaxId:326083; TaxName:Macroglossus sobrinus; GA:11.60; TC:31.29; NC:11.55; fdr:0.002;
+TH    TaxId:9612; TaxName:Canis lupus; GA:12.00; TC:31.71; NC:11.95; fdr:0.002;
+TH    TaxId:58069; TaxName:Hipposideros galeritus; GA:12.00; TC:31.65; NC:11.95; fdr:0.002;
+TH    TaxId:9417; TaxName:Artibeus jamaicensis; GA:12.00; TC:31.64; NC:11.95; fdr:0.002;
+TH    TaxId:10149; TaxName:Hydrochoerus hydrochaeris; GA:12.10; TC:31.81; NC:12.05; fdr:0.002;
+TH    TaxId:27642; TaxName:Anoura caudifer; GA:11.80; TC:31.51; NC:11.75; fdr:0.002;
+TH    TaxId:59527; TaxName:Beatragus hunteri; GA:12.10; TC:31.79; NC:12.05; fdr:0.002;
+TH    TaxId:1497538; TaxName:Antilocapra americana peninsularis; GA:12.20; TC:31.92; NC:12.15; fdr:0.002;
+TH    TaxId:10068; TaxName:Acomys cahirinus; GA:11.90; TC:31.57; NC:11.85; fdr:0.002;
+TH    TaxId:208972; TaxName:Craseonycteris thonglongyai; GA:11.90; TC:31.55; NC:11.85; fdr:0.002;
+TH    TaxId:10085; TaxName:Cricetomys gambianus; GA:11.90; TC:31.63; NC:11.85; fdr:0.002;
+TH    TaxId:108858; TaxName:Dinomys branickii; GA:12.10; TC:31.79; NC:12.05; fdr:0.002;
+TH    TaxId:36227; TaxName:Cercopithecus neglectus; GA:12.40; TC:32.07; NC:12.35; fdr:0.002;
+TH    TaxId:876679; TaxName:Crocidura indochinensis; GA:12.30; TC:31.98; NC:12.25; fdr:0.002;
+TH    TaxId:51346; TaxName:Graphiurus murinus; GA:12.20; TC:31.86; NC:12.15; fdr:0.002;
+TH    TaxId:51338; TaxName:Castor canadensis; GA:12.10; TC:31.83; NC:12.05; fdr:0.002;
+TH    TaxId:143287; TaxName:Cavia tschudii; GA:12.30; TC:31.98; NC:12.25; fdr:0.002;
+TH    TaxId:230833; TaxName:Plecturocebus donacophilus; GA:12.20; TC:31.93; NC:12.15; fdr:0.002;
+TH    TaxId:40233; TaxName:Carollia perspicillata; GA:12.10; TC:31.79; NC:12.05; fdr:0.002;
+TH    TaxId:9514; TaxName:Cebus albifrons; GA:12.30; TC:31.97; NC:12.25; fdr:0.002;
+TH    TaxId:310713; TaxName:Ceratotherium simum cottoni; GA:12.10; TC:31.78; NC:12.05; fdr:0.002;
+TH    TaxId:9470; TaxName:Nycticebus coucang; GA:12.40; TC:32.08; NC:12.35; fdr:0.002;
+TH    TaxId:30589; TaxName:Alouatta palliata; GA:12.30; TC:31.96; NC:12.25; fdr:0.002;
+TH    TaxId:27675; TaxName:Choloepus didactylus; GA:12.40; TC:32.12; NC:12.35; fdr:0.002;
+TH    TaxId:51342; TaxName:Aplodontia rufa; GA:12.30; TC:31.95; NC:12.25; fdr:0.002;
+TH    TaxId:1041416; TaxName:Orientallactaga bullata; GA:12.30; TC:31.99; NC:12.25; fdr:0.002;
+TH    TaxId:34842; TaxName:Capromys pilorides; GA:12.30; TC:31.96; NC:12.25; fdr:0.002;
+TH    TaxId:340076; TaxName:Chaetophractus vellerosus; GA:13.10; TC:32.77; NC:13.05; fdr:0.002;
+TH    TaxId:9764; TaxName:Eschrichtius robustus; GA:12.10; TC:31.75; NC:12.05; fdr:0.002;
+TH    TaxId:48752; TaxName:Platanista minor; GA:12.10; TC:31.78; NC:12.05; fdr:0.002;
+TH    TaxId:302098; TaxName:Eubalaena japonica; GA:12.10; TC:31.79; NC:12.05; fdr:0.002;
+TH    TaxId:214514; TaxName:Perognathus longimembris pacificus; GA:12.10; TC:31.74; NC:12.05; fdr:0.002;
+TH    TaxId:9742; TaxName:Phocoena phocoena; GA:12.10; TC:31.80; NC:12.05; fdr:0.002;
+TH    TaxId:9725; TaxName:Inia geoffrensis; GA:12.10; TC:31.74; NC:12.05; fdr:0.002;
+TH    TaxId:34846; TaxName:Dasyprocta punctata; GA:12.30; TC:31.95; NC:12.25; fdr:0.002;
+TH    TaxId:79805; TaxName:Solenodon paradoxus; GA:11.80; TC:31.44; NC:11.75; fdr:0.002;
+TH    TaxId:34827; TaxName:Indri indri; GA:12.10; TC:31.80; NC:12.05; fdr:0.002;
+TH    TaxId:27615; TaxName:Kogia breviceps; GA:12.10; TC:31.83; NC:12.05; fdr:0.002;
+TH    TaxId:9760; TaxName:Ziphius cavirostris; GA:12.30; TC:32.02; NC:12.25; fdr:0.002;
+TH    TaxId:9818; TaxName:Orycteropus afer; GA:12.90; TC:32.58; NC:12.85; fdr:0.002;
+TH    TaxId:108852; TaxName:Cuniculus paca; GA:12.40; TC:32.12; NC:12.35; fdr:0.002;
+TH    TaxId:70687; TaxName:Tupaia tana; GA:12.50; TC:32.22; NC:12.45; fdr:0.002;
+TH    TaxId:358128; TaxName:Phataginus tricuspis; GA:12.30; TC:31.95; NC:12.25; fdr:0.002;
+TH    TaxId:9593; TaxName:Gorilla gorilla; GA:12.30; TC:31.99; NC:12.25; fdr:0.002;
+TH    TaxId:10089; TaxName:Mus caroli; GA:12.00; TC:31.72; NC:11.95; fdr:0.002;
+TH    TaxId:10093; TaxName:Mus pahari; GA:12.00; TC:31.67; NC:11.95; fdr:0.002;
+TH    TaxId:10029; TaxName:Cricetulus griseus; GA:11.90; TC:31.60; NC:11.85; fdr:0.002;
+TH    TaxId:10116; TaxName:Rattus norvegicus; GA:12.20; TC:31.88; NC:12.15; fdr:0.002;
+TH    TaxId:9785; TaxName:Loxodonta africana; GA:12.40; TC:32.04; NC:12.35; fdr:0.002;
+TH    TaxId:9615; TaxName:Canis lupus familiaris; GA:11.90; TC:31.58; NC:11.85; fdr:0.002;
+TH    TaxId:9796; TaxName:Equus caballus; GA:12.00; TC:31.67; NC:11.95; fdr:0.002;
+TH    TaxId:9823; TaxName:Sus scrofa; GA:12.00; TC:31.69; NC:11.95; fdr:0.002;
+TH    TaxId:9913; TaxName:Bos taurus; GA:12.10; TC:31.81; NC:12.05; fdr:0.002;
+TH    TaxId:9986; TaxName:Oryctolagus cuniculus; GA:12.10; TC:31.82; NC:12.05; fdr:0.002;
+TH    TaxId:61853; TaxName:Nomascus leucogenys; GA:12.20; TC:31.93; NC:12.15; fdr:0.002;
+TH    TaxId:59463; TaxName:Myotis lucifugus; GA:11.70; TC:31.39; NC:11.65; fdr:0.002;
+TH    TaxId:10141; TaxName:Cavia porcellus; GA:12.10; TC:31.81; NC:12.05; fdr:0.002;
+TH    TaxId:132908; TaxName:Pteropus vampyrus; GA:11.80; TC:31.50; NC:11.75; fdr:0.002;
+TH    TaxId:10020; TaxName:Dipodomys ordii; GA:11.80; TC:31.53; NC:11.75; fdr:0.002;
+TH    TaxId:42254; TaxName:Sorex araneus; GA:12.00; TC:31.64; NC:11.95; fdr:0.002;
+TH    TaxId:30611; TaxName:Otolemur garnettii; GA:12.00; TC:31.70; NC:11.95; fdr:0.002;
+TH    TaxId:9685; TaxName:Felis catus; GA:12.00; TC:31.70; NC:11.95; fdr:0.002;
+TH    TaxId:9361; TaxName:Dasypus novemcinctus; GA:12.50; TC:32.22; NC:12.45; fdr:0.002;
+TH    TaxId:27679; TaxName:Saimiri boliviensis; GA:12.10; TC:31.75; NC:12.05; fdr:0.002;
+TH    TaxId:43179; TaxName:Ictidomys tridecemlineatus; GA:12.00; TC:31.67; NC:11.95; fdr:0.002;
+TH    TaxId:9668; TaxName:Mustela putorius; GA:11.90; TC:31.63; NC:11.85; fdr:0.002;
+TH    TaxId:9778; TaxName:Trichechus manatus; GA:12.30; TC:31.99; NC:12.25; fdr:0.002;
+TH    TaxId:10181; TaxName:Heterocephalus glaber; GA:12.10; TC:31.75; NC:12.05; fdr:0.002;
+TH    TaxId:9597; TaxName:Pan paniscus; GA:12.40; TC:32.08; NC:12.35; fdr:0.002;
+TH    TaxId:10160; TaxName:Octodon degus; GA:12.30; TC:31.94; NC:12.25; fdr:0.002;
+TH    TaxId:143302; TaxName:Condylura cristata; GA:11.50; TC:31.19; NC:11.45; fdr:0.002;
+TH    TaxId:34839; TaxName:Chinchilla lanigera; GA:11.90; TC:31.62; NC:11.85; fdr:0.002;
+TH    TaxId:51337; TaxName:Jaculus jaculus; GA:12.20; TC:31.87; NC:12.15; fdr:0.002;
+TH    TaxId:9807; TaxName:Ceratotherium simum; GA:12.00; TC:31.67; NC:11.95; fdr:0.002;
+TH    TaxId:9978; TaxName:Ochotona princeps; GA:11.80; TC:31.52; NC:11.75; fdr:0.002;
+TH    TaxId:9365; TaxName:Erinaceus europaeus; GA:12.10; TC:31.80; NC:12.05; fdr:0.002;
+TH    TaxId:72004; TaxName:Bos mutus; GA:12.10; TC:31.77; NC:12.05; fdr:0.002;
+TH    TaxId:9940; TaxName:Ovis aries; GA:12.10; TC:31.75; NC:12.05; fdr:0.002;
+TH    TaxId:28737; TaxName:Elephantulus edwardii; GA:12.60; TC:32.30; NC:12.55; fdr:0.002;
+TH    TaxId:29078; TaxName:Eptesicus fuscus; GA:11.70; TC:31.39; NC:11.65; fdr:0.002;
+TH    TaxId:419612; TaxName:Camelus ferus; GA:11.70; TC:31.37; NC:11.65; fdr:0.002;
+TH    TaxId:9371; TaxName:Echinops telfairi; GA:12.20; TC:31.92; NC:12.15; fdr:0.002;
+TH    TaxId:79684; TaxName:Microtus ochrogaster; GA:11.90; TC:31.56; NC:11.85; fdr:0.002;
+TH    TaxId:9707; TaxName:Odobenus rosmarus; GA:11.90; TC:31.63; NC:11.85; fdr:0.002;
+TH    TaxId:9402; TaxName:Pteropus alecto; GA:11.70; TC:31.36; NC:11.65; fdr:0.002;
+TH    TaxId:225400; TaxName:Myotis davidii; GA:11.70; TC:31.41; NC:11.65; fdr:0.002;
+TH    TaxId:9733; TaxName:Orcinus orca; GA:11.90; TC:31.61; NC:11.85; fdr:0.002;
+TH    TaxId:246437; TaxName:Tupaia chinensis; GA:12.20; TC:31.87; NC:12.15; fdr:0.002;
+TH    TaxId:10036; TaxName:Mesocricetus auratus; GA:12.00; TC:31.69; NC:11.95; fdr:0.002;
+TH    TaxId:9713; TaxName:Leptonychotes weddellii; GA:12.30; TC:32.02; NC:12.25; fdr:0.002;
+TH    TaxId:9541; TaxName:Macaca fascicularis; GA:12.20; TC:31.92; NC:12.15; fdr:0.002;
+TH    TaxId:59538; TaxName:Pantholops hodgsonii; GA:12.10; TC:31.79; NC:12.05; fdr:0.002;
+TH    TaxId:60711; TaxName:Chlorocebus sabaeus; GA:12.20; TC:31.84; NC:12.15; fdr:0.002;
+TH    TaxId:109478; TaxName:Myotis brandtii; GA:11.80; TC:31.44; NC:11.75; fdr:0.002;
+TH    TaxId:118797; TaxName:Lipotes vexillifer; GA:12.00; TC:31.65; NC:11.95; fdr:0.002;
+TH    TaxId:9694; TaxName:Panthera tigris; GA:11.90; TC:31.62; NC:11.85; fdr:0.002;
+TH    TaxId:89462; TaxName:Bubalus bubalis; GA:12.20; TC:31.87; NC:12.15; fdr:0.002;
+TH    TaxId:9767; TaxName:Balaenoptera acutorostrata; GA:12.00; TC:31.65; NC:11.95; fdr:0.002;
+TH    TaxId:10042; TaxName:Peromyscus maniculatus; GA:12.10; TC:31.76; NC:12.05; fdr:0.002;
+TH    TaxId:1026970; TaxName:Nannospalax galili; GA:12.30; TC:31.97; NC:12.25; fdr:0.002;
+TH    TaxId:29073; TaxName:Ursus maritimus; GA:11.90; TC:31.57; NC:11.85; fdr:0.002;
+TH    TaxId:9798; TaxName:Equus przewalskii; GA:11.90; TC:31.63; NC:11.85; fdr:0.002;
+TH    TaxId:885580; TaxName:Fukomys damarensis; GA:11.90; TC:31.59; NC:11.85; fdr:0.002;
+TH    TaxId:9901; TaxName:Bison bison; GA:12.20; TC:31.86; NC:12.15; fdr:0.002;
+TH    TaxId:9838; TaxName:Camelus dromedarius; GA:11.70; TC:31.37; NC:11.65; fdr:0.002;
+TH    TaxId:9837; TaxName:Camelus bactrianus; GA:11.70; TC:31.36; NC:11.65; fdr:0.002;
+TH    TaxId:61622; TaxName:Rhinopithecus roxellana; GA:12.20; TC:31.90; NC:12.15; fdr:0.002;
+TH    TaxId:9544; TaxName:Macaca mulatta; GA:12.40; TC:32.05; NC:12.35; fdr:0.002;
+TH    TaxId:54131; TaxName:Colobus angolensis; GA:12.20; TC:31.93; NC:12.15; fdr:0.002;
+TH    TaxId:9568; TaxName:Mandrillus leucophaeus; GA:12.30; TC:31.98; NC:12.25; fdr:0.002;
+TH    TaxId:9531; TaxName:Cercocebus atys; GA:12.20; TC:31.87; NC:12.15; fdr:0.002;
+TH    TaxId:9545; TaxName:Macaca nemestrina; GA:12.20; TC:31.92; NC:12.15; fdr:0.002;
+TH    TaxId:379532; TaxName:Propithecus coquereli; GA:12.20; TC:31.85; NC:12.15; fdr:0.002;
+TH    TaxId:9793; TaxName:Equus asinus; GA:11.90; TC:31.62; NC:11.85; fdr:0.002;
+TH    TaxId:32536; TaxName:Acinonyx jubatus; GA:11.90; TC:31.61; NC:11.85; fdr:0.002;
+TH    TaxId:9993; TaxName:Marmota marmota; GA:12.00; TC:31.69; NC:11.95; fdr:0.002;
+TH    TaxId:291302; TaxName:Miniopterus natalensis; GA:11.50; TC:31.22; NC:11.45; fdr:0.002;
+TH    TaxId:9516; TaxName:Cebus capucinus; GA:12.10; TC:31.81; NC:12.05; fdr:0.002;
+TH    TaxId:9974; TaxName:Manis javanica; GA:12.00; TC:31.71; NC:11.95; fdr:0.002;
+TH    TaxId:61621; TaxName:Rhinopithecus bieti; GA:12.20; TC:31.93; NC:12.15; fdr:0.002;
+TH    TaxId:9925; TaxName:Capra hircus; GA:12.20; TC:31.91; NC:12.15; fdr:0.002;
+TH    TaxId:34882; TaxName:Enhydra lutris; GA:12.00; TC:31.66; NC:11.95; fdr:0.002;
+TH    TaxId:9749; TaxName:Delphinapterus leucas; GA:11.90; TC:31.61; NC:11.85; fdr:0.002;
+TH    TaxId:9696; TaxName:Puma concolor; GA:12.00; TC:31.65; NC:11.95; fdr:0.002;
+TH    TaxId:9355; TaxName:Bradypus variegatus; GA:11.30; TC:30.96; NC:11.25; fdr:0.002;
+TH    TaxId:53275; TaxName:Rhizomys pruinosus; GA:12.60; TC:32.33; NC:12.55; fdr:0.002;
+TH    TaxId:48723; TaxName:Pontoporia blainvillei; GA:11.40; TC:31.12; NC:11.35; fdr:0.002;
+CT    Interspersed_Repeat;Transposable_Element;Class_I_Retrotransposition;LINE-dependent_Retroposon;SINE;tRNA_Promoter;MIR-core;L2-end
+MS    TaxId:40674 TaxName:Mammalia
+CC    MIRb is a pan-mammalian SINE with a 5' end derived from a tRNA, a
+CC    central deeply-conserved CORE region (shared with other MIRs), and a 3'
+CC    terminal ~55bp related to an L2 LINE [1].
+CC    RepeatMasker Annotations:
+CC         Type: SINE
+CC         SubType: MIR
+CC         Species: Mammalia
+CC         SearchStages: 60,65
+CC         BufferStages: 
+STATS LOCAL MSV      -10.3344  0.70182
+STATS LOCAL VITERBI  -11.6481  0.70182
+STATS LOCAL FORWARD   -4.6452  0.70182
+HMM          A        C        G        T   
+            m->m     m->i     m->d     i->m     i->i     d->m     d->d
+  COMPO   1.26976  1.64727  1.44492  1.23525
+          1.38629  1.38629  1.38629  1.38629
+          0.00087  7.73974  7.73974  1.46634  0.26236  0.00000        *
+      1   4.39499  0.04574  4.58083  3.81122      1 C x - -
+          1.38629  1.38629  1.38629  1.38629
+          0.01631  4.81741  4.81741  1.46634  0.26236  1.09861  0.40547
+      2   0.02037  5.52749  4.44951  5.40324      2 A x - -
+          1.38629  1.38629  1.38629  1.38629
+          0.01261  5.07288  5.07288  1.46634  0.26236  1.09861  0.40547
+      3   2.11141  3.67186  0.19715  3.42853      3 G x - -
+          1.39283  1.39283  1.39283  1.36695
+          0.02297  4.99285  4.14009  1.31792  0.31155  1.09861  0.40547
+      4   0.30327  3.49242  1.68979  3.06588      5 A x - -
+          1.40937  1.40937  1.40937  1.32011
+          0.01451  4.65716  5.31653  1.05598  0.42748  0.91244  0.51340
+      5   1.93084  3.90652  0.21658  3.52002      7 G x - -
+          1.30218  1.47391  1.54737  1.25098
+          0.03297  3.58056  5.38801  0.66097  0.72639  1.09861  0.40547
+      6   0.91398  3.25595  0.71455  2.64341     11 G x - -
+          1.31665  1.36118  1.48629  1.38869
+          0.02530  3.88565  5.41540  0.88835  0.52990  1.09861  0.40547
+      7   1.60079  3.87246  0.31766  3.00364     16 G x - -
+          1.37338  1.40330  1.48161  1.29574
+          0.03369  4.13613  4.06613  0.89365  0.52621  1.09861  0.40547
+      8   1.68794  3.37939  0.29695  3.27152     21 G x - -
+          1.36694  1.44872  1.43855  1.29839
+          0.03076  4.23586  4.14619  0.87169  0.54170  0.99286  0.46285
+      9   2.44165  0.38673  2.79779  1.75582     24 C x - -
+          1.47708  1.41638  1.34430  1.31534
+          0.03745  3.97717  4.01652  1.00617  0.45510  0.96905  0.47714
+     10   0.26482  2.60085  2.55430  2.51701     30 A x - -
+          1.37640  1.44718  1.36566  1.35841
+          0.03063  4.53453  3.94062  1.06900  0.42061  0.97957  0.47076
+     11   1.68163  3.02626  0.36029  2.68885     35 G x - -
+          1.26805  1.35010  1.49503  1.44748
+          0.06057  3.71254  3.37098  0.75364  0.63610  0.69187  0.69443
+     12   2.02881  0.89980  2.05381  1.09778     39 C x - -
+          1.26782  1.37169  1.50269  1.41739
+          0.05085  3.50108  3.94153  0.80276  0.59437  0.91424  0.51219
+     13   0.93694  2.49213  0.84616  2.33944     45 G x - -
+          1.34997  1.41991  1.39942  1.37722
+          0.05520  3.96374  3.36080  0.90743  0.51678  1.01685  0.44900
+     14   2.30992  2.19817  2.41165  0.35659     50 T x - -
+          1.34690  1.33159  1.56161  1.32388
+          0.03480  3.75858  4.52023  0.95420  0.48633  0.68363  0.70275
+     15   1.36182  2.87358  0.49074  2.58843     58 G x - -
+          1.26184  1.49868  1.47676  1.32776
+          0.04779  4.31050  3.40395  1.26761  0.33060  1.22265  0.34878
+     16   1.68667  2.95706  0.36426  2.68550     66 G x - -
+          1.40974  1.21299  1.50311  1.44373
+          0.07591  3.67775  3.04038  0.78030  0.61299  0.64818  0.74024
+     17   2.19650  1.83370  2.28595  0.46631     71 T x - -
+          1.18721  1.61910  1.49640  1.29859
+          0.05656  3.52095  3.67218  0.97069  0.47614  0.92277  0.50653
+     18   1.35240  2.82497  0.52203  2.42186     79 G x - -
+          1.20768  1.49871  1.42664  1.43726
+          0.10308  3.49784  2.69298  0.84206  0.56357  0.92952  0.50210
+     19   2.26858  0.90689  2.20476  0.96107     86 C x - -
+          1.43086  1.48107  1.42681  1.22611
+          0.03194  4.07079  4.24269  1.05200  0.42961  1.14032  0.38524
+     20   0.35953  2.83428  2.05587  2.16065     92 A x - -
+          1.42725  1.46672  1.41513  1.25016
+          0.04715  3.67280  3.88001  0.80192  0.59505  1.10118  0.40418
+     21   1.69443  2.86327  0.35977  2.79069     99 G x - -
+          1.30077  1.25936  1.54572  1.46670
+          0.07153  3.56507  3.20066  0.92217  0.50692  0.92883  0.50255
+     22   2.24526  2.26017  2.28026  0.37468    108 T x - -
+          1.32566  1.43747  1.48764  1.30586
+          0.03148  4.38299  3.98990  1.08821  0.41071  0.87295  0.54080
+     23   1.59172  3.52172  0.34659  2.81711    114 G x - -
+          1.50144  1.30390  1.56760  1.21344
+          0.06435  3.61928  3.33769  1.16590  0.37345  1.38249  0.28895
+     24   1.76988  2.83370  0.35458  2.66813    126 G x - -
+          1.74302  1.61591  1.60647  0.85401
+          0.05892  3.05044  4.61759  0.74231  0.64629  1.36677  0.29428
+     25   0.55154  2.23834  1.91786  1.76970    132 A x - -
+          1.95645  1.68726  1.66798  0.72364
+          0.13847  2.20169  3.97967  0.44139  1.03042  0.84262  0.56314
+     26   0.45307  2.56724  1.80815  2.09054    139 A x - -
+          1.55126  1.36644  1.35028  1.29522
+          0.07831  3.06180  3.55717  0.85768  0.55190  1.13724  0.38670
+     27   0.30984  3.06529  1.92519  2.60439    146 A x - -
+          1.60799  1.47398  1.45787  1.08481
+          0.06905  3.32230  3.48525  0.83922  0.56572  0.80909  0.58926
+     28   1.75944  2.63275  0.35845  2.86091    154 G x - -
+          1.54456  1.33805  1.34809  1.32990
+          0.05688  3.57940  3.59732  0.91531  0.51148  0.85878  0.55109
+     29   0.34952  2.65687  2.03909  2.35744    161 A x - -
+          1.21955  1.49690  1.45091  1.40057
+          0.05015  3.91403  3.54218  1.08456  0.41257  1.13258  0.38891
+     30   1.35099  2.46481  0.59973  2.23464    168 G x - -
+          1.27928  1.62603  1.44228  1.24249
+          0.05820  3.87104  3.33254  1.29787  0.31898  0.84747  0.55948
+     31   2.39524  0.53769  2.62702  1.37651    181 C x - -
+          1.21925  1.43276  1.56789  1.35707
+          0.08114  3.73808  2.91621  1.50510  0.25102  1.16000  0.37613
+     32   0.45511  2.39684  2.06382  1.91292    194 A x - -
+          1.22240  1.52226  1.40966  1.41455
+          0.07012  3.91664  3.04047  1.27040  0.32951  0.91320  0.51289
+     33   2.02326  1.09487  2.20854  0.85960    205 C x - -
+          1.37774  1.53027  1.57196  1.12782
+          0.04826  3.45036  4.17477  1.02133  0.44647  0.90299  0.51979
+     34   1.04500  2.62222  0.79222  2.09696    214 G x - -
+          1.29042  1.42430  1.60439  1.26175
+          0.04379  3.71261  3.99362  1.15586  0.37803  1.05264  0.42927
+     35   1.58159  3.22815  0.39048  2.55119    224 G x - -
+          1.26270  1.40065  1.47515  1.41910
+          0.04733  4.04430  3.55062  1.00342  0.45669  1.45089  0.26705
+     36   1.40956  2.42023  0.51992  2.62724    231 G x - -
+          1.32877  1.56163  1.33253  1.34096
+          0.05747  3.97954  3.29275  1.13866  0.38603  1.10059  0.40448
+     37   2.26104  0.48328  2.91439  1.49270    239 C x - -
+          1.23190  1.45944  1.44430  1.42718
+          0.02541  4.08102  4.80423  0.90851  0.51605  0.91105  0.51433
+     38   2.84180  2.06596  2.90538  0.27410    244 T x - -
+          1.23408  1.53736  1.46630  1.33494
+          0.06161  3.91852  3.22194  1.23584  0.34332  0.95451  0.48614
+     39   2.41245  1.51370  2.48395  0.49939    252 T x - -
+          1.27090  1.47196  1.28319  1.54743
+          0.05643  3.94388  3.33848  1.24728  0.33867  1.54430  0.24011
+     40   2.57899  2.08131  2.24009  0.36682    259 T x - -
+          1.29740  1.46246  1.49992  1.30216
+          0.03179  3.94512  4.42794  0.84038  0.56483  0.81644  0.58340
+     41   1.50562  3.12816  0.38759  2.88900    264 G x - -
+          1.28354  1.40464  1.51645  1.35480
+          0.04560  4.14278  3.55099  1.02054  0.44691  0.95446  0.48617
+     42   1.61453  2.49597  0.45591  2.46827    271 G x - -
+          1.42913  1.41458  1.30140  1.40525
+          0.04136  4.04705  3.77049  1.22915  0.34608  0.93669  0.49745
+     43   0.44031  2.47002  1.85915  2.15611    279 A x - -
+          1.40720  1.63336  1.34586  1.20536
+          0.04442  4.02083  3.66876  1.62459  0.21939  1.15800  0.37704
+     44   1.42148  2.84714  0.48148  2.49175    293 G x - -
+          1.35077  1.33477  1.41432  1.44966
+          0.06057  4.16348  3.14141  1.19258  0.36160  1.30072  0.31792
+     45   2.33453  1.67795  2.40730  0.46788    300 T x - -
+          1.39141  1.47753  1.34914  1.33328
+          0.05557  4.30640  3.20460  0.88027  0.53558  0.88710  0.53077
+     46   2.44182  0.49275  2.60411  1.47803    304 C x - -
+          1.41132  1.36080  1.38699  1.38671
+          0.02887  4.64898  3.96956  1.14515  0.38298  0.95236  0.48748
+     47   0.34640  2.60856  2.27419  2.15201    309 A x - -
+          1.36419  1.31518  1.51014  1.36607
+          0.04518  4.41210  3.44076  1.09571  0.40692  1.09661  0.40647
+     48   1.72897  2.82966  0.37267  2.59555    313 G x - -
+          1.41912  1.46755  1.54792  1.15552
+          0.08780  3.71152  2.81979  0.79149  0.60362  1.30502  0.31631
+     49   0.76136  2.47099  0.99875  2.52408    320 A x - -
+          1.14385  1.53039  1.48540  1.43319
+          0.08661  3.73264  2.82966  1.10307  0.40324  0.97836  0.47149
+     50   2.18313  0.49430  2.51142  1.62881    329 C x - -
+          1.47035  1.31683  1.44171  1.32558
+          0.06215  4.13820  3.11652  1.09754  0.40600  0.85076  0.55703
+     51   0.33803  2.64512  2.41179  2.07010    336 A x - -
+          1.37344  1.38110  1.49701  1.30319
+          0.04284  4.05788  3.70285  1.01327  0.45103  1.20418  0.35659
+     52   1.69964  2.62503  0.40847  2.52387    342 G x - -
+          1.45437  1.25041  1.45841  1.39652
+          0.15599  3.74347  2.11392  1.33039  0.30703  1.20780  0.35504
+     53   0.38993  2.36537  1.97070  2.41212    355 A x - -
+          1.39600  1.45074  1.53876  1.19280
+          0.07084  3.44271  3.31298  1.17930  0.36744  0.81178  0.58711
+     54   2.32159  0.55553  2.28571  1.48540    364 C x - -
+          1.41740  1.50766  1.41344  1.22784
+          0.06386  3.76484  3.25207  0.98571  0.46709  1.39248  0.28563
+     55   2.21001  0.52982  2.76580  1.43270    372 C x - -
+          1.14072  1.55334  1.42056  1.48152
+          0.04380  3.97218  3.72877  1.29265  0.32095  1.15186  0.37987
+     56   2.50410  2.20525  2.96078  0.27938    382 T x - -
+          1.33371  1.39229  1.42137  1.39993
+          0.02398  4.61339  4.28444  1.21888  0.35035  1.41918  0.27696
+     57   1.69263  2.95307  0.38833  2.45811    388 G x - -
+          1.34344  1.51188  1.49623  1.22219
+          0.04806  3.80995  3.69792  1.10042  0.40456  1.01387  0.45069
+     58   1.53006  2.78347  0.46045  2.40071    397 G x - -
+          1.43178  1.31988  1.50926  1.29875
+          0.05631  4.05645  3.28499  1.23685  0.34291  1.67812  0.20669
+     59   1.31280  2.25663  0.64905  2.26636    406 G x - -
+          1.35992  1.38783  1.25109  1.57258
+          0.04454  3.70976  3.95932  1.06684  0.42174  0.99627  0.46085
+     60   2.42811  1.90152  2.68464  0.36498    414 T x - -
+          1.44884  1.25767  1.37903  1.47396
+          0.03360  4.20067  4.01426  0.94229  0.49386  1.48822  0.25589
+     61   2.96333  2.14559  2.66585  0.27205    419 T x - -
+          1.07450  1.46325  1.55668  1.53148
+          0.07504  4.13572  2.87700  1.47229  0.26058  1.60060  0.22536
+     62   2.38989  0.93386  2.36870  0.86341    431 C x - -
+          1.41072  1.45959  1.61330  1.12555
+          0.06939  3.58125  3.23925  1.12138  0.39427  0.88655  0.53115
+     63   0.94177  2.32957  0.88069  2.32047    439 G x - -
+          1.47661  1.37638  1.44906  1.25770
+          0.03781  4.23022  3.79173  1.17240  0.37052  1.09189  0.40884
+     64   0.38215  2.16755  2.14575  2.45146    446 A x - -
+          1.43571  1.48648  1.27355  1.36238
+          0.04920  3.73670  3.72247  1.08418  0.41276  1.32626  0.30852
+     65   0.48402  2.37928  1.67905  2.25825    455 A x - -
+          1.38570  1.31417  1.30338  1.56284
+          0.04704  3.84988  3.70225  1.20336  0.35694  1.18000  0.36713
+     66   2.63518  2.05213  2.48867  0.33294    464 T x - -
+          1.21697  1.57342  1.37539  1.41142
+          0.03568  3.96782  4.12690  0.98292  0.46875  1.15636  0.37780
+     67   2.55777  0.49205  2.74728  1.39816    469 C x - -
+          1.15168  1.52989  1.46501  1.44283
+          0.05882  3.87770  3.31251  1.40853  0.28038  1.21764  0.35087
+     68   2.90355  0.37834  3.29285  1.50047    478 C x - -
+          1.66098  1.17421  1.79758  1.09277
+          0.06074  3.89924  3.25246  1.94845  0.15373  1.24834  0.33825
+     69   2.31744  1.38608  2.85855  0.52076    495 C x - -
+          1.37142  1.37932  1.40468  1.39007
+          0.04590  4.13707  3.54419  1.38709  0.28742  1.04229  0.43486
+     70   1.00260  2.69371  0.77496  2.25644    506 G x - -
+          1.63245  1.21763  1.63056  1.16220
+          0.08761  3.57153  2.88651  1.94177  0.15484  1.65024  0.21320
+     71   1.47585  2.32215  0.54668  2.35935    528 G x - -
+          1.04000  1.54136  1.43715  1.63553
+          0.03574  3.80800  4.34938  1.57488  0.23197  1.16254  0.37497
+     72   2.26609  0.50945  2.53480  1.53164    543 C x - -
+          1.38172  1.25840  1.46900  1.44992
+          0.04941  4.08956  3.45892  1.20396  0.35668  1.27424  0.32801
+     73   2.63426  2.12887  2.79298  0.29033    549 T x - -
+          1.47114  1.33038  1.41672  1.33389
+          0.04989  3.91830  3.54784  1.45948  0.26443  1.14519  0.38296
+     74   2.77356  0.45880  2.51040  1.49484    560 C x - -
+          1.36446  1.15757  1.56622  1.50778
+          0.05630  3.94952  3.33887  1.34844  0.30063  1.13003  0.39012
+     75   2.28570  1.79274  2.55704  0.42425    570 T x - -
+          1.23486  1.54431  1.62049  1.21112
+          0.06602  3.65977  3.26614  1.27111  0.32923  1.36672  0.29429
+     76   1.32137  2.86638  0.54596  2.33262    577 G x - -
+          1.33936  1.29496  1.47008  1.45170
+          0.04626  3.81776  3.76245  1.20678  0.35548  1.03393  0.43945
+     77   2.47538  0.45179  2.63180  1.57295    583 C x - -
+          1.44497  1.52366  1.37847  1.22292
+          0.05020  4.17422  3.39401  1.45500  0.26579  1.26161  0.33295
+     78   2.58413  0.47377  3.16456  1.34841    594 C x - -
+          1.45546  1.33528  1.58997  1.20500
+          0.06636  3.88229  3.13274  1.08895  0.41033  1.07533  0.41731
+     79   0.37231  2.49664  2.16057  2.17823    599 A x - -
+          1.23554  1.65354  1.45568  1.25628
+          0.08157  3.28081  3.20077  1.01536  0.44984  1.10480  0.40239
+     80   2.78941  0.49081  2.61900  1.37225    607 C x - -
+          1.24100  1.43237  1.39259  1.49731
+          0.03515  3.98425  4.13944  1.29815  0.31888  1.16985  0.37167
+     81   2.49291  2.24876  2.59243  0.30522    618 T x - -
+          1.22923  1.40060  1.40047  1.53920
+          0.04823  3.91174  3.60892  0.79946  0.59706  1.41059  0.27971
+     82   2.34704  2.04189  2.17660  0.41379    623 T x - -
+          1.43318  1.33621  1.37551  1.40283
+          0.04918  4.24623  3.39104  1.10307  0.40324  1.26098  0.33320
+     83   0.49919  2.25206  1.76004  2.15624    629 A x - -
+          1.17197  1.70937  1.43567  1.30450
+          0.05578  3.74530  3.48609  1.51503  0.24821  1.35756  0.29745
+     84   2.27442  0.63561  2.22700  1.34832    643 C x - -
+          1.34167  1.52493  1.34291  1.34758
+          0.04251  4.39074  3.53261  1.55741  0.23658  1.37948  0.28996
+     85   2.22304  1.68056  2.39015  0.48803    654 T x - -
+          1.34979  1.42775  1.51841  1.26657
+          0.08271  3.85564  2.84351  1.43474  0.27204  1.00227  0.45735
+     86   0.43327  2.48087  1.79243  2.28882    665 A x - -
+          1.54207  1.54590  1.51543  1.04064
+          0.04946  3.84446  3.61732  1.12235  0.39381  0.87457  0.53964
+     87   1.81907  2.60415  0.40874  2.30892    674 G x - -
+          1.34204  1.41551  1.37773  1.41166
+          0.04567  4.11100  3.56674  1.06968  0.42025  1.14869  0.38134
+     88   2.54847  0.42997  2.82673  1.55087    682 C x - -
+          1.04515  1.70839  1.58235  1.34051
+          0.04930  3.64843  3.81350  2.29174  0.10657  1.17562  0.36908
+     89   2.65949  2.38364  3.10815  0.23178    724 T x - -
+          1.38552  1.68015  1.85905  0.89737
+          0.04838  4.05770  3.50849  1.92462  0.15774  1.06048  0.42509
+     90   1.49807  2.25139  0.57509  2.22074    742 G x - -
+          1.40878  1.54314  1.40140  1.21876
+          0.04887  4.01508  3.51815  1.59220  0.22750  1.18339  0.36563
+     91   2.24522  2.16851  2.29848  0.38664    753 T x - -
+          1.20178  1.39858  1.48594  1.48675
+          0.04430  3.84065  3.82319  1.29365  0.32058  1.35603  0.29798
+     92   1.60405  2.96133  0.37072  2.86588    764 G x - -
+          1.22449  1.42429  1.43491  1.48158
+          0.06447  3.87315  3.17870  1.53529  0.24257  1.37044  0.29302
+     93   2.29257  2.38681  2.43898  0.32875    773 T x - -
+          1.32174  1.43428  1.43998  1.35438
+          0.03808  4.44847  3.66240  1.01060  0.45256  1.35424  0.29860
+     94   1.70706  2.84177  0.34703  2.92818    777 G x - -
+          1.35972  1.79876  1.25237  1.23121
+          0.04605  3.88383  3.71185  1.88849  0.16405  0.97397  0.47414
+     95   0.40225  2.82853  1.88275  2.12094    792 A x - -
+          1.17601  1.49284  1.49485  1.41685
+          0.04123  4.08865  3.74508  1.27296  0.32850  1.08651  0.41157
+     96   2.21876  0.52168  2.78829  1.44304    803 C x - -
+          1.34847  1.41977  1.40453  1.37393
+          0.06221  4.10008  3.12938  1.09567  0.40694  1.48765  0.25606
+     97   2.29342  0.57229  2.87057  1.27949    811 C x - -
+          1.20903  1.64274  1.36953  1.37107
+          0.03835  3.67702  4.39635  1.93113  0.15663  1.08648  0.41159
+     98   2.39493  1.99812  2.53146  0.36573    828 T x - -
+          1.24255  1.33165  1.45817  1.53876
+          0.05571  3.90340  3.38092  1.15921  0.37649  1.35568  0.29810
+     99   2.47598  2.09207  2.45219  0.34760    835 T x - -
+          1.32862  1.39474  1.40503  1.41923
+          0.03542  4.82153  3.62131  1.08026  0.41477  1.19636  0.35995
+    100   1.55740  2.84113  0.42039  2.60147    839 G x - -
+          1.23692  1.53143  1.40084  1.39793
+          0.05773  3.52451  3.62580  1.69734  0.20232  1.49129  0.25500
+    101   1.55376  3.22551  0.37471  2.79159    856 G x - -
+          1.34514  1.35738  1.42786  1.41740
+          0.05314  4.71920  3.15049  1.22217  0.34898  1.56068  0.23571
+    102   1.41835  2.72244  0.48324  2.58508    862 G x - -
+          1.29314  1.42901  1.42706  1.40229
+          0.03474  4.81895  3.64717  1.18915  0.36310  1.19898  0.35882
+    103   2.17613  0.50544  2.49620  1.60504    867 C x - -
+          1.45495  1.47529  1.44750  1.19496
+          0.04412  4.13773  3.60461  0.83967  0.56538  1.35893  0.29697
+    104   0.28836  2.70582  2.27954  2.50883    873 A x - -
+          1.37005  1.69275  1.17398  1.37532
+          0.07991  3.35803  3.17024  1.92047  0.15845  1.86538  0.16823
+    105   0.32240  2.69844  2.09358  2.46471    894 A x - -
+          1.14598  1.43314  1.58727  1.43110
+          0.05001  3.68554  3.74261  0.72826  0.65923  1.28495  0.32388
+    106   1.68129  3.18065  0.36816  2.52195    898 G x - -
+          1.55561  1.48220  1.52654  1.06562
+          0.04583  3.88655  3.71822  1.29042  0.32180  1.41465  0.27840
+    107   2.42553  2.15821  2.62495  0.32353    910 T x - -
+          1.15400  1.41640  1.50759  1.51141
+          0.04646  3.86455  3.71215  1.27830  0.32644  1.23114  0.34525
+    108   2.35211  1.23030  2.08632  0.71645    918 T x - -
+          1.47187  1.45011  1.28027  1.35480
+          0.05825  4.15912  3.19502  1.08464  0.41253  1.26360  0.33217
+    109   0.38191  2.51439  2.02718  2.25548    925 A x - -
+          1.49521  1.71550  1.19555  1.22626
+          0.07338  3.54240  3.17459  1.90508  0.16112  1.27350  0.32830
+    110   2.53669  0.58409  2.49403  1.27053    943 C x - -
+          1.44031  1.28818  1.43093  1.39316
+          0.03517  4.39653  3.80604  1.18398  0.36537  1.17885  0.36764
+    111   2.53490  2.19733  2.67764  0.29988    948 T x - -
+          1.39992  1.38565  1.35262  1.40788
+          0.05277  4.59093  3.18782  1.06986  0.42016  1.42172  0.27615
+    112   2.61143  1.99781  2.44183  0.35107    953 T x - -
+          1.78440  1.30382  1.60356  1.02324
+          0.06562  3.65002  3.28272  1.52497  0.24542  1.02390  0.44502
+    113   0.49683  1.92530  1.95310  2.26451    966 A x - -
+          1.44664  1.37016  1.34937  1.38162
+          0.06606  3.55639  3.34150  1.64118  0.21536  1.27668  0.32706
+    114   0.36494  2.46921  2.06639  2.35947    980 A x - -
+          1.46310  1.54595  1.46635  1.12514
+          0.04481  4.08270  3.61349  1.38377  0.28852  1.26894  0.33007
+    115   2.12675  0.55223  2.54593  1.48407    990 C x - -
+          1.37619  1.50270  1.78986  1.02736
+          0.05216  3.60237  3.74785  1.55714  0.23666  1.25101  0.33717
+    116   2.43505  0.56688  2.84498  1.24835   1001 C x - -
+          1.21175  1.64345  1.28881  1.45495
+          0.03666  3.99655  4.03904  2.13942  0.12525  1.13385  0.38830
+    117   2.59441  2.40700  2.85606  0.25138   1018 T x - -
+          1.42736  1.51046  1.26158  1.36241
+          0.04570  4.20517  3.51477  1.11761  0.39610  1.50436  0.25123
+    118   2.74978  0.46551  2.90496  1.37242   1026 C x - -
+          1.26221  1.62977  1.36272  1.32790
+          0.05881  3.55346  3.55810  1.44879  0.26769  1.09300  0.40828
+    119   2.57091  2.20796  2.51292  0.31119   1038 T x - -
+          1.38732  1.49585  1.22877  1.45437
+          0.05453  4.15593  3.28614  1.14343  0.38379  1.29825  0.31884
+    120   2.49597  0.42589  2.57402  1.67043   1046 C x - -
+          0.99930  1.57486  1.97044  1.25375
+          0.04257  4.04042  3.72605  2.11918  0.12798  1.17003  0.37158
+    121   2.27933  2.19521  2.60470  0.33913   1063 T x - -
+          1.38166  1.32271  1.49099  1.35760
+          0.02894  4.47222  4.06846  1.12553  0.39227  1.16437  0.37414
+    122   1.37914  3.00889  0.47470  2.56672   1069 G x - -
+          1.38466  1.33535  1.55308  1.29123
+          0.07964  3.73187  2.94500  1.48408  0.25710  1.29164  0.32134
+    123   0.48554  2.68069  1.96671  1.73612   1082 A x - -
+          1.42953  1.47848  1.52288  1.15673
+          0.04819  3.92810  3.59856  1.02604  0.44383  1.35022  0.30000
+    124   1.60538  3.03371  0.40139  2.50522   1089 G x - -
+          1.18519  1.50368  1.59949  1.30933
+          0.03882  3.83550  4.10530  1.34384  0.30224  1.29978  0.31827
+    125   2.37283  0.50310  2.51355  1.50893   1098 C x - -
+          1.42553  1.34983  1.41418  1.35786
+          0.03149  4.23412  4.10378  1.09294  0.40831  1.43923  0.27064
+    126   2.73676  0.43108  3.24889  1.40001   1104 C x - -
+          1.26157  1.45760  1.37547  1.46414
+          0.04475  4.67422  3.36872  1.13505  0.38773  1.27592  0.32736
+    127   2.93897  2.42338  3.48160  0.18910   1109 T x - -
+          1.28979  1.56021  1.41334  1.30471
+          0.07303  3.90149  2.99143  1.07347  0.41828  1.18911  0.36311
+    128   2.93613  0.38244  2.83387  1.58012   1118 C x - -
+          1.40939  1.38429  1.46239  1.29637
+          0.04106  4.32569  3.61188  0.93126  0.50097  1.03144  0.44082
+    129   0.37412  2.48121  2.19580  2.14395   1123 A x - -
+          1.50973  1.39117  1.45084  1.21783
+          0.06674  4.29585  2.97716  1.36052  0.29642  0.90023  0.52168
+    130   1.55059  3.10702  0.38153  2.80792   1132 G x - -
+          1.49132  1.57390  1.44482  1.10292
+          0.02506  4.24270  4.56788  1.67788  0.20674  0.84563  0.56087
+    131   2.82308  1.99852  2.70423  0.30365   1144 T x - -
+          1.25441  1.43353  1.50582  1.36864
+          0.03225  4.21690  4.07481  1.68176  0.20585  1.25276  0.33647
+    132   2.83154  2.31109  2.60669  0.26378   1157 T x - -
+          1.18368  1.37806  1.47462  1.54685
+          0.04889  4.04034  3.50252  1.52344  0.24585  1.42989  0.27356
+    133   3.00038  2.58072  3.00014  0.19270   1166 T x - -
+          1.23270  1.49961  1.50481  1.33476
+          0.03952  4.28901  3.68754  1.29468  0.32019  0.95351  0.48676
+    134   2.28376  0.55798  2.69720  1.35347   1175 C x - -
+          1.38996  1.58699  1.65122  1.03688
+          0.05488  4.05637  3.32174  1.78686  0.18330  1.55951  0.23603
+    135   2.69574  0.47816  3.06397  1.32470   1189 C x - -
+          1.35805  1.35331  1.42546  1.41036
+          0.03523  4.60387  3.70472  1.09297  0.40830  1.07100  0.41956
+    136   2.53373  2.23182  2.91545  0.27559   1193 T x - -
+          1.59172  1.62242  1.63367  0.90685
+          0.06851  3.29427  3.53642  1.07930  0.41526  1.38168  0.28922
+    137   2.37071  0.48514  2.74438  1.48419   1205 C x - -
+          1.52534  1.36255  1.42111  1.25527
+          0.04444  4.25112  3.53283  1.01826  0.44820  0.92891  0.50250
+    138   0.35841  2.41475  2.34753  2.15230   1211 A x - -
+          1.44483  1.37312  1.43255  1.30122
+          0.03680  4.08072  3.95108  1.07385  0.41808  1.12549  0.39229
+    139   2.55400  1.99826  2.50073  0.35008   1218 T x - -
+          1.32730  1.43620  1.43947  1.34736
+          0.02861  4.57667  4.02195  1.08810  0.41076  1.14992  0.38077
+    140   2.62298  0.46389  2.61228  1.49071   1223 C x - -
+          1.21369  1.56005  1.64286  1.20614
+          0.02687  4.12946  4.56400  1.34013  0.30356  1.36627  0.29445
+    141   2.72393  2.74576  3.28175  0.18318   1233 T x - -
+          1.22751  1.59182  1.45666  1.30781
+          0.05098  4.06500  3.42540  1.68130  0.20596  1.01487  0.45012
+    142   1.56949  2.57242  0.46244  2.45626   1247 G x - -
+          1.37928  1.44034  1.31855  1.41112
+          0.06260  4.80177  2.94752  1.44665  0.26835  1.10162  0.40396
+    143   2.74759  2.03931  2.82377  0.29247   1255 T x - -
+          0.72728  1.77245  1.99823  1.55455
+          0.04180  3.73684  4.06806  2.04254  0.13892  0.78014  0.61312
+    144   0.37561  2.52444  1.97173  2.36647   1277 A x - -
+          1.40215  1.51786  1.52493  1.14848
+          0.02650  4.21184  4.47986  1.75530  0.18978  1.47784  0.25894
+    145   0.22751  2.69878  2.74861  2.62860   1290 A x - -
+          1.38694  1.46750  1.40843  1.29050
+          0.03230  3.89084  4.47792  0.95375  0.48661  1.63339  0.21724
+    146   0.27100  2.61782  2.45137  2.54789   1299 A x - -
+          1.46277  1.35368  1.40429  1.32962
+          0.05913  4.32000  3.12097  0.93838  0.49637  1.51235  0.24896
+    147   0.34454  2.63967  1.98767  2.48825   1304 A x - -
+          1.15941  1.57466  1.22544  1.68405
+          0.05758  3.33674  3.89208  0.92831  0.50289  0.92198  0.50705
+    148   2.77490  2.08776  3.03660  0.26699   1313 T x - -
+          1.27771  1.47220  1.41702  1.38841
+          0.02670  4.74251  4.03804  1.42578  0.27486  1.26474  0.33172
+    149   1.56876  3.20102  0.39965  2.52051   1320 G x - -
+          1.63154  1.38429  1.78565  0.95145
+          0.04865  3.50637  4.04691  2.30678  0.10490  1.52963  0.24413
+    150   1.46413  3.08696  0.43209  2.60469   1355 G x - -
+          1.11971  1.53383  1.33309  1.63857
+          0.04507  3.57872  4.12524  1.63957  0.21575  1.65440  0.21221
+    151   1.32375  3.06409  0.52430  2.35177   1371 G x - -
+          1.00189  1.85245  2.06504  1.05225
+          0.11484  2.69320  3.19848  1.36888  0.29355  1.60462  0.22435
+    152   1.35806  2.71376  0.52696  2.45162   1387 G x - -
+          1.37104  1.45878  1.59465  1.16906
+          0.07279  3.07603  3.72711  1.42103  0.27637  1.06952  0.42033
+    153   0.39352  2.44102  1.94084  2.35736   1403 A x - -
+          1.24468  1.53440  1.20347  1.62846
+          0.08591  3.18825  3.19230  1.06703  0.42164  1.33792  0.30434
+    154   2.65824  1.73623  2.59547  0.38694   1413 T x - -
+          1.49317  1.31034  1.60320  1.18955
+          0.06770  2.97521  4.23874  1.40097  0.28284  1.22374  0.34832
+    155   0.38811  2.46686  1.96902  2.33078   1425 A x - -
+          1.58923  1.39724  1.35667  1.23401
+          0.05003  3.60856  3.82992  1.26301  0.33240  1.44671  0.26833
+    156   0.33277  2.65452  1.97203  2.60966   1434 A x - -
+          0.98222  1.68272  1.70624  1.35438
+          0.07162  3.26980  3.47060  2.22554  0.11430  1.36073  0.29635
+    157   2.49593  1.80180  2.40126  0.41253   1463 T x - -
+          1.48114  1.41681  1.52227  1.16501
+          0.06260  3.42646  3.56904  1.13454  0.38797  1.50032  0.25239
+    158   0.36333  2.53250  1.99194  2.42191   1471 A x - -
+          1.37249  1.42077  1.48002  1.28242
+          0.07395  3.67204  3.08217  1.36708  0.29417  1.59696  0.22629
+    159   0.50176  2.23160  1.69923  2.25995   1483 A x - -
+          1.34285  1.42978  1.34122  1.43543
+          0.06812  3.18937  3.70300  1.17481  0.36944  1.26703  0.33082
+    160   2.31484  1.69434  2.77359  0.42303   1490 T x - -
+          1.51663  1.67062  1.05229  1.41354
+          0.08676  3.04031  3.34444  1.55118  0.23825  1.72103  0.19709
+    161   0.42548  2.50228  1.85746  2.22029   1509 A x - -
+          1.21806  1.87723  1.34419  1.23639
+          0.07527  3.08532  3.61976  1.66157  0.21052  1.03943  0.43642
+    162   2.32443  0.65193  2.24821  1.28905   1526 C x - -
+          1.30450  1.68494  1.22910  1.38357
+          0.08294  3.52777  2.99134  1.62936  0.21822  1.28998  0.32197
+    163   2.56176  0.44096  2.78899  1.52358   1541 C x - -
+          1.09330  1.55463  1.49803  1.46944
+          0.07262  3.19935  3.53158  0.96454  0.47990  1.31016  0.31441
+    164   2.31513  1.89726  2.90982  0.36128   1551 T x - -
+          1.20502  1.31244  1.79867  1.32565
+          0.07692  3.43064  3.17806  2.31158  0.10437  1.06998  0.42010
+    165   0.49772  2.32206  1.73914  2.13419   1582 A x - -
+          1.09260  1.76560  1.48319  1.32178
+          0.02833  4.06032  4.53879  1.65681  0.21164  1.38771  0.28721
+    166   2.37725  0.60104  2.68890  1.23445   1595 C x - -
+          1.19211  1.38235  1.53093  1.47361
+          0.06744  3.47018  3.37837  1.04986  0.43076  1.49201  0.25479
+    167   2.54379  0.58413  2.99050  1.15971   1601 C x - -
+          1.29941  1.53634  1.48539  1.25272
+          0.06236  3.24204  3.84550  0.87820  0.53705  1.24513  0.33954
+    168   2.78501  2.41397  3.06205  0.22062   1608 T x - -
+          1.65353  1.82119  1.55175  0.83260
+          0.05902  3.40898  3.71970  1.28378  0.32433  1.38209  0.28909
+    169   2.37091  0.75083  2.46457  1.05101   1623 C x - -
+          1.15751  1.59894  1.57480  1.28528
+          0.06042  3.57571  3.48572  0.72404  0.66318  1.00997  0.45292
+    170   0.79813  2.31937  1.15328  1.99586   1628 G x - -
+          1.47332  1.45715  1.34594  1.28142
+          0.05753  4.16060  3.21109  1.17999  0.36713  1.26751  0.33063
+    171   2.06165  0.94086  2.39660  0.93793   1635 C x - -
+          1.49262  1.27681  1.67777  1.17279
+          0.05085  3.75375  3.64411  1.12651  0.39180  0.96673  0.47856
+    172   0.35586  2.82740  2.00705  2.24546   1645 A x - -
+          1.35260  1.78341  1.47552  1.06505
+          0.05438  3.33018  4.06637  1.59798  0.22603  1.06990  0.42014
+    173   1.58544  3.44511  0.39211  2.43480   1657 G x - -
+          1.30096  1.50632  1.55793  1.21931
+          0.04393  3.69228  4.01399  1.11566  0.39705  1.36888  0.29356
+    174   1.33275  3.02485  0.50695  2.46094   1666 G x - -
+          1.44004  1.34446  1.51623  1.26279
+          0.08962  3.94830  2.71148  0.78800  0.60652  1.50651  0.25062
+    175   1.36192  2.87728  0.49606  2.54311   1671 G x - -
+          1.22651  1.38227  1.50639  1.45257
+          0.03640  4.33789  3.78603  1.43259  0.27271  0.83064  0.57229
+    176   2.25794  1.67469  2.53715  0.46366   1681 T x - -
+          1.24470  1.40815  1.45431  1.45322
+          0.06085  4.12448  3.14964  1.37176  0.29257  1.21208  0.35322
+    177   2.27248  2.11354  2.30785  0.39059   1691 T x - -
+          1.06037  1.48697  1.74039  1.37767
+          0.06218  3.86532  3.23578  1.92471  0.15773  1.05741  0.42672
+    178   1.27314  2.62122  0.62705  2.17889   1704 G x - -
+          1.26637  1.36131  1.40343  1.53214
+          0.04547  3.78241  3.83126  2.27530  0.10844  1.06188  0.42435
+    179   2.46125  1.84200  2.72030  0.37060   1726 T x - -
+          1.28978  1.48916  1.48865  1.29672
+          0.06925  4.13228  2.97859  1.19091  0.36233  1.46149  0.26382
+    180   2.42985  2.27598  2.47256  0.32174   1732 T x - -
+          1.42326  1.29009  1.61121  1.25814
+          0.07943  3.27369  3.25744  1.00973  0.45306  1.01370  0.45079
+    181   1.46530  2.44406  0.56309  2.18269   1743 G x - -
+          1.01427  1.23338  1.90160  1.62607
+          0.05712  3.74930  3.44245  1.78346  0.18399  1.01787  0.44842
+    182   2.27748  2.24858  2.21390  0.38180   1757 T x - -
+          1.54956  1.29419  1.53349  1.21148
+          0.04480  3.71732  3.93665  1.02899  0.44218  0.87948  0.53614
+    183   1.47458  3.01633  0.39339  3.04961   1764 G x - -
+          1.38731  1.25821  1.87067  1.16453
+          0.04365  3.58943  4.19357  1.79149  0.18238  1.05353  0.42879
+    184   0.29868  2.72703  2.22044  2.47426   1778 A x - -
+          1.21310  1.51675  1.55173  1.30409
+          0.04478  3.79315  3.85075  1.13624  0.38717  1.28283  0.32469
+    185   1.35511  3.13002  0.46116  2.69097   1788 G x - -
+          1.25854  1.52295  1.55771  1.24742
+          0.06651  3.90929  3.11694  1.08738  0.41113  1.46560  0.26259
+    186   1.46293  2.78033  0.46584  2.54062   1796 G x - -
+          1.44112  1.26481  1.48169  1.37125
+          0.02624  4.31734  4.37697  1.02309  0.44548  0.92794  0.50313
+    187   0.34373  2.52507  2.16877  2.33813   1802 A x - -
+          1.23242  1.36460  1.56561  1.41071
+          0.04411  3.56417  4.21099  1.06400  0.42323  1.15165  0.37997
+    188   2.42322  2.19214  2.43674  0.33934   1810 T x - -
+          1.23433  1.64939  1.36630  1.34034
+          0.07030  3.48881  3.28742  1.11996  0.39496  1.22804  0.34653
+    189   2.65524  2.19219  2.31700  0.32923   1819 T x - -
+          1.18901  1.80575  1.19182  1.48079
+          0.05899  3.55825  3.54745  1.62943  0.21821  1.18291  0.36584
+    190   0.32437  2.46385  2.15374  2.57888   1831 A x - -
+          1.52381  1.47904  1.47117  1.12514
+          0.08313  4.03935  2.77806  0.98706  0.46628  1.36687  0.29424
+    191   0.35463  2.37130  2.09934  2.49287   1836 A x - -
+          1.40862  1.25540  1.51746  1.38114
+          0.07828  3.65028  3.00958  1.23436  0.34393  1.67900  0.20648
+    192   0.35811  2.66292  1.88513  2.53262   1847 A x - -
+          1.09531  1.73023  1.51814  1.31230
+          0.06534  3.80524  3.19431  1.72978  0.19519  1.30635  0.31582
+    193   2.42560  2.33099  2.33426  0.33199   1862 T x - -
+          1.18801  1.53929  1.38463  1.46870
+          0.04541  4.41662  3.43207  1.48356  0.25725  0.68372  0.70267
+    194   1.60721  3.06951  0.37711  2.69904   1871 G x - -
+          1.32004  1.48204  1.48938  1.27229
+          0.04717  3.92534  3.63671  1.18513  0.36486  1.27841  0.32640
+    195   0.27658  2.83459  2.37018  2.41444   1878 A x - -
+          1.17928  1.54112  1.48393  1.37985
+          0.06580  3.32473  3.58645  0.96993  0.47660  1.26294  0.33243
+    196   1.46876  2.71821  0.46504  2.58119   1890 G x - -
+          1.50803  1.29535  1.45350  1.30526
+          0.07451  3.79576  3.00914  0.70552  0.68092  1.38467  0.28822
+    197   0.40361  2.61313  2.02500  2.06518   1895 A x - -
+          1.32391  1.41870  1.45079  1.35677
+          0.06779  4.44599  2.92222  1.23910  0.34199  1.11668  0.39655
+    198   2.05802  1.99658  2.45021  0.43045   1902 T x - -
+          1.37289  1.73848  1.74671  0.92510
+          0.05110  3.58294  3.81571  1.63117  0.21778  1.46236  0.26356
+    199   0.43987  2.25283  1.89599  2.29652   1917 A x - -
+          1.59148  1.40855  1.57488  1.06465
+          0.07118  3.25680  3.49997  1.09732  0.40611  1.64629  0.21414
+    200   0.27448  2.83096  2.21864  2.62671   1927 A x - -
+          1.32886  1.51485  1.32994  1.38275
+          0.07296  3.71902  3.07676  0.99695  0.46046  1.26804  0.33043
+    201   2.35304  1.88210  2.64030  0.38374   1934 T x - -
+          1.21605  1.65370  1.45380  1.27805
+          0.06575  3.96553  3.10826  1.32866  0.30765  1.36999  0.29318
+    202   1.18250  2.45150  0.70523  2.17746   1941 G x - -
+          1.05143  1.70198  1.79254  1.19832
+          0.05652  3.68025  3.51551  1.96602  0.15084  1.01153  0.45203
+    203   2.14707  0.88677  2.46158  0.95220   1962 C x - -
+          1.53953  1.33669  1.42442  1.26530
+          0.04415  3.72241  3.96254  1.08394  0.41288  1.09575  0.40690
+    204   0.36549  2.50465  2.07066  2.31933   1970 A x - -
+          1.22655  1.51057  1.58358  1.27056
+          0.04477  3.91278  3.73824  1.89446  0.16299  1.10277  0.40339
+    205   2.29735  2.16990  2.35112  0.37103   1986 T x - -
+          1.21911  1.47627  1.68805  1.23396
+          0.05792  3.63260  3.51233  1.20774  0.35506  1.23146  0.34512
+    206   1.30725  2.87306  0.57239  2.21882   1995 G x - -
+          1.08082  1.41593  1.63453  1.50085
+          0.08068  3.33057  3.17623  0.94489  0.49220  1.15751  0.37727
+    207   2.35524  1.84927  2.06237  0.47703   2004 T x - -
+          1.38785  1.52776  1.47216  1.19092
+          0.05086  3.47333  3.98594  1.01212  0.45169  1.09671  0.40642
+    208   0.39810  2.56182  1.80892  2.43711   2012 A x - -
+          1.30762  1.40493  1.62024  1.25071
+          0.05010  3.50491  3.97317  1.26377  0.33210  1.27442  0.32794
+    209   0.25012  2.59453  2.45163  2.80579   2026 A x - -
+          1.43602  1.51477  1.43216  1.19245
+          0.06085  3.84628  3.27860  1.31604  0.31224  1.61332  0.22218
+    210   0.32549  2.77333  2.18028  2.27921   2037 A x - -
+          1.19529  1.62804  1.36260  1.40620
+          0.06808  3.44776  3.38157  0.90269  0.51999  1.40555  0.28135
+    211   1.52440  2.74888  0.43743  2.62336   2047 G x - -
+          1.25900  1.42400  1.42143  1.45267
+          0.07899  4.24015  2.78799  0.85758  0.55197  1.40296  0.28219
+    212   2.25958  0.93735  2.38016  0.88818   2051 C x - -
+          1.37103  1.58969  1.57201  1.09501
+          0.05563  3.83109  3.42890  0.99176  0.46350  1.27143  0.32910
+    213   0.84360  2.47899  1.03108  2.04490   2056 G x - -
+          1.38254  1.56424  1.47018  1.17141
+          0.05830  3.77870  3.38782  1.08713  0.41126  1.36500  0.29488
+    214   2.43099  0.55874  2.62406  1.31822   2064 C x - -
+          1.27952  1.49939  1.61896  1.20244
+          0.03476  4.31567  3.87260  1.63592  0.21663  1.43074  0.27330
+    215   2.38085  1.44144  2.98436  0.47744   2075 T x - -
+          1.32118  1.22636  1.56605  1.46554
+          0.06147  3.67068  3.37674  0.97462  0.47375  1.37129  0.29273
+    216   2.47020  1.81394  2.53469  0.39581   2082 T x - -
+          1.35482  1.46941  1.37965  1.34600
+          0.06333  3.92555  3.17876  1.17670  0.36859  1.36034  0.29649
+    217   0.41423  2.62898  1.88269  2.16442   2090 A x - -
+          1.46257  1.28620  1.61004  1.23045
+          0.06958  3.54624  3.26016  1.21394  0.35243  1.12181  0.39407
+    218   1.62129  2.56886  0.44851  2.44007   2103 G x - -
+          1.47886  1.41517  1.40097  1.26280
+          0.05760  3.81747  3.38171  1.52761  0.24469  1.22163  0.34920
+    219   1.95599  0.61248  2.58740  1.42148   2111 C x - -
+          1.36939  1.52507  1.53202  1.16464
+          0.04127  4.17402  3.68713  1.69644  0.20253  1.23383  0.34415
+    220   0.33745  2.35746  2.33597  2.35349   2120 A x - -
+          1.41044  1.44277  1.39182  1.30539
+          0.06423  3.58622  3.36643  0.99137  0.46373  1.47607  0.25946
+    221   2.36510  0.68620  2.29898  1.19662   2128 C x - -
+          1.28842  1.54361  1.30196  1.43259
+          0.05086  4.08547  3.41820  1.08188  0.41394  1.17580  0.36900
+    222   0.38772  2.69668  1.93876  2.20648   2133 A x - -
+          1.27747  1.61535  1.92112  0.97818
+          0.05566  3.53917  3.68490  1.88369  0.16491  1.00985  0.45299
+    223   1.65808  2.87906  0.39045  2.56971   2155 G x - -
+          1.33317  1.39672  1.36063  1.45906
+          0.04955  4.53421  3.28061  1.04355  0.43417  1.00461  0.45600
+    224   2.11953  2.15253  2.39834  0.39623   2160 T x - -
+          1.40520  1.44582  1.56858  1.16864
+          0.03065  4.52165  3.94700  1.51900  0.24709  1.15603  0.37795
+    225   1.41552  2.80049  0.53192  2.21691   2169 G x - -
+          1.35341  1.42632  1.37470  1.39217
+          0.02719  4.92102  3.93579  1.26101  0.33319  1.05889  0.42593
+    226   2.53629  0.45917  2.56053  1.55225   2174 C x - -
+          1.60723  1.20179  1.53306  1.26220
+          0.03799  3.96526  4.00027  1.47397  0.26008  1.23132  0.34518
+    227   2.56753  0.42691  3.15808  1.47734   2186 C x - -
+          1.25672  1.31022  1.59967  1.41186
+          0.03923  3.95257  3.94956  1.23895  0.34205  1.15374  0.37900
+    228   2.30967  2.36284  2.79811  0.29353   2193 T x - -
+          1.39333  1.42570  1.55101  1.20605
+          0.03104  4.25203  4.11498  1.10882  0.40040  1.15646  0.37775
+    229   1.68232  3.82889  0.29007  3.12094   2200 G x - -
+          1.18642  1.51229  1.50737  1.37519
+          0.04306  4.01900  3.72229  1.04737  0.43211  1.44724  0.26817
+    230   1.58773  2.68555  0.42516  2.60693   2207 G x - -
+          1.34822  1.44851  1.35101  1.40081
+          0.03486  4.49008  3.77041  0.99203  0.46334  1.17417  0.36972
+    231   2.30616  0.46277  2.80977  1.55780   2212 C x - -
+          1.41506  1.45536  1.40829  1.27579
+          0.05088  3.85424  3.56067  1.02275  0.44567  0.96605  0.47898
+    232   0.31588  2.53872  2.40295  2.28832   2219 A x - -
+          1.29318  1.48235  1.37355  1.40529
+          0.03319  4.45980  3.85924  1.15801  0.37704  1.14270  0.38413
+    233   2.63737  0.52382  2.70613  1.31156   2225 C x - -
+          1.31728  1.47636  1.45947  1.30449
+          0.06136  3.79701  3.29467  1.19699  0.35968  1.42235  0.27595
+    234   0.38454  2.64731  1.97966  2.20473   2234 A x - -
+          1.22870  1.64791  1.38936  1.32561
+          0.05368  3.73590  3.56106  1.05438  0.42834  1.03195  0.44054
+    235   2.18723  1.21151  1.98006  0.79415   2242 T x - -
+          1.35088  1.47948  1.42763  1.29698
+          0.03004  4.15768  4.27197  1.31495  0.31264  0.96710  0.47833
+    236   0.37678  2.86975  1.88498  2.25011   2252 A x - -
+          1.39738  1.45579  1.46769  1.24104
+          0.03970  4.22472  3.71763  0.87821  0.53704  0.97808  0.47166
+    237   1.54692  2.82578  0.42903  2.56793   2257 G x - -
+          1.51605  1.49741  1.29583  1.26215
+          0.04500  3.99498  3.66528  1.36867  0.29363  0.91540  0.51142
+    238   2.18285  1.91029  2.38358  0.43537   2266 T x - -
+          1.47963  1.39555  1.44515  1.24177
+          0.03105  4.03158  4.35659  0.98708  0.46627  1.03641  0.43808
+    239   0.36292  2.58279  1.93176  2.47813   2274 A x - -
+          1.57404  1.46673  1.21894  1.32211
+          0.05777  3.81319  3.37978  1.73694  0.19365  1.16229  0.37508
+    240   0.55529  2.65523  1.34447  2.35249   2291 A x - -
+          1.38726  1.44857  1.41079  1.30421
+          0.02863  4.49210  4.07303  1.01740  0.44868  0.93869  0.49617
+    241   1.41510  3.01124  0.47547  2.45020   2296 G x - -
+          1.23083  1.50074  1.43289  1.40093
+          0.03142  4.07618  4.27141  0.72875  0.65877  1.02972  0.44178
+    242   2.14254  1.11694  2.40785  0.76495   2301 C x - -
+          1.36969  1.54384  1.53161  1.15180
+          0.06093  3.95544  3.21988  1.34563  0.30161  1.29122  0.32150
+    243   1.10363  2.42858  0.81248  1.99205   2312 G x - -
+          1.27694  1.47887  1.41311  1.38697
+          0.03162  4.11099  4.21752  0.85157  0.55642  0.85415  0.55451
+    244   2.70475  0.51776  2.85321  1.27440   2317 C x - -
+          1.32679  1.51510  1.59645  1.16389
+          0.01896  4.60450  4.73615  1.59861  0.22587  0.87179  0.54164
+    245   2.93547  2.15389  2.96604  0.24929   2326 T x - -
+          1.35312  1.48532  1.48871  1.23968
+          0.05058  4.14662  3.39601  0.98328  0.46853  1.29304  0.32081
+    246   2.59413  0.51043  2.62914  1.37472   2333 C x - -
+          1.49041  1.47392  1.36731  1.23477
+          0.02235  4.21486  4.91636  1.36192  0.29594  0.99897  0.45927
+    247   0.34188  2.34032  2.27837  2.39886   2343 A x - -
+          1.47346  1.39282  1.44920  1.24570
+          0.02720  4.31326  4.30898  1.18981  0.36281  0.84766  0.55934
+    248   0.47692  2.65088  1.44946  2.60343   2351 A x - -
+          1.31567  1.39952  1.39084  1.44339
+          0.03992  4.67829  3.51186  1.17971  0.36726  0.71470  0.67205
+    249   2.46963  2.00933  2.67545  0.33907   2357 T x - -
+          1.43882  1.50122  1.41114  1.21716
+          0.02496  4.22990  4.59515  1.00211  0.45745  0.87948  0.53614
+    250   0.29774  2.70748  2.19010  2.53967   2363 A x - -
+          1.41342  1.40168  1.39881  1.33325
+          0.01812  4.80774  4.62615  1.28351  0.32444  1.19959  0.35856
+    251   0.29655  2.62614  2.32978  2.44245   2369 A x - -
+          1.45104  1.39239  1.37084  1.33447
+          0.04922  4.11136  3.45327  0.86614  0.54571  1.15790  0.37709
+    252   0.33511  2.82846  1.91195  2.55305   2374 A x - -
+          1.46488  1.38670  1.28920  1.41263
+          0.03136  3.96424  4.43191  1.11994  0.39497  0.65283  0.73516
+    253   2.79134  2.30904  2.88099  0.24433   2382 T x - -
+          1.36516  1.43368  1.47348  1.28336
+          0.02233  4.33973  4.70547  1.11296  0.39837  0.85215  0.55599
+    254   1.50183  2.85824  0.42085  2.75802   2389 G x - -
+          1.29792  1.42654  1.44718  1.38019
+          0.03872  4.44162  3.64201  0.99143  0.46370  1.12355  0.39323
+    255   1.75366  2.08965  0.83277  1.31569   2393 G x - -
+          1.35914  1.36959  1.41461  1.40289
+          0.03563  4.71624  3.64747  1.22794  0.34658  0.84697  0.55986
+    256   2.80313  1.80979  2.81876  0.33406   2398 T x - -
+          1.44114  1.36450  1.41888  1.32483
+          0.03928  4.29868  3.69178  1.00458  0.45602  0.85574  0.55333
+    257   0.32227  2.98637  1.99079  2.42542   2404 A x - -
+          1.46188  1.38374  1.46104  1.25328
+          0.05613  4.19054  3.23278  1.10668  0.40146  1.04748  0.43204
+    258   1.60931  3.16244  0.36451  2.76282   2408 G x - -
+          1.41335  1.51652  1.40506  1.23152
+          0.03812  3.74028  4.29373  0.63270  0.75748  1.05570  0.42763
+    259   2.88488  0.44687  3.51226  1.29213   2413 C x - -
+          1.36252  1.46487  1.40571  1.31795
+          0.02573  3.95768  5.06785  1.07078  0.41967  0.84378  0.56226
+    260   2.81318  2.61725  3.41487  0.18140   2421 T x - -
+          1.00007  2.10242  1.10247  1.72632
+          0.34450  1.60682  2.39799  0.32088  1.29285  0.99428  0.46202
+    261   2.06840  0.69514  2.54870  1.21596   2429 C x - -
+          1.30013  1.39875  1.38206  1.47170
+          0.03995  3.67912  4.27441  0.58758  0.81119  1.20431  0.35653
+    262   3.58607  2.49653  4.35611  0.13114   2432 T x - -
+          1.58355  1.32227  1.52489  1.16932
+          0.07776  2.79493  4.29072  0.47094  0.97926  0.33842  1.24792
+    263   0.44399  2.45150  1.83515  2.18233   2437 A x - -
+          1.29575  1.42628  1.42324  1.40579
+          0.01728  4.39965  5.32839  1.00303  0.45691  1.12901  0.39061
+    264   2.87792  2.42570  3.04579  0.21347   2441 T x - -
+          1.40129  1.34261  1.40129  1.40129
+          0.01299  4.83471  5.30748  1.16838  0.37233  0.94781  0.49035
+    265   3.81227  2.52482  3.94744  0.12951   2443 T x - -
+          1.38629  1.38629  1.38629  1.38629
+          0.01057  5.24854  5.24854  1.46634  0.26236  1.09861  0.40547
+    266   0.21940  2.89757  2.55156  2.75076   2444 A x - -
+          1.38629  1.38629  1.38629  1.38629
+          0.01084  5.22319  5.22319  1.46634  0.26236  1.09861  0.40547
+    267   4.61177  2.30818  4.85022  0.12466   2445 T x - -
+          1.38629  1.38629  1.38629  1.38629
+          0.01227  5.09966  5.09966  1.46634  0.26236  1.09861  0.40547
+    268   4.92194  4.47880  5.05557  0.02532   2446 T x - -
+          1.38629  1.38629  1.38629  1.38629
+          0.00559  5.18918        *  1.46634  0.26236  0.00000        *
+//
