@@ -283,9 +283,10 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 	#The TSD sequences to collect
 	sequences_to_update = os.path.join(output_directory, 'Step2_extend_blast_input_rename.fa')
 	#Collect update sequences
-	if not os.path.exists(f'{sequences_to_update}.fxi'):
-		print('Indexing TSD sequences...')
-	
+	input_index = f'{sequences_to_update}.fxi'
+	if os.path.exists(input_index):
+		os.remove(input_index)
+	print('Indexing TSD sequences...')
 	fa = pyfastx.Fasta(sequences_to_update, build_index = True)
 
 	#The fasta headers are formatted somewhat strangely - this fixes them

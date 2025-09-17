@@ -373,7 +373,7 @@ def adjust_tsd_for_blast(input_file, left_shift = 130, right_shift = 70):
 				right_adjust_for_blast = end - tsd_size + right_shift
 				
 				#header = '{}'.strip() + '|tsd_l:{}|tsd_s:{}|tsd_e:{}'.strip() + '\n'
-				header = f'{name}_{index_dict[name]} {strand} {start}:{end} |tsd_l:{tsd_size}|tsd_s:{left_adjust_for_blast}|tsd_e:{right_adjust_for_blast}'
+				header = f'{name}_{index_dict[name]} {strand} {start}:{end}|tsd_l:{tsd_size}|tsd_s:{left_adjust_for_blast}|tsd_e:{right_adjust_for_blast}'
 				
 				yield left_adjust_for_blast, right_adjust_for_blast, src, header
 		
