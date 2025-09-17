@@ -72,8 +72,6 @@ dependencies:
   - perl-scalar-list-utils=1.62=pl5321hec16e2b_0
   - perl-types-serialiser=1.01=pl5321hdfd78af_0
   - pip=22.1.2=pyhd8ed1ab_0
-  - python=3.7.4=h265db76_1
-  - python_abi=3.7=2_cp37m
   - readline=7.0=hf8c457e_1001
   - repeatmasker=4.1.2.p1=pl5321hdfd78af_1
   - rmblast=2.11.0=h6200dbe_0
