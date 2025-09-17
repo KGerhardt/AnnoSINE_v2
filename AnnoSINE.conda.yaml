@@ -72,7 +72,7 @@ dependencies:
   - perl-scalar-list-utils=1.62=pl5321hec16e2b_0
   - perl-types-serialiser=1.01=pl5321hdfd78af_0
   - pip=22.1.2=pyhd8ed1ab_0
-  - readline=7.0=hf8c457e_1001
+  - readline
   - repeatmasker=4.1.2.p1=pl5321hdfd78af_1
   - rmblast=2.11.0=h6200dbe_0
   - setuptools=63.1.0=py37h89c1867_0
@@ -82,7 +82,7 @@ dependencies:
   - wget=1.20.3=ha56f1ee_1
   - wheel=0.37.1=pyhd8ed1ab_0
   - xz=5.2.5=h516909a_1
-  - zlib=1.2.12=h166bdaf_1
+  - zlib
   - irf
   - seqtk
   - cd-hit
