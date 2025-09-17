@@ -1,5 +1,6 @@
 import time
 import os
+import sys
 
 #Set openMP multithreads to 1 for the purposes of preventing libdivsufsort parallelism
 os.environ['OMP_NUM_THREADS'] = '1'
@@ -34,69 +35,81 @@ from tsd_searcher import alignment_tsd_tir_finder
 from hyperSINEfinder import jesus_give_me_a_SINE
 
 
-print('Example: python3 AnnoSINE.py 2 ../Input_Files/test.fasta ../Output_Files', flush=True)
-parser = argparse.ArgumentParser(description="SINE Annotation Tool for Plant Genomes",
-								 formatter_class=RawTextHelpFormatter)
-
-# positional arguments
-parser.add_argument("mode", type=int,
-					help="[1 | 2 | 3]\n"
-					"Choose the running mode of the program.\n"
-					"\t1--Homology-based method;\n"
-					"\t2--Structure-based method;\n"
-					"\t3--Hybrid of homology-based and structure-based method.")
-					
-parser.add_argument("input_filename", type=str, help="input genome assembly path")
-parser.add_argument("output_filename", type=str, help="output files path")
-
-# optional arguments
-parser.add_argument("-e", "--hmmer_evalue", metavar='',type=float, default=1e-10,
-					help="Expectation value threshold for saving hits of homology search (default: 1e-10)")
-parser.add_argument("-v", "--blast_evalue", metavar='',type=float, default=1e-10,
-					help="Expectation value threshold for sequences alignment search (default: 1e-10)")
-parser.add_argument("-l", "--length_factor", metavar='', type=float, default=0.3,
-					help="Threshold of the local alignment length relative to the the BLAST query length (default: 0.3)")
-parser.add_argument("-c", "--copy_number_factor", metavar='', type=float, default=0.15,
-					help="Threshold of the copy number that determines the SINE boundary (default: 0.15)")
-parser.add_argument("-s", "--shift",  metavar='', type=int, default=50,
-					help="Maximum threshold of the boundary shift (default: 50)")
-parser.add_argument("-g", "--gap",  metavar='', type=int, default=10,
-					help="Maximum threshold of the truncated gap (default: 10)")
-parser.add_argument("-minc", "--copy_number", metavar='', type=int, default=1,
-					help="Minimum threshold of the copy number for each element (default: 20)")
-parser.add_argument("-numa", "--num_alignments", metavar='', type=int, default=50000,
-					help="--num_alignments value for blast alignments (default: 50000)")
-
-#parser.add_argument("-maxb", "--base_copy_number", type=int, default=1,
-					#help="Maximum threshold of copy number for the first and last base (default: 1)")
-parser.add_argument("-a", "--animal", action = 'store_true',
-					help='If set, AnnoSINE will perform an HMM search using animal HMMs isntead of plant HMMs. Use this when your genome is not a plant (default off).')
-
-parser.add_argument("-b", "--boundary", metavar='', type=str, default='msa',
-					help="Output SINE seed boundaries based on TSD or MSA (default: msa)")
-parser.add_argument("-f", "--figure", metavar='', type=str, default='n',
-					help="Output the SINE seed MSA figures and copy number profiles (y/n). Please note that this step may take a long time to process. (default: n)")
-parser.add_argument("-temd", "--temp_dir", metavar='',type=str, default='',
-					help="The temp dir used by paf2blast6 script. If not set, will use /tmp folder automatically.")
-parser.add_argument("-auto", "--automatically_continue", action = 'store_true',
-					help="If set, the program will skip finished steps and continue unifinished steps for a previously processed output dir.")
-parser.add_argument("-r", "--non_redundant", metavar='', type=str, default='y',
-					help="Annotate SINE in the whole genome based on the non-redundant library (y/n) (default: y)")
-parser.add_argument("-t", "--threads", metavar='', type=int, default=36,
-					help="Threads for each tool in AnnoSINE (default: 36)")
-parser.add_argument("-irf", "--irf_path", metavar='', type=str, default='',
-					help="Path to the irf program (default: '')")
-parser.add_argument("-rpm", "--RepeatMasker_enable", metavar='', type=int, default=1,
-					help="If set to 0, then will not run RepearMasker (Step 8 for the code). (default: 1)")
-					
-parser.add_argument('--stop_at_tsd', action='store_true',
-					help='Run HMMsearch, SINEfinder, and TSD searcher, then exit. Useful to developers.')
-args = parser.parse_args()
-
 # obtain program paths
 script_dir = os.path.dirname(os.path.abspath(__file__)) #shujun
-#work_dir = os.getcwd()
-work_dir=args.output_filename
+
+class MyParser(argparse.ArgumentParser):
+	def error(self, message):
+		self.print_help()
+		sys.exit(2)
+
+def options():
+	parser = MyParser(description='''SINE annotation tool for plant and animal genomes.
+	
+Usage: AnnoSINE_v2.py --genome [path_to_genome_fasta] --outdir [output_directory] --search-type [plant | animal] --mode [1|2|3]
+''',
+									 formatter_class=RawTextHelpFormatter)
+
+	# Required arguments
+
+						
+	parser.add_argument('--genome', type=str, required = True, help="input genome assembly path")
+	parser.add_argument('--outdir', type=str, required = True, help="output files path")
+	parser.add_argument('--org-type', choices = ['plant', 'animal'], required = True,
+						help='')
+						
+	parser.add_argument("--mode", type=int, choices = [1, 2, 3], required = True,
+						help="[1 | 2 | 3]\n"
+						"Choose the running mode of the program.\n"
+						"\t1--Homology-based method;\n"
+						"\t2--Structure-based method;\n"
+						"\t3--Both homology-based and structure-based method.")
+
+	# optional arguments
+	parser.add_argument("-e", "--hmmer-evalue", metavar='',type=float, default=1e-10,
+						help="Expectation value threshold for saving hits of homology search (default: 1e-10)")
+	parser.add_argument("-v", "--blast-evalue", metavar='',type=float, default=1e-10,
+						help="Expectation value threshold for sequences alignment search (default: 1e-10)")
+	parser.add_argument("-l", "--length-factor", metavar='', type=float, default=0.3,
+						help="Threshold of the local alignment length relative to the the BLAST query length (default: 0.3)")
+	parser.add_argument("-c", "--copy-number-factor", metavar='', type=float, default=0.15,
+						help="Threshold of the copy number that determines the SINE boundary (default: 0.15)")
+	parser.add_argument("-s", "--shift",  metavar='', type=int, default=50,
+						help="Maximum threshold of the boundary shift (default: 50)")
+	parser.add_argument("-g", "--gap",  metavar='', type=int, default=10,
+						help="Maximum threshold of the truncated gap (default: 10)")
+	parser.add_argument("-minc", "--copy-number", metavar='', type=int, default=1,
+						help="Minimum threshold of the copy number for each element (default: 20)")
+	parser.add_argument("-numa", "--num-alignments", metavar='', type=int, default=50000,
+						help="--num_alignments value for blast alignments (default: 50000)")
+
+	#parser.add_argument("-maxb", "--base_copy_number", type=int, default=1,
+						#help="Maximum threshold of copy number for the first and last base (default: 1)")
+
+	parser.add_argument("-b", "--boundary", metavar='', type=str, default='msa',
+						help="Output SINE seed boundaries based on TSD or MSA (default: msa)")
+	parser.add_argument("-f", "--figure", metavar='', type=str, default='n',
+						help="Output the SINE seed MSA figures and copy number profiles (y/n). Please note that this step may take a long time to process. (default: n)")
+	parser.add_argument("-temd", "--temp-dir", metavar='',type=str, default='',
+						help="The temp dir used by paf2blast6 script. If not set, will use /tmp folder automatically.")
+	parser.add_argument("-auto", "--automatically-continue", action = 'store_true',
+						help="If set, the program will skip finished steps and continue unifinished steps for a previously processed output dir.")
+	parser.add_argument("-r", "--non-redundant", metavar='', type=str, default='y',
+						help="Annotate SINE in the whole genome based on the non-redundant library (y/n) (default: y)")
+	parser.add_argument("-t", "--threads", metavar='', type=int, default=36,
+						help="Threads for each tool in AnnoSINE (default: 36)")
+	parser.add_argument("-irf", "--irf-path", metavar='', type=str, default='',
+						help="Path to the irf program (default: '')")
+	parser.add_argument("-rpm", "--RepeatMasker-enable", metavar='', type=int, default=1,
+						help="If set to 0, then will not run RepearMasker (Step 8 for the code). (default: 1)")
+						
+	parser.add_argument('--stop-at-tsd', action='store_true',
+						help='Run HMMsearch, SINEfinder, and TSD searcher, then exit. Useful to developers.')
+	args = parser.parse_args()
+	
+	return parser, args
+
+
 
 def hmm_worker(args):
 	splitarg = args.split()
@@ -322,7 +335,87 @@ def parse_and_clean_step1_input(filename):
 			
 			yield line
 
-def merge_tsd_input(pattern, out_genome_assembly_path):
+
+#Because of earlier changes this code now does some different things.
+
+#We no longer need to run TSD searcher, so that code is skipped altogether.
+#Both the HMM results and the SINEfinder results are pre-filtered for having TSDs, so we do not need to do 'tsd_not_exist' checks
+#We simply extend the ends of the SINE candidates for blast and directly write that input from the step1 and step2 inputs
+#Consider renaming those inputs to HMM_candidates and SINEFinder_candidates
+
+#Then pipeline proceeds.
+
+def adjust_tsd_for_blast(input_file, left_shift = 130, right_shift = 70):
+	index_dict = {}
+	with open(input_file) as fh:
+		for line in fh:
+			if line.startswith('>'):
+				segs = line.strip().split()
+				name = segs[0]
+				
+				src = name[1:]
+				if name not in index_dict:
+					index_dict[name] = 1
+				else:
+					index_dict[name] += 1
+				
+				strand = segs[1]
+				start_end = [int(loc) for loc in segs[2].split(':')]
+				
+				start = min(start_end)
+				end = max(start_end)
+				
+				tsd_size = segs[3].split(';')[0]
+				tsd_size = tsd_size.replace('TSD-len=', '')
+				tsd_size = int(tsd_size)
+				
+				left_adjust_for_blast = start + tsd_size - left_shift
+				right_adjust_for_blast = end - tsd_size + right_shift
+				
+				#header = '{}'.strip() + '|tsd_l:{}|tsd_s:{}|tsd_e:{}'.strip() + '\n'
+				header = f'{name}_{index_dict[name]} {strand} {start}:{end} |tsd_l:{tsd_size}|tsd_s:{left_adjust_for_blast}|tsd_e:{right_adjust_for_blast}'
+				
+				yield left_adjust_for_blast, right_adjust_for_blast, src, header
+		
+		
+		
+#Updated function skips several intermediate steps
+# (1) Both HMM and SINEFinder outputs are pre-screened for having TSDs, so no use of TSD-searcher is needed
+# (2) Since TSD presence is assured, we can go directly to BLAST input, which are TSD-bearing SINE candidates extended in either direction
+# (3) Those candidates need updated headers, see function adjust_tsd_for_blast
+# (4) Clean those sequences for non ATCGatcg characters
+
+def merge_tsd_input(pattern, out_genome_assembly_path, in_genome_assembly_path):
+	genref = read_genome_assembly(in_genome_assembly_path)
+	#HMM, SINEFinder inputs
+	hmm_s1_in        = os.path.join(out_genome_assembly_path, 'Step1_extend_tsd_input_1.fa')
+	sinefinder_s1_in = os.path.join(out_genome_assembly_path, 'Step1_extend_tsd_input_2.fa')
+	
+	#Merged output - a concatenation of the above with the caveat of replacing non-ATCGatcg characters in the sequences with 'N'
+	#final_s1_out = os.path.join(out_genome_assembly_path, 'Step1_extend_tsd_input.fa')
+	
+	final_s1_out = os.path.join(out_genome_assembly_path, 'Step2_extend_blast_input_rename.fa')
+	
+	#Since we use upper, no need to check for lower case chars
+	character_cleaner = re.compile(r'[^ATCG]')
+	
+	with open(final_s1_out, 'w') as out:
+		if pattern == 1 or pattern == 3:
+			for l, r, seqid, head in adjust_tsd_for_blast(hmm_s1_in):
+				print(head, file = out)
+				extended_sequence = genref[seqid][l:r].upper()
+				extended_sequence = re.sub(character_cleaner, 'N', extended_sequence)
+				print(extended_sequence, file = out)
+		if pattern == 2 or pattern == 3:
+			for l, r, seqid, head in adjust_tsd_for_blast(sinefinder_s1_in):
+				print(head, file = out)
+				extended_sequence = genref[seqid][l:r].upper()
+				extended_sequence = re.sub(character_cleaner, 'N', extended_sequence)
+				print(extended_sequence, file = out)
+
+
+#Relic
+def old_merge_tsd_input(pattern, out_genome_assembly_path):
 	#HMM, SINEFinder inputs
 	hmm_s1_in        = os.path.join(out_genome_assembly_path, 'Step1_extend_tsd_input_1.fa')
 	sinefinder_s1_in = os.path.join(out_genome_assembly_path, 'Step1_extend_tsd_input_2.fa')
@@ -410,14 +503,11 @@ def process_tsd_output(in_genome_assembly_path, out_genome_assembly_path):
 	hmm_start = []
 	hmm_end = []
 	hmm_id = []
-	
+	hmm_tsd = []
+	finder_tsd = []	
 	#Open recovered TSD coordinates file from TSD searcher and see what TSDs were found
 	with open(tsd_output_file) as tsd_file:
-		lines = tsd_file.readlines()
-		hmm_tsd = []
-		finder_tsd = []
-		filename = os.path.join(out_genome_assembly_path, 'Step2_tsd.txt')
-		for line in lines:
+		for line in tsd_file:
 			if line[0] == '>':
 				title.append(line)
 				hmm_start.append(int(line.split()[2].split(':')[0]))
@@ -431,7 +521,10 @@ def process_tsd_output(in_genome_assembly_path, out_genome_assembly_path):
 				  hmm_tsd.append(0)
 			  
 	
-	#Find the positions of TSDs according to either HMM search or SINEfinder
+	#Okay, the creation of the TSD searcher output file was deleted when I removed that step. Makes sense. Skip this block
+	#Find the positions of TSDs according to either HMM search or SINEfinder - find out where step2_tsd is made
+	'''
+	filename = os.path.join(out_genome_assembly_path, 'Step2_tsd.txt')
 	hmm_pos = []
 	record_tsd = []
 	with open(filename) as f2:
@@ -450,7 +543,7 @@ def process_tsd_output(in_genome_assembly_path, out_genome_assembly_path):
 					#	record_tsd.append(1)
 				else:
 					record_tsd.append(0)
-
+	'''
 	starts = []
 	ends = []
 	tsd_info = []
@@ -458,7 +551,12 @@ def process_tsd_output(in_genome_assembly_path, out_genome_assembly_path):
 
 	output_genome_sequence = read_genome_assembly(in_genome_assembly_path)
 	
-	#For each element, if a TSD was found
+	#Because of skipping TSD searcher, we instead need to open the correct files and handle them accordingly - 
+	#here, I think this means we open up BLAST from HMMs as blast input and adjust, TSD found and adjust
+	#Blast input headers should be modified to include the 'tsd not exist' tag and the tsd_searcher header needs to 
+	#be re-added to the step1 outputs
+	
+	#For each element, if a TSD was found record that it happened
 	for t in range(len(hmm_pos)):
 		if record_tsd[t] == 0:
 			tsd_info.append('tsd not exist')
@@ -476,14 +574,12 @@ def process_tsd_output(in_genome_assembly_path, out_genome_assembly_path):
 			seq_id = hmm_id[t]
 
 			input_seq.append(output_genome_sequence[seq_id][start:end])
-			starts.append(
-				hmm_start[t] - 30 + int(hmm_pos[t][1].split('-')[1].replace(')', '')))  # tsd boundary
+			starts.append(hmm_start[t] - 30 + int(hmm_pos[t][1].split('-')[1].replace(')', '')))  # tsd boundary
 			ends.append(hmm_start[t] - 30 + int(hmm_pos[t][3].split('-')[0].replace('(', '')))
 	
 	tsd_outfa = os.path.join(out_genome_assembly_path, 'Step2_tsd_output.fa')
 	if os.path.exists(tsd_outfa):
 		os.remove(tsd_outfa)
-		#modify_text(tsd_outfa)
 	
 	save_to_fna_2(tsd_outfa, input_seq, title, tsd_info, starts, ends)
 
@@ -584,7 +680,6 @@ def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_ass
 		ksize = 10
 	else:
 		ksize = 8
-	
 	
 	
 	mmidx = os.path.join(out_genome_assembly_path, 'Step2_mimimap_index.idx')
@@ -1633,7 +1728,26 @@ def tsd_search_init(gf, ml, mm, bh, appr):
 	global my_fa
 	tsd_mn = alignment_tsd_tir_finder(min_ok_length = ml, max_mismatch = mm, return_best_only = bh, best_hit_approach = appr)
 	my_fa = pyfastx.Fasta(gf)
+
+def conform_tsd_header(seqid, original_start, left_tsd_end, right_tsd_start, tsd_length):
+	#From the start of the HMM's region, extend 130 - the right index of the left TSD's relative location to the left
+	#start = original_start + left_tsd_end - 130
+	start = left_tsd_end - 130
+	#From the start of the HMM's region extend 70 + left index of the right TSD's relative location
+	#end   = original_start + right_tsd_start + 70
+	end   = right_tsd_start + 70
 	
+	#output_genome_sequence[seq_id][start:end]
+	
+	#what in the hell are these coordinates? 
+	#starts.append(hmm_start[t] - 30 + left_tsd_end)
+	#ends.append(hmm_start[t] - 30 + right_tsd_start)
+	
+	#header = '{}'.strip() + '|tsd_l:{}|tsd_s:{}|tsd_e:{}'.strip() + '\n'
+	header = f'>{seqid} |tsd_l:{tsd_length}|tsd_s:{start}|tsd_e:{end}'
+	
+	return start, end, header
+
 def parallel_tsd_search(args):
 	sequence, left_window, right_window = args
 	seq = my_fa[sequence]
@@ -1643,7 +1757,8 @@ def parallel_tsd_search(args):
 	r = seq[-right_window:]
 	#tsds = mn.operate(l, r, is_TIR = False)
 	tsds = tsd_mn.operate(l, r, is_TIR = False)
-		
+
+
 	if tsds is None:
 		tsd_found = False
 	else:
@@ -1655,31 +1770,36 @@ def parallel_tsd_search(args):
 			seq = seq[ls:-(right_window - rend)]
 		else:
 			seq = seq[ls:]
-			
+
 		name = name.split()
 		loc = name[2].split(':')
+		
 		og_start, og_end = int(loc[0]), int(loc[1])
 		name = ' '.join(name[0:2])
-		name = f'{name} {og_start+ls}:{og_end-(right_window - rend)}'
+		name = f'{name} {og_start+ls}:{og_end-(right_window - rend)} TSD-len={tsdl};TSD-score={tsdl-tsd_mm};TSD-mism={tsd_mm}'
 		
 	return tsd_found, name, seq
 	
 def main_function():
-	print('Please input the path of genomic sequence', flush=True) # print out message immediately
+	parser, args = options()
+	
+	work_dir=args.outdir
+	
 	input_pattern = args.mode
-	input_genome_assembly_path = args.input_filename
-	output_genome_assembly_path = args.output_filename
+	input_genome_assembly_path = args.genome
+	output_genome_assembly_path = args.outdir
+	organism_type = args.org_type
 	
 	if not os.path.exists(output_genome_assembly_path):
 	  os.makedirs(output_genome_assembly_path)
-	
+	ensure_path(output_genome_assembly_path)  
+
 	#This was literally just copying the genome in a way that's totally unnecessary
 	#input_genome_assembly_path = convert_ingenome(input_genome_assembly_path, output_genome_assembly_path)
 	
-	ensure_path(output_genome_assembly_path)
-	
 	pre=os.path.splitext(os.path.basename(input_genome_assembly_path))[0]
-
+	
+	#This is probably no longer needed with hyperSINEfinder
 	input_sine_finder = pre+'-matches.fasta'
 
 	input_hmm_e_value = args.hmmer_evalue
@@ -1690,8 +1810,6 @@ def main_function():
 	input_max_gap = args.gap
 	input_min_copy_number = args.copy_number
 	input_num_alignments=args.num_alignments
-	
-	input_animal=args.animal
 	
 	input_bound = args.boundary
 	input_figure = args.figure
@@ -1723,7 +1841,6 @@ def main_function():
 
 	if input_pattern == 1 or input_pattern == 3:
 	
-
 		has_tsds = f'{step_1_1_file}.hmm_contains_TSD.txt'
 		food_for_blast = f'{step_1_1_file}.hmm_blast_candidates.txt'
 		
@@ -1731,10 +1848,10 @@ def main_function():
 		if check_finished('Step1_process_hmm', [food_for_blast], at) or at:
 			t1=time.time()
 
-			if input_animal:
+			if organism_type == 'animal':
 				print('HMM search will proceed using animal HMMs.')
 				hmm_model_dir = os.path.join(os.path.dirname(os.path.abspath(script_dir)), 'hmm_animals')
-			else:
+			if organism_type == 'plant':
 				print('HMM search will proceed using plant HMMs')
 				hmm_model_dir = os.path.join(os.path.dirname(os.path.abspath(script_dir)), 'hmm_plants')
 	
@@ -1761,29 +1878,37 @@ def main_function():
 			t2=time.time()
 			print('Step 1 mode-1::process_hmm_output_3 uses ',t2-t1,' s',flush=True)
 			
+			exist_index =f'{step_1_1_file}.fxi'
+			if os.path.exists(exist_index):
+				os.remove(exist_index)
 			my_fa = pyfastx.Fasta(step_1_1_file, build_index = True)
 			seqs = list(range(len(my_fa.keys())))
 			tsd_args = [(s, 40, 40,) for s in seqs]
-			tsd_mn = alignment_tsd_tir_finder(min_ok_length = 5, max_mismatch = 2, return_best_only = True, best_hit_approach = 'closest')
+			#tsd_mn = alignment_tsd_tir_finder(min_ok_length = 5, max_mismatch = 2, return_best_only = True, best_hit_approach = 'closest')
 			
 			#We still need to keep the no-TSD sequences somewhere, and we need to adjust the sequence 
 			#location boundaries according to the TSD loci in the sequence headers
 			
 			#Apply TSD searcher to these outputs separately, here
 
+			#tsd_out = open(has_tsds, 'w')
 			tsd_out = open(has_tsds, 'w')
-			blast_out = open(food_for_blast, 'w')
+			#blast_out = open(food_for_blast, 'w')
 			with multiprocessing.Pool(cpus, initializer = tsd_search_init, initargs = (step_1_1_file, 5, 2, True, 'closest',)) as pool:
 				for has_tsd, name, seq in pool.map(parallel_tsd_search, tsd_args):
 					if has_tsd:
 						print(f'>{name}', file = tsd_out)
 						print(f'{seq}', file = tsd_out)
 					else:
-						print(f'>{name}', file = blast_out)
-						print(f'{seq}', file = blast_out)
+						pass
+						#print(f'>{name}', file = blast_out)
+						#print(f'{seq}', file = blast_out)
 			
-			#os.remove(step_1_1_file)
-			#os.remove(f'{step_1_1_file}.fxi')
+			tsd_out.close()
+			os.remove(step_1_1_file)
+			os.remove(f'{step_1_1_file}.fxi')
+			os.rename(has_tsds, step_1_1_file)
+			#pyfastx.Fasta(step_1_1_file, build_index = True)
 			#os.remove(finished_check)	
 			
 	
@@ -1802,10 +1927,6 @@ def main_function():
 
 	#Data prep ends here
 	
-	if stop_at_tsd_searcher:
-		print('AnnoSINE was instructed to stop at TSD searching results.')
-		print('This will break EDTA if used in that context; this option was meant as a developer aide and kept for its marginal utility.')
-		return None
 	
 	step11_ok = True
 	if os.path.exists(step_1_1_file):
@@ -1829,10 +1950,14 @@ def main_function():
 	step_1_complete_file = os.path.join(output_genome_assembly_path, 'Step1_extend_tsd_input.fa')
 	if check_finished('Step1_merge_part', [step_1_complete_file], at) or at:
 		t1=time.time()
-		merge_tsd_input(input_pattern, output_genome_assembly_path)
+		merge_tsd_input(input_pattern, output_genome_assembly_path, input_genome_assembly_path)
 		t2=time.time()
 		print('Step 1::merge_tsd_input uses ',t2-t1,' s',flush=True)
 		
+	if stop_at_tsd_searcher:
+		print('AnnoSINE was instructed to stop at TSD searching results.')
+		print('This will break EDTA if used in that context; this option was meant as a developer aide and kept for its marginal utility.')
+		return None
 		
 	t2=time.time()
 	print('Step 1 totally uses ',t2-start_time, ' s',flush=True)
@@ -1853,8 +1978,6 @@ def main_function():
 	print('Step 2 uses ',t2-t1,' s',flush=True)
 	print('\n======================== Step 2 has been done ========================\n\n', flush=True)
 	'''
-	
-
 
 	'''
 	I think the process blast output part is the rate limiting step, but memory use by minimap is also a concern

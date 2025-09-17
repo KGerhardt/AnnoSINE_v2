@@ -90,7 +90,8 @@ def run_hmmsearch(queries, targets, output, z, threads = 1):
 	total_chunks = len(args)
 	print(f'There are {total_chunks} chunks to process.')
 	
-	print(f'The search is arranged from slowest HMM models to fastest; progress will generally speed up as this step proceeds.')
+	print(f'The search is arranged from largest HMM models to smallest in order to maximize CPU efficiency')
+	print(f'Progress reporting will generally speed up as this step proceeds.')
 	
 	chunk_size = max([int(round(total_chunks/100)), 1])
 	processed_chunks = 0
