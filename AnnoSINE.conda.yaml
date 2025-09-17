@@ -17,12 +17,12 @@ dependencies:
   - cd-hit=4.8.1=h5b5514e_6
   - curl=7.83.1=h7bff187_0
   - entrez-direct=16.2=he881be0_1
-  - gettext=0.19.8.1=hf34092f_1004
+  - gettext
   - gmp=6.1.2=hf484d3e_1000
   - gnutls=3.5.19=h2a4e5f8_1
   - h5py=3.7.0=nompi_py37hc97082c_100
   - hdf5=1.12.1=nompi_h2386368_104
-  - hmmer=3.3.1=he1b5a44_0
+  - hmmer=3.4
   - icu=70.1=h27087fc_0
   - keyutils=1.6.1=h166bdaf_0
   - krb5=1.19.3=h3790be6_0
