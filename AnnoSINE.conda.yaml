@@ -100,5 +100,5 @@ dependencies:
     - pydivsufsort
     - pyhmmer
     - pyfastx
-    - polars=1.33.1
+    - polars==1.33.1
     - parasail
