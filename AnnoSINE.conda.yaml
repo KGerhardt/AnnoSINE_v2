@@ -26,31 +26,31 @@ dependencies:
   - icu=70.1=h27087fc_0
   - keyutils=1.6.1=h166bdaf_0
   - krb5=1.19.3=h3790be6_0
-  - libblas=3.9.0=15_linux64_openblas
-  - libcblas=3.9.0=15_linux64_openblas
-  - libcurl=7.83.1=h7bff187_0
-  - libedit=3.1.20191231=he28a2e2_2
-  - libev=4.33=h516909a_1
-  - libffi=3.4.4
-  - libgcc-ng=12.1.0=h8d9b700_16
-  - libgfortran-ng=12.1.0=h69a702a_16
-  - libgfortran5=12.1.0=hdcd56e2_16
-  - libgomp=12.1.0=h8d9b700_16
-  - libidn2=2.3.2=h7f98852_0
-  - liblapack=3.9.0=15_linux64_openblas
-  - libnghttp2=1.47.0=h727a467_0
-  - libnsl=2.0.0=h7f98852_0
-  - libopenblas=0.3.20=pthreads_h78a6416_0
-  - libssh2=1.10.0=ha56f1ee_2
-  - libstdcxx-ng=12.1.0=ha89aaad_16
-  - libunistring=0.9.10=h7f98852_0
-  - libuv=1.43.0=h7f98852_0
-  - libzlib=1.2.12=h166bdaf_1
-  - ncurses=6.3=h27087fc_1
-  - nettle=3.3=0
-  - nodejs=17.9.0=h96d913c_0
-  - openssl=1.1.1q=h166bdaf_0
-  - pcre=8.45=h9c3ff4c_0
+  - libblas
+  - libcblas
+  - libcurl
+  - libedit
+  - libev
+  - libffi
+  - libgcc-ng
+  - libgfortran-ng
+  - libgfortran5
+  - libgomp
+  - libidn2
+  - liblapack
+  - libnghttp2
+  - libnsl
+  - libopenblas
+  - libssh2
+  - libstdcxx-ng
+  - libunistring
+  - libuv
+  - libzlib
+  - ncurses
+  - nettle
+  - nodejs
+  - openssl
+  - pcre
   - perl=5.32.1=2_h7f98852_perl5
   - perl-archive-tar=2.40=pl5321hdfd78af_0
   - perl-carp=1.50=pl5321hd8ed1ab_0
