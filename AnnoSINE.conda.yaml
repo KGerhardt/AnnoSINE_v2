@@ -1,5 +1,6 @@
 name: AnnoSINE
 channels:
+  - anaconda
   - bioconda
   - conda-forge
   - defaults
