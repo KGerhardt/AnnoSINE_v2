@@ -81,7 +81,7 @@ dependencies:
   - trf=4.09.1=hec16e2b_2
   - wget=1.20.3=ha56f1ee_1
   - wheel=0.37.1=pyhd8ed1ab_0
-  - xz=5.2.5=h516909a_1
+  - xz
   - zlib
   - irf
   - seqtk
