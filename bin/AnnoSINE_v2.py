@@ -2064,7 +2064,8 @@ def main_function():
 	print('************************************************************************', flush=True)
 	print('************************** AnnoSINE COMPLETE! **************************', flush=True)
 	print('************************************************************************', flush=True)
-	os.system('rm '+input_genome_assembly_path)
+	#Oh, what a bad idea.
+	#os.system('rm '+input_genome_assembly_path)
 	
 	return None
 

@@ -9,6 +9,8 @@ import pyfastx
 
 import shutil
 
+
+
 #Fast numpy RLE	
 #https://stackoverflow.com/questions/1066758/find-length-of-sequences-of-identical-values-in-a-numpy-array-run-length-encodi
 def rle(ia):
@@ -169,6 +171,8 @@ def clean_blast_record(args):
 	
 	return file, updates
 
+
+#This is currently relic code to test if the parallel part was killing RAM use
 #Parallel processing for retrieval of many genome subsequences in little memory.
 def ref_sequences_to_partial_file(args):
 	#index, seqid, ref_genome, my_output, data = args
@@ -183,6 +187,8 @@ def ref_sequences_to_partial_file(args):
 		for row in data.iter_rows():
 			#Reference name goes unused
 			full_description, query_name, classifier, old_start, old_end, tsd_start, tsd_end, start_adjustment, end_adjustment, blast_hit_ct, record_length, reference_name_dupe = row
+			blast_start = 0
+			blast_end = 0
 			if start_adjustment is not None:
 				#I am not sure whether the end shift check is supposed to be with reference to the TSD start and end, or the blast alignment's full length.
 				#ok_start_shift is the same in either case - it is ok_end_shift that is in question
@@ -201,9 +207,6 @@ def ref_sequences_to_partial_file(args):
 					tsd_end = tsd_start + end_adjustment
 					blast_start = tsd_start
 					blast_end = tsd_end
-				else:
-					blast_start = 0
-					blast_end = 0
 				
 				#Sanity fixes
 				if tsd_end > seqlen:
@@ -273,17 +276,12 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 	#Spacing
 	print('')
 		
-	#Reference genome assemble
-	refgen = os.path.normpath(in_genome_assembly_path)
-	if not os.path.exists(f'{refgen}.fxi'):
-		#This process is pretty quick, a few sec/GB of reference genome
-		print('Indexing reference genome...')
-	ref = pyfastx.Fasta(refgen, build_index = True)
 	
 	#The TSD sequences to collect
 	sequences_to_update = os.path.join(output_directory, 'Step2_extend_blast_input_rename.fa')
 	#Collect update sequences
 	input_index = f'{sequences_to_update}.fxi'
+	
 	if os.path.exists(input_index):
 		os.remove(input_index)
 	print('Indexing TSD sequences...')
@@ -346,16 +344,78 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 	idx = 0
 	tsds_by_file = {}
 	sequence_retrieval = []
-	for refseq, data in descriptions.group_by('reference_sequence'):
-		refseq = refseq[0] #Polars encodes group by as tuples in case there are multiple cols used
-		output = os.path.join(output_directory, f'Step3_blast_process_output_chunk_{idx}.fa')
-		#index, seqid, ref_genome, data
-		next_arg = (idx, refseq, refgen, output, data, max_shift,)
-		tsds_by_file[idx] = len(data)
-		sequence_retrieval.append(next_arg)
-		idx += 1
-
+	
+	#Reference genome assembly
+	refgen = os.path.normpath(in_genome_assembly_path)
+	if not os.path.exists(f'{refgen}.fxi'):
+		#This process is pretty quick, a few sec/GB of reference genome
+		print('Indexing reference genome...')
+	
+	print('Loading reference genome...')
+	ref = pyfastx.Fasta(refgen, build_index = True)
+	ref_gen_dict = {}
+	rgl = {}
+	for seq in ref:
+		ref_gen_dict[seq.name] = seq.seq.upper()
+		rgl[seq.name] = len(ref_gen_dict[seq.name])
+	print('Complete!')
+	
+	print('')
+	print('Writing blast output sequences...')
 	final_output = os.path.join(output_directory, 'Step3_blast_process_output.fa')
+	with open(final_output, 'w') as outfile:
+		for refseq, data in descriptions.group_by('reference_sequence'):
+			refseq = refseq[0] #Polars encodes group by as tuples in case there are multiple cols used
+			
+			#index, seqid, ref_genome, my_output, data, max_shift = args
+			
+			seqlen = rgl[refseq]
+			
+			for row in data.iter_rows():
+				#Reference name goes unused
+				full_description, query_name, classifier, old_start, old_end, tsd_start, tsd_end, start_adjustment, end_adjustment, blast_hit_ct, record_length, reference_name_dupe = row
+				blast_start = 0
+				blast_end = 0
+				if start_adjustment is not None:
+					#I am not sure whether the end shift check is supposed to be with reference to the TSD start and end, or the blast alignment's full length.
+					#ok_start_shift is the same in either case - it is ok_end_shift that is in question
+					
+					#The new start location is within max_shift bp of the original start
+					ok_start_shift = start_adjustment < max_shift
+					#The new end location is within max_shift bp of the original end
+					
+					#This way is with respect to the original TSD boundary
+					#ok_end_shift = abs(tsd_end - (tsd_start + end_adjustment)) < max_shift
+					#This way is with respect to the record length
+					ok_end_shift = (record_length - end_adjustment) < max_shift
+									
+					if ok_start_shift and ok_end_shift:
+						tsd_start = tsd_start + start_adjustment
+						tsd_end = tsd_start + end_adjustment
+						blast_start = tsd_start
+						blast_end = tsd_end
+					
+					#Sanity fixes
+					if tsd_end > seqlen:
+						tsd_end = seqlen
+						
+				if blast_hit_ct is None:
+					blast_hit_ct = 0
+				if record_length is None:
+					record_length = 0
+					
+				printable_name = full_description.split()
+				prefix = '_'.join(printable_name[0].split('_')[:-1])
+				suffix = ' '.join(printable_name[1:])
+				printable_name = ' '.join([prefix, suffix])
+									
+				header = f'>{printable_name}|blast_s:{blast_start}|blast_e:{blast_end}|blast_count:{blast_hit_ct}|blast_l:{record_length}'
+				subseq = ref_gen_dict[refseq][tsd_start:tsd_end]
+				
+				print(header, file = outfile)
+				print(subseq, file = outfile)
+
+	'''
 	done_count = 0
 	print(f'Making sequence updates. {total_sequences_to_parse} reference genome sequences to process with {num_tsds} total subseqeunces to retrieve.')
 	#Process data chunks in parallel; load one contig from the reference genome per parallel process and slice it to each request
@@ -374,3 +434,4 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 				#User reports
 				print(f'{done_count} genome fragments of {total_sequences_to_parse} complete. {processed_tsds} sequences retrieved in this batch, {num_tsds} remain.')
 					
+	'''
