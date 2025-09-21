@@ -682,9 +682,9 @@ def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_ass
 		ksize = 8
 	
 	
-	mmidx = os.path.join(out_genome_assembly_path, 'Step2_mimimap_index.idx')
+	mmidx = os.path.join(out_genome_assembly_path, 'Step2_minimap_index.idx')
 	
-	comm = f'minimap2  -t {cpus} -k {ksize} -I 1G -d {mmidx} {in_genome_assembly_path}'
+	comm = f'minimap2  -t {cpus} -d {mmidx} {in_genome_assembly_path}'
 	comm = comm.split()
 	print('Creating minimap2 index...')
 	subprocess.run(comm, stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)

@@ -338,7 +338,7 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 					)
 	
 	#Usually the same as the number of contigs in the reference genome, but could possibly differ if no TSDs found in one contig.
-	total_sequences_to_parse = descriptions.select(pl.col('reference_sequence').n_unique()).item()
+	#total_sequences_to_parse = descriptions.select(pl.col('reference_sequence').n_unique()).item()
 	
 	#Prepare for parallel procesing
 	idx = 0

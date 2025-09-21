@@ -17,8 +17,8 @@ import sqlite3
 sys.setrecursionlimit(100000)  # Set the recursion limit to 30000, shujun
 parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
 parser.add_argument("input_filename", type=str)
-args = parser.parse_args()
-input_genome_assembly_path = args.input_filename
+#args = parser.parse_args()
+#input_genome_assembly_path = args.input_filename
 
 # Supplemental Data. Wenke et al. (2011) Plant Cell 10.1105/tpc.111.088682.
 
@@ -1466,4 +1466,4 @@ def main_func():
 #main_func()
 
 
-run_parallel('../TEtrimmer/try2/bTaeGut7v0.4_MT_rDNA.fa', 'test_parallel_sinefinder.txt', threads = 20)
+run_parallel(sys.argv[1], sys.argv[2], threads = 20)

@@ -80,6 +80,18 @@ class genomeSplitter:
 		
 		self.output_files = None
 		
+	def get_seqlens(self):
+		conn = sqlite3.connect(self.index)
+		curs = conn.cursor()
+		summary = curs.execute('SELECT chrom, slen FROM seq').fetchall()
+		curs.close()
+		conn.close()
+		self.seqs_and_lengths = {}
+		for row in summary:
+			seq_name = row[0]
+			seq_length = row[1]
+			self.seqs_and_lengths[seq_name] = seq_length
+		
 	#Create pyfastx index for the genome if it doesnt exist; load sequence lengths for planning.
 	def index_and_summarize(self):
 		if os.path.exists(self.index):
@@ -94,16 +106,8 @@ class genomeSplitter:
 			if not self.quiet:
 				print('Indexing complete.')
 		
-		conn = sqlite3.connect(self.index)
-		curs = conn.cursor()
-		summary = curs.execute('SELECT chrom, blen FROM seq').fetchall()
-		curs.close()
-		conn.close()
-		self.seqs_and_lengths = {}
-		for row in summary:
-			seq_name = row[0]
-			seq_length = row[1]
-			self.seqs_and_lengths[seq_name] = seq_length
+		self.get_seqlens()
+		
 		if not self.quiet:
 			print(f'Sequence summarized.')
 

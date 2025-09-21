@@ -336,7 +336,7 @@ class hyperSINEfinder:
 		#Sort by start location irrespective of pattern
 		hits_array = hits_array[hits_array[:,1].argsort()]
 		
-		np.savetxt('raw_hits.txt', hits_array, delimiter='\t', fmt = '%d')
+		#np.savetxt('raw_hits.txt', hits_array, delimiter='\t', fmt = '%d')
 		
 		#Break into forward and reverse hits; include polyAT in both
 		forward_hits = hits_array[hits_array[:, 0] < 3]
@@ -402,6 +402,7 @@ class hyperSINEfinder:
 		
 			#Assess whether this SINE candidate actually starts and ends with a TSD
 			tsds = self.tsd_checker.operate(tsd1, tsd2)
+			#print(tsds)
 			#If it does, the best hit is the first hit according to tsd_checker with options selected
 			if tsds is not None:
 				#tsd = (updates[0], updates[1], left_string_start, left_string_end, right_string_start, right_string_end, updates[2], updates[3]+updates[4], )
@@ -536,7 +537,6 @@ def jesus_give_me_a_SINE(genome_file, output = None, threads = 1):
 	
 	ok_procs = min([threads, len(ids)])
 	
-	
 	if output is None:
 		import io
 		out = io.StringIO('')
@@ -546,8 +546,8 @@ def jesus_give_me_a_SINE(genome_file, output = None, threads = 1):
 	with multiprocessing.Pool(ok_procs, initializer = initialize_sine_worker, initargs = (genome_file, )) as pool:
 		fwd = []
 		rev = []
-		for f, r, s in pool.map(worker, ids):				
-		#for f, r, s in pool.imap_unordered(worker, ids):				
+		#for f, r, s in pool.map(worker, ids):				
+		for f, r, s in pool.imap_unordered(worker, ids):				
 			if f is not None:
 				for rec in f:
 					print(rec, file = out)
@@ -560,8 +560,10 @@ def jesus_give_me_a_SINE(genome_file, output = None, threads = 1):
 
 	return output
 
-#f = '../TEtrimmer/try2/pyhmmer_vs_hmmer_test/bTaeGut7v0.4_MT_rDNA.fa'
-#jesus_give_me_a_SINE(f, 'example_zebrafinch_sines.txt', 10)
+
+jesus_give_me_a_SINE(sys.argv[1], sys.argv[2], 10)
+
+
 #oot = jesus_give_me_a_SINE(f, None, 10)
 
 #print(oot.getvalue())
