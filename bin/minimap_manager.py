@@ -131,7 +131,6 @@ class minimap_manager:
 								overwrite = False)
 								
 			gs.get_seqlens()
-		re.compile('')
 			seqlen_dict = gs.seqs_and_lengths
 			chunks = [os.path.join(rg_splits, f) for f in os.listdir(rg_splits) if f.endswith('minimap2.idx')]
 			
