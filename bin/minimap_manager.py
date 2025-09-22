@@ -147,11 +147,18 @@ class minimap_manager:
 		
 	def prepare_queries(self, query_group_size = 100):
 		query_splits = os.path.join(self.wd, 'minimap_wrangler', 'split_queries')
+		
 		self.prep_dir(query_splits)
-		pfx = f'pyfastx split {self.qs} -c {query_group_size} --out-dir {query_splits}'
-		pfx = pfx.split()
-		subprocess.run(pfx)
-		chunks = [os.path.join(query_splits, f) for f in os.listdir(query_splits)]
+		split_check = os.path.join(query_splits, 'pyfastx_split_complete.txt')
+		
+		if not os.path.exists(split_check):
+			pfx = f'pyfastx split {self.qs} -c {query_group_size} --out-dir {query_splits}'
+			pfx = pfx.split()
+			subprocess.run(pfx)
+			out = open(split_check, 'w')
+			out.close()
+
+		chunks = [os.path.join(query_splits, f) for f in os.listdir(query_splits) if f != 'pyfastx_split_complete.txt']
 		
 		return chunks
 		
