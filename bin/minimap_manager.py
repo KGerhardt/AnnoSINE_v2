@@ -200,8 +200,7 @@ class minimap_manager:
 		my_targets = pl.scan_csv(query_vs_target_alns,
 								has_header = False,
 								separator = "\t",
-								schema = self.paf_format,
-								missing_columns="insert")
+								schema = self.paf_format)
 		
 		#Extract the target sequence offset
 		my_targets = my_targets.with_columns(
@@ -233,7 +232,8 @@ class minimap_manager:
 		#Write output
 		my_targets.sink_csv(path = comb_out,
 							include_header = False,
-							separator = '\t')
+							separator = '\t',
+							missing_columns="insert")
 		
 		#Clean up partial alignments
 		for o in query_vs_target_alns:
