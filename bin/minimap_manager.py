@@ -9,6 +9,8 @@ import sqlite3
 
 from genomeSplitter import genomeSplitter
 
+import re
+
 '''
 #genomesplitter usage
 	mn = genomeSplitter(genome_file = genome_file, 
@@ -61,6 +63,9 @@ class minimap_manager:
 				'cg':pl.String, 
 				'extra':pl.String
 			}
+		
+		#chr1_179	301	2	114	-	chr17;;0	53461100	13048107	13048234	104	127	5	NM:i:23	ms:i:146	AS:i:130	nn:i:0	tp:A:P	cm:i:8	
+		#s1:i:42	s2:i:45	de:f:0.1034	rl:i:10	cg:Z:5M1D37M11D3M2D16M1D51M
 		
 	def prep_dir(self, directory):
 		if not os.path.exists(directory):
@@ -126,7 +131,7 @@ class minimap_manager:
 								overwrite = False)
 								
 			gs.get_seqlens()
-			
+		re.compile('')
 			seqlen_dict = gs.seqs_and_lengths
 			chunks = [os.path.join(rg_splits, f) for f in os.listdir(rg_splits) if f.endswith('minimap2.idx')]
 			
@@ -163,6 +168,20 @@ class minimap_manager:
 		command = f'minimap2 -c -t {thread_chunk} {target} -p 0.01 -N 10000 {query} -o {my_outfile}'
 		command = command.split()
 		subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+		
+		#Minimap has intolerably bad output formatting with no guarantee of even fixed number of fields in the same file
+		#So we have to clean its ouputs and ensure they are correctly formatted for later processing, shouldn't be a problem but absolutely is
+		s2_pattern = re.compile(r's2:i:\d+\t')
+		cleanup = f'{my_outfile}.clean'
+		with open(cleanup, 'w') as out:
+			with open(my_outfile, 'r') as inf:
+				for line in inf:
+					if 's2:i:' in line:
+						line = re.sub(s2_pattern, '', line)
+					out.write(line)
+					
+		os.remove(my_outfile)
+		os.rename(cleanup, my_outfile)
 		
 		return query, my_outfile
 		
