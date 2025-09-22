@@ -127,7 +127,8 @@ def parallel_process_chunk(chunk, chunk_idx, qc, output_dir):
 	return temp_file
 
 #def parallel_process_file(input_file, odir, chunk_size=100_000, max_lines=5_000_000, n_threads=5,tdir=''):
-def parallel_process_file(input_file, odir, chunk_size=100_000, max_lines=5_000_000, n_threads=5,tdir=''):
+#def parallel_process_file(input_file, odir, chunk_size=100_000, max_lines=5_000_000, n_threads=5,tdir=''):
+def parallel_process_file(input_files, odir, chunk_size=100_000, max_lines=5_000_000, n_threads=5,tdir=''):
 	qc = QualityCalculations()
 	if not tdir=='':
 		tdir=tdir+'/temd'
@@ -140,39 +141,41 @@ def parallel_process_file(input_file, odir, chunk_size=100_000, max_lines=5_000_
 		output_dir = tempfile.mkdtemp()
 	temp_files = []
 
+	chunk_idx = 0
+	futures = []
 	# Using ProcessPoolExecutor for parallel processing
 	with concurrent.futures.ProcessPoolExecutor(max_workers=n_threads) as executor:
-		futures = []
-		for chunk_idx, chunk in enumerate(pd.read_csv(
-			input_file,
-			engine='c',
-			sep="\t",
-			header=None,
-			on_bad_lines='skip',
-			names=[
-				"qname",
-				"qlen",
-				"qstart",
-				"qend",
-				"strand",
-				"tname",
-				"tlen",
-				"tstart",
-				"tend",
-				"nmatch",
-				"alen",
-				"mapq",
-				'NM', 'ms', 'AS', 'nn', 'tp', 'cm', 's1', 'de', 'rl', 'cg', 'extra',
-			],
-			dtype={'cg':'str', 'extra':'str'},
-			chunksize=chunk_size)
-			):
-			futures.append(executor.submit(parallel_process_chunk, chunk, chunk_idx, qc, output_dir))
+		for input_file in input_files:
+			for chunk in pd.read_csv(
+				input_file,
+				engine='c',
+				sep="\t",
+				header=None,
+				on_bad_lines='skip',
+				names=[
+					"qname",
+					"qlen",
+					"qstart",
+					"qend",
+					"strand",
+					"tname",
+					"tlen",
+					"tstart",
+					"tend",
+					"nmatch",
+					"alen",
+					"mapq",
+					'NM', 'ms', 'AS', 'nn', 'tp', 'cm', 's1', 'de', 'rl', 'cg', 'extra',
+				],
+				dtype={'cg':'str', 'extra':'str'},
+				chunksize=chunk_size):
+				futures.append(executor.submit(parallel_process_chunk, chunk, chunk_idx, qc, output_dir))
+				chunk_idx += 1
 
 		# Collecting the results (temp file paths)
 		for future in concurrent.futures.as_completed(futures):
 			temp_files.append(future.result())
-
+	
 	# Merging the temporary files to produce the final output in the same order as the input
 	part_num = 1  # Suffix for output files if they exceed max lines
 	line_count = 0  # Line counter

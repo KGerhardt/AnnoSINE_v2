@@ -561,7 +561,7 @@ def jesus_give_me_a_SINE(genome_file, output = None, threads = 1):
 	return output
 
 
-jesus_give_me_a_SINE(sys.argv[1], sys.argv[2], 10)
+#jesus_give_me_a_SINE(sys.argv[1], sys.argv[2], 10)
 
 
 #oot = jesus_give_me_a_SINE(f, None, 10)

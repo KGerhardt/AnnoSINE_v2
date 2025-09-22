@@ -267,7 +267,7 @@ class minimap_manager:
 		
 		
 def run_map(ref_genome, queries, output_dir, mmseqs_k, threads = 1):
-	mn = minimap_manager(g, q, w, k, t)
+	mn = minimap_manager(ref_genome, queries, output_dir, mmseqs_k, threads)
 	results = mn.run()
 	
 	return results

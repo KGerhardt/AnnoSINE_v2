@@ -49,8 +49,10 @@ def clean_blast_record(args):
 	#file, factor_copy, factor_length, min_copy_number, max_gap, max_shift = args
 	file, factor_copy, factor_length, min_copy_number, max_gap = args
 
-	df = pl.read_csv(file, has_header = False, separator = '\t', schema = blast_schema, columns = these_cols)
-	
+	#df = pl.read_csv(file, has_header = False, separator = '\t', schema = blast_schema, columns = these_cols)
+	df = pl.scan_csv(file, has_header = False, separator = '\t', schema = blast_schema)
+	df = df.select(['qname', 'tname', 'alen', 'qstart', 'qend']).collect()
+				
 	#Instead of trying to clean at the paf2blast outputs, we filter unique over hits here because these files are made to be contiguous
 
 	#BLAST is 1-indexed, fix this for python by subtracting 1 from all starts
@@ -232,11 +234,11 @@ def ref_sequences_to_partial_file(args):
 
 #The manager function of this script
 def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_copy = 0.15, factor_length= 0.3, min_copy_number = 1, max_gap = 10, max_shift = 50, threads = 1):
-	
 	changes_file = os.path.join(output_directory, 'Step3_tsd_update_ledger.txt')
 	completion_marker = os.path.join(output_directory, 'Step3_blast_processing_log.txt')
 	
-	input_files = [f for f in os.listdir(output_directory) if 'Step3_blast_output.out_part' in f and not f.endswith('.fa')]
+	#input_files = [f for f in os.listdir(output_directory) if 'Step3_blast_output.out_part' in f and not f.endswith('.fa')]
+	input_files = [f for f in os.listdir(output_directory) if 'alignments.out_part' in f and not f.endswith('.fa')]
 	completed_files = []
 	
 	#Check previously processed blast inputs
@@ -255,11 +257,13 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 		print('Processing BLAST outputs for changes to TSDs')
 		
 		#commands = [(os.path.join(output_directory, file), factor_copy, factor_length, min_copy_number, max_gap, max_shift) for file in input_files]
-		commands = [(os.path.join(output_directory, file), factor_copy, factor_length, min_copy_number, max_gap) for file in input_files]
+		commands = [(os.path.join(output_directory, file), factor_copy, factor_length, min_copy_number, max_gap, ) for file in input_files]
 		remaining_chunks = len(commands)
 		
 		print(f'{remaining_chunks} BLAST chunks left to process.')
 		
+		
+		#For some reason I cannot ascertain, the polars read_csv just isn't working
 		log = open(completion_marker, 'a')
 		with open(changes_file, 'w') as out:
 			with multiprocessing.Pool(threads) as pool:
@@ -276,7 +280,6 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 	#Spacing
 	print('')
 		
-	
 	#The TSD sequences to collect
 	sequences_to_update = os.path.join(output_directory, 'Step2_extend_blast_input_rename.fa')
 	#Collect update sequences
@@ -359,16 +362,14 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 		ref_gen_dict[seq.name] = seq.seq.upper()
 		rgl[seq.name] = len(ref_gen_dict[seq.name])
 	print('Complete!')
-	
+		
 	print('')
 	print('Writing blast output sequences...')
 	final_output = os.path.join(output_directory, 'Step3_blast_process_output.fa')
 	with open(final_output, 'w') as outfile:
 		for refseq, data in descriptions.group_by('reference_sequence'):
 			refseq = refseq[0] #Polars encodes group by as tuples in case there are multiple cols used
-			
-			#index, seqid, ref_genome, my_output, data, max_shift = args
-			
+						
 			seqlen = rgl[refseq]
 			
 			for row in data.iter_rows():
@@ -415,6 +416,7 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 				print(header, file = outfile)
 				print(subseq, file = outfile)
 
+	print('Complete!')
 	'''
 	done_count = 0
 	print(f'Making sequence updates. {total_sequences_to_parse} reference genome sequences to process with {num_tsds} total subseqeunces to retrieve.')
@@ -435,3 +437,19 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 				print(f'{done_count} genome fragments of {total_sequences_to_parse} complete. {processed_tsds} sequences retrieved in this batch, {num_tsds} remain.')
 					
 	'''
+	
+	
+def main():
+	od, asm, fc, fl, mc, mg, ms, thds = sys.argv[1:]
+	fc = float(fc)
+	fl = float(fl)
+	mc = int(mc)
+	mg = int(mg)
+	ms = int(ms)
+	thds = int(thds)
+	
+	get_updates_from_blasts(od, asm, factor_copy = fc, factor_length = fl, min_copy_number = mc, max_gap = mg, max_shift = ms, threads = thds)
+
+if __name__ == "__main__":
+	main()
+	

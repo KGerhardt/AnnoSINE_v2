@@ -24,7 +24,11 @@ import pyfastx
 import sqlite3
 import shutil
 #from genomeSplitter import genomeSplitter
-from process_blast_output_polars import get_updates_from_blasts
+#from process_blast_output_polars import get_updates_from_blasts
+
+#from ext import extrun
+
+from minimap_manager import run_map
 #from pyhmmer_runner import process_pyhmmer, hmm_output_cleaner
 #from pyhmmer_runner import process_pyhmmer
 #from annosine_tsd_searcher import tsd_searcher
@@ -412,7 +416,8 @@ def merge_tsd_input(pattern, out_genome_assembly_path, in_genome_assembly_path):
 				extended_sequence = genref[seqid][l:r].upper()
 				extended_sequence = re.sub(character_cleaner, 'N', extended_sequence)
 				print(extended_sequence, file = out)
-
+	
+	
 
 #Relic
 def old_merge_tsd_input(pattern, out_genome_assembly_path):
@@ -1982,15 +1987,49 @@ def main_function():
 	'''
 	I think the process blast output part is the rate limiting step, but memory use by minimap is also a concern
 	'''
+	
+	
+	blast_inputs = os.path.join(output_genome_assembly_path, 'Step2_extend_blast_input_rename.fa')
+	
 	print('================ Step 3: MSA implementation has begun ================', flush=True)
 	t1=time.time()
-	if check_finished('Step3_MSA', [output_genome_assembly_path+'/Step3_blast_output.out_part1'], at) or at:
-		multiple_sequence_alignment(input_blast_e_value, input_genome_assembly_path, output_genome_assembly_path,cpus,input_num_alignments, input_temd)
+	if check_finished('Step3_MSA', [os.path.join(output_genome_assembly_path, 'Step3_blast_output.out_part1')], at) or at:
+		is_big_file = is_file_size_exceeded(blast_inputs, 10)
+		if is_big_file:
+			ksize = 10
+		else:
+			ksize = 8
+		
+		partial_alignments = run_map(input_genome_assembly_path,
+									blast_inputs,
+									output_genome_assembly_path,
+									ksize,
+									cpus)
+		
+		chunk_size=100_000 #Read inputs 500k lines at a time using pandas
+		max_lines = 5_000_000 #~500 MB output file size
+
+		#Directly call the python behavior instead of calling by system
+		parallel_process_file(partial_alignments, output_genome_assembly_path, chunk_size, max_lines, cpus, input_temd)
+
+		#multiple_sequence_alignment(input_blast_e_value, input_genome_assembly_path, output_genome_assembly_path,cpus,input_num_alignments, input_temd)
+		
 		
 	if check_finished('Step3_process_MSA', [output_genome_assembly_path+'/Step3_blast_process_output.fa'], at) or at:
 		#New code for faster, lower memory chunk processing
-		get_updates_from_blasts(output_genome_assembly_path, input_genome_assembly_path, factor_copy = input_factor_copy_number, factor_length = input_factor_length, 
-								min_copy_number = input_min_copy_number, max_gap = input_max_gap, max_shift = input_max_shift, threads = int(cpus))
+		
+
+		#get_updates_from_blasts('output_newopts', 'AnnoSINE_v2/Testing/A.thaliana_Chr4.fasta', factor_copy = 0.15, factor_length = 0.3, 
+		#min_copy_number = 1, max_gap = 10, max_shift = 50, threads = 12)
+		
+		#I don't know why this is hanging when called from within the annosine script but not when it gets called any other way
+		#Do I really need to go back to os.system? Ew
+		#get_updates_from_blasts(output_genome_assembly_path, input_genome_assembly_path, factor_copy = input_factor_copy_number, factor_length = input_factor_length, 
+		#						min_copy_number = input_min_copy_number, max_gap = input_max_gap, max_shift = input_max_shift, threads = cpus)
+		
+		blast_process_script = os.path.join(os.path.dirname(os.path.abspath(script_dir)), 'bin', 'process_blast_output_polars.py')
+		os.system(f'python3 {blast_process_script} {output_genome_assembly_path} {input_genome_assembly_path} {input_factor_copy_number} \
+		{input_factor_length} {input_min_copy_number} {input_max_gap} {input_max_shift} {cpus}')
 		
 	if check_finished('Step3_process_MSA_p2',[output_genome_assembly_path+'/Step4_rna_input.fasta'],at) or at:
 		process_blast_output_2(output_genome_assembly_path)
