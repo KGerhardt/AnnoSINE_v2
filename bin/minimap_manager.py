@@ -60,7 +60,8 @@ class minimap_manager:
 				's1':pl.String, 
 				'de':pl.String, 
 				'rl':pl.String, 
-				'cg':pl.String
+				'cg':pl.String, 
+				'extra':pl.String
 			}
 		
 		#chr1_179	301	2	114	-	chr17;;0	53461100	13048107	13048234	104	127	5	NM:i:23	ms:i:146	AS:i:130	nn:i:0	tp:A:P	cm:i:8	
@@ -232,7 +233,7 @@ class minimap_manager:
 		#Write output
 		my_targets.sink_csv(path = comb_out,
 							include_header = False,
-							separator = '\t')
+							separator = '\t',)
 		
 		#Clean up partial alignments
 		for o in query_vs_target_alns:
