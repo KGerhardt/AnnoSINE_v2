@@ -178,6 +178,7 @@ class minimap_manager:
 		#Minimap has intolerably bad output formatting with no guarantee of even fixed number of fields in the same file
 		#So we have to clean its ouputs and ensure they are correctly formatted for later processing, shouldn't be a problem but absolutely is
 		s2_pattern = re.compile(r's2:i:\d+\t')
+		zd_pattern = re.compile(f'zd:i:\d+\t')
 		cleanup = f'{my_outfile}.clean'
 		with open(cleanup, 'w') as out:
 			with open(my_outfile, 'r') as inf:
@@ -185,6 +186,9 @@ class minimap_manager:
 					line = line.strip()
 					if 's2:i:' in line:
 						line = re.sub(s2_pattern, '', line)
+					if 'zd:i:' in line:
+						line = re.sub(zd_pattern, '', line)
+					
 					print(line, file = out)
 					
 		os.remove(my_outfile)
@@ -233,7 +237,7 @@ class minimap_manager:
 		#Write output
 		my_targets.sink_csv(path = comb_out,
 							include_header = False,
-							separator = '\t',)
+							separator = '\t')
 		
 		#Clean up partial alignments
 		for o in query_vs_target_alns:
