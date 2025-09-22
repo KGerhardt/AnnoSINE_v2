@@ -200,7 +200,8 @@ class minimap_manager:
 		my_targets = pl.scan_csv(query_vs_target_alns,
 								has_header = False,
 								separator = "\t",
-								schema = self.paf_format)
+								schema = self.paf_format,
+								missing_columns="insert")
 		
 		#Extract the target sequence offset
 		my_targets = my_targets.with_columns(
