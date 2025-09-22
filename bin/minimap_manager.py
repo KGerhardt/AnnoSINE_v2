@@ -60,8 +60,7 @@ class minimap_manager:
 				's1':pl.String, 
 				'de':pl.String, 
 				'rl':pl.String, 
-				'cg':pl.String, 
-				'extra':pl.String
+				'cg':pl.String
 			}
 		
 		#chr1_179	301	2	114	-	chr17;;0	53461100	13048107	13048234	104	127	5	NM:i:23	ms:i:146	AS:i:130	nn:i:0	tp:A:P	cm:i:8	
@@ -182,9 +181,10 @@ class minimap_manager:
 		with open(cleanup, 'w') as out:
 			with open(my_outfile, 'r') as inf:
 				for line in inf:
+					line = line.strip()
 					if 's2:i:' in line:
 						line = re.sub(s2_pattern, '', line)
-					out.write(line)
+					print(line, file = out)
 					
 		os.remove(my_outfile)
 		os.rename(cleanup, my_outfile)
@@ -232,8 +232,7 @@ class minimap_manager:
 		#Write output
 		my_targets.sink_csv(path = comb_out,
 							include_header = False,
-							separator = '\t',
-							missing_columns="insert")
+							separator = '\t')
 		
 		#Clean up partial alignments
 		for o in query_vs_target_alns:
