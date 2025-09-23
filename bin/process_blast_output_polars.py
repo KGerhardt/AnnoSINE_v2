@@ -30,6 +30,8 @@ def rle(ia):
 #the equivalent to the original AnnoSINE_v2's process_blast_output_1 function
 #The core behavior of this script
 def clean_blast_record(args):
+	file, factor_copy, factor_length, min_copy_number, max_gap = args
+
 	#Define file format for the reader
 	blast_schema = {"qname":pl.String,
 				"tname":pl.String,
@@ -46,8 +48,7 @@ def clean_blast_record(args):
 
 	these_cols = [0, 1, 3, 6, 7]
 
-	#file, factor_copy, factor_length, min_copy_number, max_gap, max_shift = args
-	file, factor_copy, factor_length, min_copy_number, max_gap = args
+\
 
 	#df = pl.read_csv(file, has_header = False, separator = '\t', schema = blast_schema, columns = these_cols)
 	df = pl.scan_csv(file, has_header = False, separator = '\t', schema = blast_schema)
@@ -237,8 +238,10 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 	changes_file = os.path.join(output_directory, 'Step3_tsd_update_ledger.txt')
 	completion_marker = os.path.join(output_directory, 'Step3_blast_processing_log.txt')
 	
+	blast_results_dir = os.path.join(output_directory, 'minimap_wrangler', 'partial_alignment_results')
+	
 	#input_files = [f for f in os.listdir(output_directory) if 'Step3_blast_output.out_part' in f and not f.endswith('.fa')]
-	input_files = [f for f in os.listdir(output_directory) if 'alignments.out_part' in f and not f.endswith('.fa')]
+	input_files = [f for f in os.listdir(blast_results_dir)]
 	completed_files = []
 	
 	#Check previously processed blast inputs
@@ -257,11 +260,11 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 		print('Processing BLAST outputs for changes to TSDs')
 		
 		#commands = [(os.path.join(output_directory, file), factor_copy, factor_length, min_copy_number, max_gap, max_shift) for file in input_files]
-		commands = [(os.path.join(output_directory, file), factor_copy, factor_length, min_copy_number, max_gap, ) for file in input_files]
+		#commands = [(os.path.join(output_directory, file), factor_copy, factor_length, min_copy_number, max_gap, ) for file in input_files]
+		commands = [(os.path.join(blast_results_dir, file), factor_copy, factor_length, min_copy_number, max_gap, ) for file in input_files]
 		remaining_chunks = len(commands)
 		
 		print(f'{remaining_chunks} BLAST chunks left to process.')
-		
 		
 		#For some reason I cannot ascertain, the polars read_csv just isn't working
 		log = open(completion_marker, 'a')

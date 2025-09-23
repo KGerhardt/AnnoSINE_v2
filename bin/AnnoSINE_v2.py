@@ -1993,7 +1993,8 @@ def main_function():
 	
 	print('================ Step 3: MSA implementation has begun ================', flush=True)
 	t1=time.time()
-	if check_finished('Step3_MSA', [os.path.join(output_genome_assembly_path, 'Step3_blast_output.out_part1')], at) or at:
+	alignment_completion_marker = os.path.join(output_genome_assembly_path, 'alignment_complete.txt')
+	if check_finished('Step3_MSA', [alignment_completion_marker], at) or at:
 		is_big_file = is_file_size_exceeded(blast_inputs, 10)
 		if is_big_file:
 			ksize = 10
@@ -2005,14 +2006,21 @@ def main_function():
 									output_genome_assembly_path,
 									ksize,
 									cpus)
+									
+		out = open(alignment_completion_marker, 'w')
+		out.close()
+		#########################
+		#All blast conversion and stuff is now handled in the run_map function!
+		#########################
 		
-		chunk_size=100_000 #Read inputs 500k lines at a time using pandas
-		max_lines = 5_000_000 #~500 MB output file size
+		#chunk_size=100_000 #Read inputs 500k lines at a time using pandas
+		#max_lines = 5_000_000 #~500 MB output file size
 
 		#Directly call the python behavior instead of calling by system
-		parallel_process_file(partial_alignments, output_genome_assembly_path, chunk_size, max_lines, cpus, input_temd)
+		#parallel_process_file(partial_alignments, output_genome_assembly_path, chunk_size, max_lines, cpus, input_temd)
 
 		#multiple_sequence_alignment(input_blast_e_value, input_genome_assembly_path, output_genome_assembly_path,cpus,input_num_alignments, input_temd)
+		
 		
 		
 	if check_finished('Step3_process_MSA', [output_genome_assembly_path+'/Step3_blast_process_output.fa'], at) or at:
@@ -2030,7 +2038,7 @@ def main_function():
 		blast_process_script = os.path.join(os.path.dirname(os.path.abspath(script_dir)), 'bin', 'process_blast_output_polars.py')
 		os.system(f'python3 {blast_process_script} {output_genome_assembly_path} {input_genome_assembly_path} {input_factor_copy_number} \
 		{input_factor_length} {input_min_copy_number} {input_max_gap} {input_max_shift} {cpus}')
-		
+
 	if check_finished('Step3_process_MSA_p2',[output_genome_assembly_path+'/Step4_rna_input.fasta'],at) or at:
 		process_blast_output_2(output_genome_assembly_path)
 	

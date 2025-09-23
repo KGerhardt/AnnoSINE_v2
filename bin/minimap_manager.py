@@ -9,6 +9,9 @@ import sqlite3
 
 from genomeSplitter import genomeSplitter
 
+from paf2_blast_stream import process_file
+
+
 import re
 
 '''
@@ -62,6 +65,21 @@ class minimap_manager:
 				'rl':pl.String, 
 				'cg':pl.String, 
 				'extra':pl.String
+			}
+			
+		self.blast_format = {
+			"qname":pl.String,
+			"tname":pl.String,
+			"percent_ident":pl.Float32,
+			"alen":pl.Int32,
+			"nonmatch":pl.Int32,
+			"gap_openings":pl.Int32,
+			"qstart":pl.Int32,
+			"qend":pl.Int32,
+			"tstart":pl.Int64,
+			"tend":pl.Int64,
+			"evalue":pl.Float32,
+			"bitscore":pl.Float32
 			}
 		
 		#chr1_179	301	2	114	-	chr17;;0	53461100	13048107	13048234	104	127	5	NM:i:23	ms:i:146	AS:i:130	nn:i:0	tp:A:P	cm:i:8	
@@ -169,34 +187,24 @@ class minimap_manager:
 		qname = os.path.basename(query)
 		tname = os.path.basename(target)
 		
-		print(f'Searching {qname} vs {tname}')
+		#Run alignment
+		#print(f'Searching {qname} vs {tname}')
 		my_outfile = os.path.join(working_outputs, f'{qname}_vs_{tname}.paf')
 		command = f'minimap2 -c -t {thread_chunk} {target} -p 0.01 -N 10000 {query} -o {my_outfile}'
 		command = command.split()
 		subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 		
-		#Minimap has intolerably bad output formatting with no guarantee of even fixed number of fields in the same file
-		#So we have to clean its ouputs and ensure they are correctly formatted for later processing, shouldn't be a problem but absolutely is
-		#s2_pattern = re.compile(r's2:i:\d+\t')
-		#zd_pattern = re.compile(f'zd:i:\d+\t')
-		cleanup = f'{my_outfile}.clean'
-		with open(cleanup, 'w') as out:
-			with open(my_outfile, 'r') as inf:
-				for line in inf:
-					segs = line.strip().split('\t')
-					#if 's2:i:' in line:
-					#	line = re.sub(s2_pattern, '', line)
-					#if 'zd:i:' in line:
-					#	line = re.sub(zd_pattern, '', line)
-					
-					if len(segs) == 22:
-						print(line, file = out)
-					
+		#Convert minimap to BLAST format
+		blast_out = f'{my_outfile}.blast'
+		#print(f'Converting {my_outfile} to blast')
+		process_file(my_outfile, blast_out)
+		
+		#Remove minimap aln
 		os.remove(my_outfile)
-		os.rename(cleanup, my_outfile)
+
+		return query, blast_out
 		
-		return query, my_outfile
-		
+	#Old function for polars - formatting errors made this very messy
 	def merge_query_chunks(self, query_file, query_vs_target_alns):
 		qname = os.path.basename(query_file)
 		comb_out = os.path.join(working_outputs, f'{qname}_alignments.paf')
@@ -246,6 +254,36 @@ class minimap_manager:
 			
 		return comb_out
 			
+	#Post-blast conversion
+	def merge_query_chunks_blast(self, query_file, query_vs_target_alns):
+		qname = os.path.basename(query_file)
+		comb_out = os.path.join(working_outputs, f'{qname}_alignments.blast.txt')
+		#Concat + sort PAF with polars
+		
+		#Target length will always be wrong for long chromosomes > 500 milion bp, but that's OK we don't use it those
+		my_targets = pl.scan_csv(query_vs_target_alns,
+								has_header = False,
+								separator = "\t",
+								schema = self.blast_format)
+		
+		#Sort results
+		my_targets = my_targets.sort(by = ['qname', 'tname', 'tstart'])
+
+		#Deduplicate rows that appeared in overlap
+		my_targets = my_targets.unique(subset=['qname', 'tname', 'tstart'], maintain_order=True)
+
+		#Write output
+		my_targets.sink_csv(path = comb_out,
+							include_header = False,
+							separator = '\t')
+		
+		#Clean up partial alignments
+		for o in query_vs_target_alns:
+			os.remove(o)
+			
+		return comb_out
+			
+			
 	def run(self):
 		thread_group_size = 4
 		
@@ -287,7 +325,7 @@ class minimap_manager:
 				query_record[qname].append(partial_out)
 				if len(query_record[qname]) == num_targets:
 					print(f'Merging partial results for {qname}')
-					output = self.merge_query_chunks(qname, query_record[qname])
+					output = self.merge_query_chunks_blast(qname, query_record[qname])
 					removed = query_record.pop(qname)
 					removed = None
 					final_results.append(output)
@@ -295,7 +333,6 @@ class minimap_manager:
 		final_results.sort()
 					
 		return final_results
-		
 		
 def run_map(ref_genome, queries, output_dir, mmseqs_k, threads = 1):
 	mn = minimap_manager(ref_genome, queries, output_dir, mmseqs_k, threads)
