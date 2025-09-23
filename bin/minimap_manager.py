@@ -170,9 +170,27 @@ class minimap_manager:
 		split_check = os.path.join(query_splits, 'pyfastx_split_complete.txt')
 		
 		if not os.path.exists(split_check):
-			pfx = f'pyfastx split {self.qs} -c {query_group_size} --out-dir {query_splits}'
-			pfx = pfx.split()
-			subprocess.run(pfx)
+			query_base = os.path.basename(self.qs)
+			split_index = 1
+			counter = 0
+			with open(self.qs) as inf:
+				dat = inf.read()
+				
+			dat = dat.split('>')
+			name = os.path.join(query_splits, f'{query_base}.{split_index}.fa')
+			out = open(name, 'w')
+			for record in dat:
+				out.write(f'>{record}')
+				counter += 1
+				if counter == query_group_size:
+					counter = 0
+					out.close()
+					split_index += 1
+					name = os.path.join(query_splits, f'{query_base}.{split_index}.fa')
+					out = open(name, 'w')
+					
+			out.close()
+
 			out = open(split_check, 'w')
 			out.close()
 
@@ -307,7 +325,7 @@ class minimap_manager:
 		#Get queries split into groups of some size
 		#How many files could this be? Potentially thousands, which isn't good
 		#Is there a good way too split out a few at a time?
-		queries = self.prepare_queries(50)
+		queries = self.prepare_queries(100)
 		query_record = {}
 		for q in queries:
 			query_record[q] = []
