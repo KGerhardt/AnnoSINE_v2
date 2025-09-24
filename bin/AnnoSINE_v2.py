@@ -541,7 +541,7 @@ def multiple_sequence_alignment(e_value, in_genome_assembly_path, out_genome_ass
 	#Directly call the python behavior instead of calling by system
 	parallel_process_file(output_paf, out_genome_assembly_path, chunk_size, max_lines, cpus, input_temd)
 	
-
+	
 
 
 '''
@@ -1059,17 +1059,21 @@ def process_blast_output_2(out_genome_assembly_path):
 					f2.write(line)
 
 #Updated style, filepath building, removed os system calls
-def tandem_repeat_finder(uid, out_genome_assembly_path):
-	input_file = os.path.join(uid, 'Step4_rna_output.fasta')
+#Updated the code to directly call from within the output directory; this eliminates the need to specify the output or do any silly input copying/movement.
+def tandem_repeat_finder(out_genome_assembly_path):
+	#input_file = os.path.join(uid, 'Step4_rna_output.fasta')
+	input_file = 'Step4_rna_output.fasta'
 	output_filebase = 'Step4_rna_output.fasta.2.5.7.80.10.10.2000.dat'
 	path=os.getcwd()
 	output_file = os.path.join(os.getcwd(), output_filebase)
 	moved_file = os.path.join(out_genome_assembly_path, output_filebase)
 	command = f'trf {input_file} 2 5 7 80 10 10 2000 -d -h -l 6'
 	command = command.split()
-	subprocess.run(command, stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-	if os.path.exists(output_file):
-		shutil.move(output_file, moved_file)
+	subprocess.run(command, stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL, cwd = out_genome_assembly_path)
+	#print(command)
+	#proc = subprocess.Popen(command, stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL, cwd = out_genome_assembly_path)
+	#if os.path.exists(output_file):
+	#	shutil.move(output_file, moved_file)
 
 
 
@@ -1562,10 +1566,11 @@ def main_function():
 	if input_pattern == 1 or input_pattern == 3:
 	
 		has_tsds = f'{step_1_1_file}.hmm_contains_TSD.txt'
-		food_for_blast = f'{step_1_1_file}.hmm_blast_candidates.txt'
+		#food_for_blast = f'{step_1_1_file}.hmm_blast_candidates.txt'
+		finished_check = os.path.join(output_genome_assembly_path, 'hmmsearch_complete.txt')
 		
 		print('================ HMMER prediction has begun ==================', flush=True)
-		if check_finished('Step1_process_hmm', [food_for_blast], at) or at:
+		if not os.path.exists(finished_check) or at:
 			t1=time.time()
 
 			if organism_type == 'animal':
@@ -1576,7 +1581,7 @@ def main_function():
 				hmm_model_dir = os.path.join(os.path.dirname(os.path.abspath(script_dir)), 'hmm_plants')
 	
 			hmmsearch_output = os.path.join(output_genome_assembly_path, 'Step1_HMMsearch_results.txt')
-			finished_check = os.path.join(output_genome_assembly_path, 'hmmsearch_complete.txt')
+			
 			
 			if not os.path.exists(finished_check):
 				#process_pyhmmer(input_genome_assembly_path, hmm_model_dir, hmmsearch_output, threads = cpus)
@@ -1613,7 +1618,6 @@ def main_function():
 
 			#tsd_out = open(has_tsds, 'w')
 			tsd_out = open(has_tsds, 'w')
-			#blast_out = open(food_for_blast, 'w')
 			with multiprocessing.Pool(cpus, initializer = tsd_search_init, initargs = (step_1_1_file, 5, 2, True, 'closest',)) as pool:
 				for has_tsd, name, seq in pool.map(parallel_tsd_search, tsd_args):
 					if has_tsd:
@@ -1628,6 +1632,8 @@ def main_function():
 			os.remove(step_1_1_file)
 			os.remove(f'{step_1_1_file}.fxi')
 			os.rename(has_tsds, step_1_1_file)
+			out = open(finished_check, 'w')
+			out.close()
 			#pyfastx.Fasta(step_1_1_file, build_index = True)
 			#os.remove(finished_check)	
 			
@@ -1641,13 +1647,7 @@ def main_function():
 			t2=time.time()
 			print('Step 1 mode-2::sine_finder uses ',t2-t1,' s',flush=True)
 			t1=time.time()
-			#process_sine_finder(input_genome_assembly_path, input_sine_finder, output_genome_assembly_path, input_pattern)
-			#t2=time.time()
-			#print('Step 1 mode-2::process_sine_finder uses ',t2-t1,' s',flush=True)
 
-	#Data prep ends here
-	
-	
 	step11_ok = True
 	if os.path.exists(step_1_1_file):
 		if os.path.getsize(step_1_1_file) == 0:
@@ -1755,19 +1755,23 @@ def main_function():
 	print('Step 4 uses ',t2-t1,' s',flush=True)
 	print('\n========================= Step 4 has been done =======================\n\n', flush=True)
 	
-	uid=uuid.uuid1().hex 
-	if not os.path.exists(uid):
-		os.makedirs(uid)
-	os.system('cp '+output_genome_assembly_path+'/Step4_rna_output.fasta '+uid)
+	#uid=uuid.uuid1().hex 
+	#if not os.path.exists(uid):
+	#	os.makedirs(uid)
+	#os.system('cp '+output_genome_assembly_path+'/Step4_rna_output.fasta '+uid)
+	
 	print('=============== Step 5: Tandem repeat finder has begun ===============', flush=True)
 	t1=time.time()
-	if check_finished('Step5_trf',[work_dir+'/Step4_rna_output.fasta.2.5.7.80.10.10.2000.dat'],at) or at:
-		tandem_repeat_finder(uid, output_genome_assembly_path)
+	if check_finished('Step5_trf',[output_genome_assembly_path+'/Step4_rna_output.fasta.2.5.7.80.10.10.2000.dat'],at) or at:
+		tandem_repeat_finder(output_genome_assembly_path)
+	
 	if check_finished('Step5_process_trf',[output_genome_assembly_path+'/Step5_trf_output.fasta'],at) or at:
 		process_trf(0.5, output_genome_assembly_path, work_dir)
+		
 	t2=time.time()
 	print('Step 5 uses ',t2-t1,' s',flush=True)
-	shutil.rmtree(uid)
+	#shutil.rmtree(uid)
+	
 	print('\n======================== Step 5 has been done ========================\n\n', flush=True)
 
 	print('=============== Step 6: Inverted repeat finder has begun =============', flush=True)
