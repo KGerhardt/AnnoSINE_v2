@@ -1169,16 +1169,17 @@ def extend_seq(in_genome_assembly_path, out_genome_assembly_path):
 	save_to_fna(filename_2, seq, title)
 
 
-def inverted_repeat_finder(out_genome_assembly_path, irf_path):
-	path = os.path.split(os.path.abspath(__file__))[0]
-	if irf_path=='': 
-		irf_path=path+'/irf308.linux.exe'
-
-	os.system(irf_path +' '+ out_genome_assembly_path +'/Step6_irf_input.fasta ' #shujun
-		'2 3 5 80 10 20 500000 10000 -d -h -t4 74 -t5 493 -t7 10000')
-
-	if os.path.exists('Step6_irf_input.fasta.2.3.5.80.10.20.500000.10000.dat'):
-		os.system('mv Step6_irf_input.fasta.2.3.5.80.10.20.500000.10000.dat '+ out_genome_assembly_path)
+def inverted_repeat_finder(out_genome_assembly_path, script_dir):
+	irf_path= os.path.join(script_dir, 'irf308.linux.exe')
+	irf_input = 'Step6_irf_input.fasta'
+	irf_command = f'{irf_path} {irf_input} 2 3 5 80 10 20 500000 10000 -d -h -t4 74 -t5 493 -t7 10000'
+	irf_command = irf_command.split()
+	#run from within the directory
+	subprocess.run(irf_command, stdout=subprocess.DEVNULL, stderr = subprocess.DEVNULL, cwd = out_genome_assembly_path)
+	#subprocess.run(irf_command, cwd = out_genome_assembly_path)
+	
+	#if os.path.exists('Step6_irf_input.fasta.2.3.5.80.10.20.500000.10000.dat'):
+	#	os.system('mv Step6_irf_input.fasta.2.3.5.80.10.20.500000.10000.dat '+ out_genome_assembly_path)
 	
 
 #This probably makes more sense to do with TSD searcher's TIR finder behavior under best hit + longest criteria settings. I guess I have to compare notes on these
@@ -1779,7 +1780,7 @@ def main_function():
 	if check_finished('Step6_extend_seq',[output_genome_assembly_path+'/Step6_irf_input.fasta'],at) or at:
 		extend_seq(input_genome_assembly_path, output_genome_assembly_path)
 	if check_finished('Step6_irf',[output_genome_assembly_path+'/Step6_irf_input.fasta.2.3.5.80.10.20.500000.10000.dat'],at) or at:
-		inverted_repeat_finder(output_genome_assembly_path, irf_path)
+		inverted_repeat_finder(output_genome_assembly_path, script_dir)
 	if check_finished('Step6_process_irf',[output_genome_assembly_path+'/Step6_irf_output.fasta'],at) or at:
 		process_irf(output_genome_assembly_path)
 	t2=time.time()
