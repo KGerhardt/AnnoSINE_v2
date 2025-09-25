@@ -290,10 +290,16 @@ class minimap_manager:
 		#Deduplicate rows that appeared in overlap
 		my_targets = my_targets.unique(subset=['qname', 'tname', 'tstart'], maintain_order=True)
 
-		#Write output
-		my_targets.sink_csv(path = comb_out,
-							include_header = False,
-							separator = '\t')
+		try:
+			#Write output
+			my_targets.sink_csv(path = comb_out,
+								include_header = False,
+								separator = '\t')
+		except Exception as e:
+			print(f'{comb_out} could not write an output for reason {e}')
+			print('This probably is not a problem')
+			#Usually the result of an empty file
+			comb_out = None
 		
 		#Clean up partial alignments
 		for o in query_vs_target_alns:
@@ -346,7 +352,8 @@ class minimap_manager:
 					output = self.merge_query_chunks_blast(qname, query_record[qname])
 					removed = query_record.pop(qname)
 					removed = None
-					final_results.append(output)
+					if output is not None:
+						final_results.append(output)
 					
 		final_results.sort()
 					
