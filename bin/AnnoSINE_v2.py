@@ -1310,21 +1310,24 @@ def re_process_figure(out_genome_assembly_path):
 #Cleaned up the style
 def genome_annotate(in_genome_assembly_path, out_genome_assembly_path, in_nonredundant, rm_cpus): #reduce cpu number for RepeatMasker to avoid overutilization
 	print('Genome file: ' + os.path.normpath(in_genome_assembly_path), flush=True)
-	annot = os.path.join(out_genome_assembly_path, 'RepeatMasker')
+	#annot = os.path.join(out_genome_assembly_path, 'RepeatMasker')
+	annot = 'RepeatMasker'
 	
 	print(f'Annotation results: {annot}', flush=True)
 	if in_nonredundant == 'y':
-		seed = os.path.join(out_genome_assembly_path, 'Seed_SINE.fa')
+		#seed = os.path.join(out_genome_assembly_path, 'Seed_SINE.fa')
+		seed = 'Seed_SINE.fa'
 		comm = f'RepeatMasker -e ncbi -pa {rm_cpus} -q -no_is -norna -nolow -div 40 \
 				-lib {seed} -cutoff 225 {in_genome_assembly_path} -dir {annot}'
 		
 	elif in_nonredundant == 'n':
-		s7_out = os.path.join(out_genome_assembly_path, 'Step7_cluster_output.fasta')
+		#s7_out = os.path.join(out_genome_assembly_path, 'Step7_cluster_output.fasta')
+		s7_out = 'Step7_cluster_output.fasta'
 		comm = f'RepeatMasker -e ncbi -pa {rm_cpus} -q -no_is -norna -nolow -div 40 \
 				-lib {s7_out} -cutoff 225 {in_genome_assembly_path} -dir {annot}'
 				
 	comm = comm.split()
-	subprocess.run(comm, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+	subprocess.run(comm, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd = out_genome_assembly_path)
 
 def sine_finder(genome_assembly_path, script_dir):
 	#main_func()

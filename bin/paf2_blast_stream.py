@@ -48,6 +48,9 @@ def find_cigar(row, qc):
 	return 0
 
 def process_chunk(df, qc):
+	#Remove edge case of bad alignment report
+	df = df[df['alen'] > 0]
+
 	try:
 		df["nonmatch"] = df.NM.map(
 			lambda x: int(re.search(nonmatch_pattern, x).group(1))
@@ -61,6 +64,7 @@ def process_chunk(df, qc):
 		qc.calc_bitscore(a, n) for a, n in zip(df["alen"], df["nonmatch"])
 	]
 	df["evalue"] = [qc.calc_evalue(a, n) for a, n in zip(df["alen"], df["nonmatch"])]
+	
 	df["percent_ident"] = [
 		(nmatch / a) * 100 for a, nmatch in zip(df["alen"], df["nmatch"])
 	]

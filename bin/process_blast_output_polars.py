@@ -274,7 +274,7 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 					for u in update_tuples:
 						print(*u, sep = '\t', file = out)
 					remaining_chunks -= 1
-					print(f'{r} has been processed! {remaining_chunks} BLAST outputs remain.')
+					#print(f'{r} has been processed! {remaining_chunks} BLAST outputs remain.')
 					print(os.path.basename(r), file = log)
 	else:
 		print('No remaining BLAST outputs to be processed;')

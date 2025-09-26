@@ -295,6 +295,50 @@ class minimap_manager:
 			my_targets.sink_csv(path = comb_out,
 								include_header = False,
 								separator = '\t')
+								
+			
+				
+			megabytes = 1024 * 1024
+			if os.path.getsize(comb_out) > 500 * megabytes:
+				new_output_list = []
+				max_lines = 5_000_000 #500 MB/output file
+				partial_index = 0
+				line_count = 0
+				file_handle = os.path.join(working_outputs, f'{qname}_{partial_index}_alignments.blast.txt')
+				new_output_list.append(file_handle)
+				outfile = open(file_handle, 'w')
+				with open(comb_out) as inf:
+					for line in inf:
+						ele=line.split()
+						sid = ele[0]
+						
+						if line_count >= max_lines:
+							# Close the current file and open a new one with an incremented suffix
+
+							#Continue writing lines beyond max until there's a new record so that records are grouped
+							if sid==prev:
+								outfile.write(line)
+								continue
+
+							outfile.close()
+							partial_index += 1
+							file_handle = os.path.join(working_outputs, f'{qname}_{partial_index}_alignments.blast.txt')
+							outfile = open(file_handle, "w")
+							new_output_list.append(file_handle)
+							line_count = 0  # Reset line count for the new file
+						
+						outfile.write(line)
+						line_count += 1
+						prev=sid
+						
+				outfile.close()
+				
+				os.remove(comb_out)
+				
+				comb_out = new_output_list
+			else:
+				comb_out = [comb_out]
+						
 		except Exception as e:
 			print(f'{comb_out} could not write an output for reason {e}')
 			print('This probably is not a problem')
@@ -353,7 +397,7 @@ class minimap_manager:
 					removed = query_record.pop(qname)
 					removed = None
 					if output is not None:
-						final_results.append(output)
+						final_results.extend(output)
 					
 		final_results.sort()
 					
