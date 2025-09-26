@@ -58,58 +58,67 @@ def process_chunk(df, qc):
 	except:
 		df["nonmatch"]=0
 
-	df['gap_openings'] = df.apply(lambda row: find_cigar(row, qc), axis=1)
 
-	df["bitscore"] = [
-		qc.calc_bitscore(a, n) for a, n in zip(df["alen"], df["nonmatch"])
-	]
-	df["evalue"] = [qc.calc_evalue(a, n) for a, n in zip(df["alen"], df["nonmatch"])]
-	
-	df["percent_ident"] = [
-		(nmatch / a) * 100 for a, nmatch in zip(df["alen"], df["nmatch"])
-	]
-	
-	df = df.round({"bitscore": 3, "percent_ident": 3})
-	m = df["strand"] == "-"
-	
-	df.loc[m, ["tstart", "tend"]] = (df.loc[m, ["tend", "tstart"]].values)
-	
-	blast = df.loc[
-		:,
-		[
-			"qname",
-			"tname",
-			"percent_ident",
-			"alen",
-			"nonmatch",
-			"gap_openings",
-			"qstart",
-			"qend",
-			"tstart",
-			"tend",
-			"evalue",
-			"bitscore",
-		],
-	]
-	
-	#For the genome chunking part, here is where corrections to positions would/should occur, alongside updated seq names
-	blast['target_offsets'] = blast['tname'].str.extract(r';;(\d+)$')
-	blast['tname'] = blast['tname'].str.replace(r';;\d+$', '', regex = True)
-	
-	blast['target_offsets'] = blast['target_offsets'].astype(int)
-	blast["tstart"] = blast["tstart"].astype(int)
-	blast["tend"] = blast["tend"].astype(int)
-	blast['evalue'] = blast['evalue'].astype(float)
-	blast['evalue'] = blast['evalue'].round(4)
-	
-	blast['tstart'] = blast['tstart'] + blast['target_offsets']
-	blast['tend'] = blast['tend'] + blast['target_offsets']
-	
-	blast["qstart"] = blast["qstart"] + 1
-	blast.loc[~m, "tstart"] = blast.loc[~m, "tstart"] + 1
-	blast.loc[m, "tend"] = blast.loc[m, "tend"] + 1
+	try:
+		df['gap_openings'] = df.apply(lambda row: find_cigar(row, qc), axis=1)
 
-	blast = blast.drop(columns = ['target_offsets'])
+		df["bitscore"] = [
+			qc.calc_bitscore(a, n) for a, n in zip(df["alen"], df["nonmatch"])
+		]
+		df["evalue"] = [qc.calc_evalue(a, n) for a, n in zip(df["alen"], df["nonmatch"])]
+		
+		df["percent_ident"] = [
+			(nmatch / a) * 100 for a, nmatch in zip(df["alen"], df["nmatch"])
+		]
+		
+		df = df.round({"bitscore": 3, "percent_ident": 3})
+		m = df["strand"] == "-"
+		
+		df.loc[m, ["tstart", "tend"]] = (df.loc[m, ["tend", "tstart"]].values)
+		
+		blast = df.loc[
+			:,
+			[
+				"qname",
+				"tname",
+				"percent_ident",
+				"alen",
+				"nonmatch",
+				"gap_openings",
+				"qstart",
+				"qend",
+				"tstart",
+				"tend",
+				"evalue",
+				"bitscore",
+			],
+		]
+	except:
+		pass
+	
+	try:
+		#For the genome chunking part, here is where corrections to positions would/should occur, alongside updated seq names
+		blast['target_offsets'] = blast['tname'].str.extract(r';;(\d+)$')
+		blast['tname'] = blast['tname'].str.replace(r';;\d+$', '', regex = True)
+		
+		blast['target_offsets'] = blast['target_offsets'].astype(int)
+		blast["tstart"] = blast["tstart"].astype(int)
+		blast["tend"] = blast["tend"].astype(int)
+		blast['evalue'] = blast['evalue'].astype(float)
+		blast['evalue'] = blast['evalue'].round(4)
+		
+		blast['tstart'] = blast['tstart'] + blast['target_offsets']
+		blast['tend'] = blast['tend'] + blast['target_offsets']
+		
+		blast["qstart"] = blast["qstart"] + 1
+		blast.loc[~m, "tstart"] = blast.loc[~m, "tstart"] + 1
+		blast.loc[m, "tend"] = blast.loc[m, "tend"] + 1
+
+		blast = blast.drop(columns = ['target_offsets'])
+	except Exception as e:
+		print(f'BLAST transformation error: {e} with file looks like:')
+		print(blast)
+		blast = None
 	
 	return blast
 
@@ -139,7 +148,8 @@ def process_file(input_file, output_file):
 				
 	blast_df = process_chunk(df, qc)
 	
-	blast_df.to_csv(output_file, sep = '\t', header = False, index = False)
+	if blast_df is not None:
+		blast_df.to_csv(output_file, sep = '\t', header = False, index = False)
 				
 	
 

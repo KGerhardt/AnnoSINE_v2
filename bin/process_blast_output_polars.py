@@ -266,10 +266,14 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 		
 		print(f'{remaining_chunks} BLAST chunks left to process.')
 		
-		#For some reason I cannot ascertain, the polars read_csv just isn't working
+		#Reduce thread usage for lfixed mem/thread (Purdue ANVIL) environments
+		chunk_threads = threads
+		if chunk_threads > 1:
+			chunk_threads = int(chunk_threads // 2)
+		
 		log = open(completion_marker, 'a')
 		with open(changes_file, 'w') as out:
-			with multiprocessing.Pool(threads) as pool:
+			with multiprocessing.Pool(chunk_threads) as pool:
 				for r, update_tuples in pool.imap_unordered(clean_blast_record, commands):
 					for u in update_tuples:
 						print(*u, sep = '\t', file = out)

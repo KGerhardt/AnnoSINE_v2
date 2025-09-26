@@ -215,138 +215,96 @@ class minimap_manager:
 		#Convert minimap to BLAST format
 		blast_out = f'{my_outfile}.blast'
 		#print(f'Converting {my_outfile} to blast')
-		process_file(my_outfile, blast_out)
+		success = process_file(my_outfile, blast_out)
 		
 		#Remove minimap aln
 		os.remove(my_outfile)
+		
+		if not success:
+			blast_out = None
 
 		return query, blast_out
-		
-	#Old function for polars - formatting errors made this very messy
-	def merge_query_chunks(self, query_file, query_vs_target_alns):
-		qname = os.path.basename(query_file)
-		comb_out = os.path.join(working_outputs, f'{qname}_alignments.paf')
-		#Concat + sort PAF with polars
-		
-		#Target length will always be wrong for long chromosomes > 500 milion bp, but that's OK we don't use it those
-		my_targets = pl.scan_csv(query_vs_target_alns,
-								has_header = False,
-								separator = "\t",
-								schema = self.paf_format)
-		
-		#Extract the target sequence offset
-		my_targets = my_targets.with_columns(
-			pl.col("tname")
-			.str.extract(r';;(\d+)', 1)  # Extract the first match of digits
-			.cast(pl.Int64)            # Convert to integer
-			.alias("offset")
-		)
-
-		#Adjust alignment indices accordingly, truncate target name to its non-offset prefix
-		my_targets = my_targets.with_columns(
-			pl.col("tname").str.replace(r';;\d+', '').alias('tname'),
-			(pl.col('offset') + pl.col('tstart')).alias('tstart'),
-			(pl.col('offset') + pl.col('tend')).alias('tend')
-		)
-
-		#Drop the now superfluous offset indicator
-		my_targets = my_targets.drop('offset')
-
-		#Correct sequence lengths to match original genome lengths
-		my_targets = my_targets.update(self.seqlen_dataframe, on = 'tname', how = 'left')
-		
-		#Sort results
-		my_targets = my_targets.sort(by = ['qname', 'tname', 'tstart'])
-
-		#Deduplicate rows that appeared in overlap
-		my_targets = my_targets.unique(subset=['qname', 'tname', 'tstart'], maintain_order=True)
-
-		#Write output
-		my_targets.sink_csv(path = comb_out,
-							include_header = False,
-							separator = '\t')
-		
-		#Clean up partial alignments
-		for o in query_vs_target_alns:
-			os.remove(o)
-			
-		return comb_out
 			
 	#Post-blast conversion
 	def merge_query_chunks_blast(self, query_file, query_vs_target_alns):
 		qname = os.path.basename(query_file)
 		comb_out = os.path.join(working_outputs, f'{qname}_alignments.blast.txt')
+		cleaned_q_v_t = [f for f in query_vs_target_alns if f is not None]
 		#Concat + sort PAF with polars
 		
-		#Target length will always be wrong for long chromosomes > 500 milion bp, but that's OK we don't use it those
-		my_targets = pl.scan_csv(query_vs_target_alns,
-								has_header = False,
-								separator = "\t",
-								schema = self.blast_format)
-		
-		#Sort results
-		my_targets = my_targets.sort(by = ['qname', 'tname', 'tstart'])
-
-		#Deduplicate rows that appeared in overlap
-		my_targets = my_targets.unique(subset=['qname', 'tname', 'tstart'], maintain_order=True)
-
-		try:
-			#Write output
-			my_targets.sink_csv(path = comb_out,
-								include_header = False,
-								separator = '\t')
-								
+		if len(cleaned_q_v_t) > 0:
+			#Target length will always be wrong for long chromosomes > 500 milion bp, but that's OK we don't use it those
+			my_targets = pl.scan_csv(cleaned_q_v_t,
+									has_header = False,
+									separator = "\t",
+									schema = self.blast_format)
 			
-				
-			megabytes = 1024 * 1024
-			if os.path.getsize(comb_out) > 500 * megabytes:
-				new_output_list = []
-				max_lines = 5_000_000 #500 MB/output file
-				partial_index = 0
-				line_count = 0
-				file_handle = os.path.join(working_outputs, f'{qname}_{partial_index}_alignments.blast.txt')
-				new_output_list.append(file_handle)
-				outfile = open(file_handle, 'w')
-				with open(comb_out) as inf:
-					for line in inf:
-						ele=line.split()
-						sid = ele[0]
-						
-						if line_count >= max_lines:
-							# Close the current file and open a new one with an incremented suffix
+			#Sort results
+			my_targets = my_targets.sort(by = ['qname', 'tname', 'tstart'])
 
-							#Continue writing lines beyond max until there's a new record so that records are grouped
-							if sid==prev:
-								outfile.write(line)
-								continue
+			#Deduplicate rows that appeared in overlap
+			my_targets = my_targets.unique(subset=['qname', 'tname', 'tstart'], maintain_order=True)
 
-							outfile.close()
-							partial_index += 1
-							file_handle = os.path.join(working_outputs, f'{qname}_{partial_index}_alignments.blast.txt')
-							outfile = open(file_handle, "w")
-							new_output_list.append(file_handle)
-							line_count = 0  # Reset line count for the new file
-						
-						outfile.write(line)
-						line_count += 1
-						prev=sid
-						
-				outfile.close()
+			try:
+				#Write output
+				my_targets.sink_csv(path = comb_out,
+									include_header = False,
+									separator = '\t')
+									
 				
-				os.remove(comb_out)
+					
+				megabytes = 1024 * 1024
+				if os.path.getsize(comb_out) > 500 * megabytes:
+					new_output_list = []
+					max_lines = 5_000_000 #500 MB/output file
+					partial_index = 0
+					line_count = 0
+					file_handle = os.path.join(working_outputs, f'{qname}_{partial_index}_alignments.blast.txt')
+					new_output_list.append(file_handle)
+					outfile = open(file_handle, 'w')
+					with open(comb_out) as inf:
+						for line in inf:
+							ele=line.split()
+							sid = ele[0]
+							
+							if line_count >= max_lines:
+								# Close the current file and open a new one with an incremented suffix
+
+								#Continue writing lines beyond max until there's a new record so that records are grouped
+								if sid==prev:
+									outfile.write(line)
+									continue
+
+								outfile.close()
+								partial_index += 1
+								file_handle = os.path.join(working_outputs, f'{qname}_{partial_index}_alignments.blast.txt')
+								outfile = open(file_handle, "w")
+								new_output_list.append(file_handle)
+								line_count = 0  # Reset line count for the new file
+							
+							outfile.write(line)
+							line_count += 1
+							prev=sid
+							
+					outfile.close()
+					
+					os.remove(comb_out)
+					
+					comb_out = new_output_list
+				else:
+					comb_out = [comb_out]
+							
+			except Exception as e:
+				print(f'{comb_out} could not write an output for reason {e}')
+				print('This probably is not a problem')
+				#Usually the result of an empty file
+				comb_out = None
 				
-				comb_out = new_output_list
-			else:
-				comb_out = [comb_out]
-						
-		except Exception as e:
-			print(f'{comb_out} could not write an output for reason {e}')
-			print('This probably is not a problem')
-			#Usually the result of an empty file
+		else:
 			comb_out = None
 		
 		#Clean up partial alignments
-		for o in query_vs_target_alns:
+		for o in cleaned_q_v_t:
 			os.remove(o)
 			
 		return comb_out
@@ -392,7 +350,7 @@ class minimap_manager:
 			for qname, partial_out in pool.imap_unordered(self.manage_minimap_alignment, args):
 				query_record[qname].append(partial_out)
 				if len(query_record[qname]) == num_targets:
-					print(f'Merging partial results for {qname}')
+					#print(f'Merging partial results for {qname}')
 					output = self.merge_query_chunks_blast(qname, query_record[qname])
 					removed = query_record.pop(qname)
 					removed = None
