@@ -241,7 +241,7 @@ def get_updates_from_blasts(output_directory, in_genome_assembly_path, factor_co
 	blast_results_dir = os.path.join(output_directory, 'minimap_wrangler', 'partial_alignment_results')
 	
 	#input_files = [f for f in os.listdir(output_directory) if 'Step3_blast_output.out_part' in f and not f.endswith('.fa')]
-	input_files = [f for f in os.listdir(blast_results_dir) if os.path.getsize(f) > 0]
+	input_files = [f for f in os.listdir(blast_results_dir) if os.path.getsize(os.path.join(blast_results_dir, f)) > 0]
 	completed_files = []
 	
 	#Check previously processed blast inputs
