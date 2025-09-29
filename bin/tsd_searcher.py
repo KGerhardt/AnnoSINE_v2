@@ -6,7 +6,6 @@ import re
 import argparse
 import pyfastx
 
-
 #os.environ['OMP_NUM_THREADS'] = '1'
 
 import pydivsufsort
@@ -1083,75 +1082,67 @@ class alignment_tsd_tir_finder:
 			#Score extensions; for each successful extension, truncate to the highest scoring run with <= self.max_mismatch
 			#Returns all exact matches and their extensions with score, mismatch count, and 
 			winners = self.score_extensions(extension_strings)
-			if self.polyAT_TSD_ok:
-				is_polyAT = [False] * len(winners)
-			else:
-				#Check if the sequence contains a polyA or polyT sequence
-				#is_polyAT = [mn.is_polyAT(w[0], clean_sequence = False)[0] or 
-				#			 mn.is_polyAT(w[1], clean_sequence = False)[0] for w in winners]
-				
-				#Check if the sequence is all A/T
-				is_polyAT = [self.check_sequence_richness(w[0],)[0] or self.check_sequence_richness(w[1])[0] for w in winners]
-
-			is_not_polyAT = np.logical_not(np.array(is_polyAT))
-			acceptable_length = np.zeros(shape = is_not_polyAT.shape, dtype = np.bool_)
-			for i in range(0, len(winners)):
-				if winners[i][2] >= self.min_ok_length:
-					acceptable_length[i] = True
-			
-			retained_sequences = np.logical_and(is_not_polyAT, acceptable_length)
-			
-			#print(is_not_polyAT)
-			#print(acceptable_length)
-			
-			#Ensure 2-d retention of shared substrings
-			shared_substrings = shared_substrings[retained_sequences, :]
-			winners = [winners[i] for i in np.where(retained_sequences)[0]]
-				
-			#Filter to best hit
-			if self.best:
-				#best_index = self.get_best_hit(winners, is_polyAT, shared_substrings)
-				best_index = self.get_best_hit(winners, shared_substrings)
-				if best_index is not None:
-					winners = [winners[best_index]]
-					shared_substrings = shared_substrings[best_index, None]
-				else:
-					winners = None
-					shared_substrings = None
-
 			if winners is not None:
-				#Winners has form
-				#(query TSD, target TSD, TSD length, tsd_mismatches, tsd_gap, move_left_left, move_left_right, move_right_left, move_right_right)
-				for original_indices, updates in zip(shared_substrings, winners):
-					left_string_start = int(original_indices[0] - updates[5])
-					right_string_start = int(original_indices[1] - updates[6])
-					left_string_end = int(original_indices[0] + original_indices[2] + updates[7])
-					right_string_end = int(original_indices[1] + original_indices[2] + updates[8])
-					
-					if is_TIR:
-						right_sequence_length = len(right_sequence)
-						reverted_right = self.revcomp(updates[1])
-						
-						#Forward orientation substring coordinates
-						right_string_start_fo = right_sequence_length - right_string_end
-						right_string_end_fo = right_sequence_length - right_string_start
-						
-						tsd = (updates[0], reverted_right, left_string_start, left_string_end, right_string_start_fo, right_string_end_fo, updates[2], updates[3]+updates[4], )
-					
+				if len(winners) > 0:
+					if self.polyAT_TSD_ok:
+						is_polyAT = [False] * len(winners)
 					else:
-						tsd = (updates[0], updates[1], left_string_start, left_string_end, right_string_start, right_string_end, updates[2], updates[3]+updates[4], )
+						#Check if the sequence contains a polyA or polyT sequence
+						#is_polyAT = [mn.is_polyAT(w[0], clean_sequence = False)[0] or 
+						#			 mn.is_polyAT(w[1], clean_sequence = False)[0] for w in winners]
+						
+						#Check if the sequence is all A/T
+						is_polyAT = [self.check_sequence_richness(w[0],)[0] or self.check_sequence_richness(w[1])[0] for w in winners]
+
+					is_not_polyAT = np.logical_not(np.array(is_polyAT))
+					acceptable_length = np.zeros(shape = is_not_polyAT.shape, dtype = np.bool_)
+					for i in range(0, len(winners)):
+						if winners[i][2] >= self.min_ok_length:
+							acceptable_length[i] = True
 					
-					#Print checks
-					#if '-' in updates[0] or '-' in updates[1]:
-					#	print(seq.description)
-					#	print(f'{updates[0]} {updates[1]} {left_string_start}:{left_string_end} {right_string_start}:{right_string_end} tsd_length:{updates[2]} tsd_mismatches:{updates[3]+updates[4]}')
-					#	print('')
-					#print(f'left_seq	 {tsd[0]}')
-					#print(f'right_seq	{tsd[1]}')
-					#print(f'left select  {l[tsd[2]:tsd[3]]}')
-					#print(f'right select {r[tsd[4]:tsd[5]]}')
+					retained_sequences = np.logical_and(is_not_polyAT, acceptable_length)
 					
-					final_tsds.append(tsd)
+					#print(is_not_polyAT)
+					#print(acceptable_length)
+					
+					#Ensure 2-d retention of shared substrings
+					shared_substrings = shared_substrings[retained_sequences, :]
+					winners = [winners[i] for i in np.where(retained_sequences)[0]]
+						
+					#Filter to best hit
+					if self.best:
+						#best_index = self.get_best_hit(winners, is_polyAT, shared_substrings)
+						best_index = self.get_best_hit(winners, shared_substrings)
+						if best_index is not None:
+							winners = [winners[best_index]]
+							shared_substrings = shared_substrings[best_index, None]
+						else:
+							winners = None
+							shared_substrings = None
+
+					if winners is not None:
+						#Winners has form
+						#(query TSD, target TSD, TSD length, tsd_mismatches, tsd_gap, move_left_left, move_left_right, move_right_left, move_right_right)
+						for original_indices, updates in zip(shared_substrings, winners):
+							left_string_start = int(original_indices[0] - updates[5])
+							right_string_start = int(original_indices[1] - updates[6])
+							left_string_end = int(original_indices[0] + original_indices[2] + updates[7])
+							right_string_end = int(original_indices[1] + original_indices[2] + updates[8])
+							
+							if is_TIR:
+								right_sequence_length = len(right_sequence)
+								reverted_right = self.revcomp(updates[1])
+								
+								#Forward orientation substring coordinates
+								right_string_start_fo = right_sequence_length - right_string_end
+								right_string_end_fo = right_sequence_length - right_string_start
+								
+								tsd = (updates[0], reverted_right, left_string_start, left_string_end, right_string_start_fo, right_string_end_fo, updates[2], updates[3]+updates[4], )
+							
+							else:
+								tsd = (updates[0], updates[1], left_string_start, left_string_end, right_string_start, right_string_end, updates[2], updates[3]+updates[4], )
+								
+							final_tsds.append(tsd)
 			
 		if len(final_tsds) == 0:
 			#Fallback to SINEfinder TSD search
@@ -1186,6 +1177,9 @@ class alignment_tsd_tir_finder:
 def main():
 	parser, opts = options()
 	
+	#the OMP parallelization is good for suffix arrays of long strings, usually inappropriate to TSD searching
+	
+	
 	if opts.sequences is None:
 		print('You must supply a set of sequences to search for TSDs using --sequences')
 	else:
@@ -1214,6 +1208,9 @@ def main():
 			out = open(output, 'w')
 		else:
 			out = sys.stdout
+		
+		header = ['seqid', 'left_sequence', 'right_sequence', 'tsd_loc_left_start', 'tsd_loc_left_end', 'tsd_loc_right_start', 'tsd_loc_right_end', 'tsd_length', 'mismatches']
+		print(*header, sep = '\t', file = out)
 		
 		for seq in fa:
 			final_tsds = []
