@@ -852,6 +852,8 @@ class alignment_tsd_tir_finder:
 		
 		return segments
 
+	#This function doesn't properly handle only matches and then only mismatches or vice versa, a rare edge case where an exact match terminates at the end of a string.
+	#Currently it skips the string and resorts to SINEfinder logic.
 	#Find the highest scoring substring for each extension candidate and return the strings, updated extension offsets
 	def score_extensions(self, extension_strings, prefer_exact = True):
 		winning_candidates = []
@@ -995,7 +997,8 @@ class alignment_tsd_tir_finder:
 						else:
 							final_candidate = (exact_repeat, exact_repeat, exact_length, 0, 0, 0, 0, 0, 0, )
 			
-			winning_candidates.append(final_candidate)
+			if final_candidate is not None:
+				winning_candidates.append(final_candidate)
 			
 		return winning_candidates
 
