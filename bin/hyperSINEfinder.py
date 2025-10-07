@@ -8,6 +8,8 @@ import numpy as np
 
 from itertools import product
 
+import random
+
 #Set OMP threads for TSD searcher to 1
 os.environ['OMP_NUM_THREADS'] = '1'
 from tsd_searcher import alignment_tsd_tir_finder
@@ -270,40 +272,44 @@ class hyperSINEfinder:
 					left = np.searchsorted(acceptable_one_twos[:,0], acceptable_zero_ones[:, 1], side = 'left')
 					right = np.searchsorted(acceptable_one_twos[:,0], acceptable_zero_ones[:, 1], side = 'right')
 					
-					
 					for zero, one, l, r in zip(acceptable_zero_ones[:, 0], acceptable_zero_ones[:, 1], left, right):
 						#if zero not in patterns:
 						#	patterns[zero] = {}
 						for two in acceptable_one_twos[l:r, 1]:
 							#patterns[zero][one] = two
 							pp.append((zero, one, two,))
+										
+					#print('Start', forward)
+					#print(pp)
 					
-					pp = np.array(pp)
+					pp = np.array(pp, dtype = np.int32)
 					
-					if forward:
-						#Distance from 0 -> 1
-						dist1 = pp[:, 1] - pp[:, 0]
-						dist2 = pp[:, 2] - pp[:, 1]
-					else:
-						#We would be searching in reverse here, so we'd favor a_box -> b_box distance anyway
-						dist1 = pp[:, 2] - pp[:, 1]
-						dist2 = pp[:, 1] - pp[:, 0]
+					#What happens when I remove all of the filtering code?
+					if True:
+						#Find max distance between start and end indices for max-length SINE elements
+						max_distances = pp[:,2] - pp[:,0]
+						#Sort by distance descending
+						pp = pp[np.argsort(max_distances)[::-1]]
 						
-					#Sort to maximize a_box to b_box distance, then by b_box to polyAT distance
-					pp = pp[np.lexsort((dist2, dist1,))]
-					
-					#Find first appearance of each 0, 1, and 2 pattern in order
-					unique_elements, first_indices = np.unique(pp[:, 0], return_index=True)
-					pp = pp[first_indices]
-					unique_elements, first_indices = np.unique(pp[:, 1], return_index=True)
-					pp = pp[first_indices]
-					unique_elements, first_indices = np.unique(pp[:, 2], return_index=True)
-					pp = pp[first_indices]
-						
-					#Fix ordering for pretty print
-					pp = pp[np.argsort(pp[:, 0])]
-					
-					
+						#Extract the longest sequences per unique a-box start position
+						if forward:
+							#Find first appearance of each 0, 1, and 2 pattern in that order
+							unique_elements, first_indices = np.unique(pp[:, 0], return_index=True)
+							pp = pp[first_indices]
+							unique_elements, first_indices = np.unique(pp[:, 1], return_index=True)
+							pp = pp[first_indices]
+							unique_elements, first_indices = np.unique(pp[:, 2], return_index=True)
+							pp = pp[first_indices]
+						else:
+							#Find first appearance of each 4, 3, and 2 pattern in that order
+							unique_elements, first_indices = np.unique(pp[:, 2], return_index=True)
+							pp = pp[first_indices]
+							unique_elements, first_indices = np.unique(pp[:, 1], return_index=True)
+							pp = pp[first_indices]
+							unique_elements, first_indices = np.unique(pp[:, 0], return_index=True)
+							pp = pp[first_indices]
+
+					#Recover the genomic positions for each SINE element index
 					sine_candidates = []	
 					for row in pp:
 						z, o, t = row[0], row[1], row[2]
@@ -311,10 +317,7 @@ class hyperSINEfinder:
 						sine_candidates.append(next_candidate)
 					
 					sine_candidates = np.array(sine_candidates)
-					#print(sine_candidates[0:75])
-					#print(sine_candidates.shape)
-					#print('##########')
-					
+
 			else:
 				hits = None
 		else:
@@ -380,8 +383,12 @@ class hyperSINEfinder:
 				spacer2 = sequence[b_box_end:polyAT_start]
 				polyAT  = sequence[polyAT_start:polyAT_end]
 				tsd2    = sequence[polyAT_end:right_tsd_region]
-				
+								
 			else:
+				#This causes labelling issues in the SINE headers but not necessarily issues finding the SINEs
+				#The labels below need to have adjustments to the line with {left_tsd_region+ls}:{polyAT_end+rend} so that if reverse,
+				#it should be {left_tsd_region+ls}:{}
+				
 				polyAT_start = row[0]
 				polyAT_end   = row[1]
 				b_box_start  = row[2]
@@ -414,7 +421,7 @@ class hyperSINEfinder:
 				tsd2 = tsd2[rs:rend]
 				#SINEfinder output header format
 				#>chr1_pat F 876520:876774 TSD-len=10;TSD-score=10;TSD-mism=0
-				next_sine_header = f'>{description} {"+" if forward else "-"} {left_tsd_region+ls}:{polyAT_end+rend} TSD-len={tsdl};TSD-score={tsdl-tsd_mm};TSD-mism={tsd_mm}'
+				
 				
 				#SINEfinder sequence format alternates caps and lowercase with TSDs, a + b boxes, polyAT caps and all else lower
 				tsd1 = tsd1.upper()
@@ -428,6 +435,11 @@ class hyperSINEfinder:
 				tsd2 = tsd2.upper()
 				next_sine_sequence = f'{tsd1}{tsd1_spacer}{a_box}{spacer1}{b_box}{spacer2}{polyAT}{tsd2_spacer}{tsd2}'
 				
+				left_start = left_tsd_region+ls
+				right_end = left_start + len(next_sine_sequence)
+				
+				next_sine_header = f'>{description} {"+" if forward else "-"} {left_start}:{right_end} TSD-len={tsdl};TSD-score={tsdl-tsd_mm};TSD-mism={tsd_mm}'
+
 				writeout.append(next_sine_header)
 				writeout.append(next_sine_sequence)
 		
@@ -452,6 +464,11 @@ class hyperSINEfinder:
 		if len(hits) > 0:
 			#Definitely need to remove ungreedy polyAT hits
 			f, r = self.clean_and_group_matches(hits)
+
+		#if f is not None:
+		#	np.savetxt(f'{desc}_forward_hits.txt', f, fmt = '%d', delimiter = '\t')
+		#if r is not None:
+		#	np.savetxt(f'{desc}_reverse_hits.txt', r, fmt = '%d', delimiter = '\t')
 
 		#print(f'{sequence_id} cleaned')
 
@@ -561,8 +578,7 @@ def jesus_give_me_a_SINE(genome_file, output = None, threads = 1):
 	return output
 
 
-#jesus_give_me_a_SINE(sys.argv[1], sys.argv[2], 10)
-
+jesus_give_me_a_SINE(sys.argv[1], sys.argv[2], 10)
 
 #oot = jesus_give_me_a_SINE(f, None, 10)
 
